@@ -1,0 +1,70 @@
+[gd_scene load_steps=10 format=3 uid="uid://6yghlai5jgs6"]
+
+[ext_resource type="Texture2D" uid="uid://du7gy501uoka6" path="res://Art/Model 3.png" id="1_i3ufg"]
+[ext_resource type="Script" path="res://Scenes/car.gd" id="1_tmlb7"]
+[ext_resource type="Shader" path="res://shaders/color_replace.gdshader" id="2_ufg2e"]
+[ext_resource type="Texture2D" uid="uid://ce8ule58xnuww" path="res://Art/light_texture.svg" id="4_y344l"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pmuwr"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="Curve" id="Curve_nlpam"]
+_data = [Vector2(0.00353357, 0), -2.95547, 0.721939, 0, 0, Vector2(0.99999, 1), 1.34261, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Curve" id="Curve_b72up"]
+_data = [Vector2(0, 0.502857), 0.0, 1.61714, 0, 0, Vector2(0.501767, 1), 0.0, 0.0, 0, 0, Vector2(0.85159, 1), 0.0, 0.0, 0, 0, Vector2(0.99999, 0), -6.03848, -6.03848, 0, 0, Vector2(1, 0), -252.276, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_uvm3r"]
+radius = 35.0
+height = 180.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d00hp"]
+resource_local_to_scene = true
+shader = ExtResource("2_ufg2e")
+shader_parameter/target_color = Color(0, 1, 0, 1)
+shader_parameter/replacement_color = Color(0.839216, 0, 0, 1)
+shader_parameter/color_thresh = 0.75
+
+[node name="Car" type="RigidBody2D"]
+collision_layer = 2
+mass = 2000.0
+physics_material_override = SubResource("PhysicsMaterial_pmuwr")
+linear_damp = 1.0
+angular_damp = 3.0
+script = ExtResource("1_tmlb7")
+tire_friction = 3.0
+steering_dropoff = SubResource("Curve_nlpam")
+accelecation_curve = SubResource("Curve_b72up")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_uvm3r")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_d00hp")
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_i3ufg")
+
+[node name="CameraMount" type="Node2D" parent="."]
+
+[node name="LeftHeadlight" type="PointLight2D" parent="."]
+visible = false
+position = Vector2(-28, -67.2064)
+rotation = -1.5708
+scale = Vector2(3, 1)
+color = Color(1, 0.870588, 0.27451, 1)
+texture = ExtResource("4_y344l")
+offset = Vector2(52, 0)
+texture_scale = 0.13
+
+[node name="RightHeadlight" type="PointLight2D" parent="."]
+visible = false
+position = Vector2(28, -68)
+rotation = -1.5708
+scale = Vector2(3, 1)
+color = Color(1, 0.870588, 0.27451, 1)
+texture = ExtResource("4_y344l")
+offset = Vector2(52, 0)
+texture_scale = 0.13

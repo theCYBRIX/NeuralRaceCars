@@ -1,0 +1,76 @@
+class_name TestingCar
+extends NeuralCar
+
+enum UserInput {
+	FORWARDS,
+	REVERSE,
+	TURN_LEFT,
+	TURN_RIGHT
+}
+
+@export var track : BaseTrack
+
+@export var deactivateable : bool = false
+
+@onready var sensor_vision: Line2D = $SensorVision
+var sequential_sensors : Array[RayCast2D]
+@onready var closest_point_on_track: Line2D = $ClosestPointOnTrack
+
+@onready var arrow: Sprite2D = $Arrow
+
+func _ready() -> void:
+	super._ready()
+	
+	sequential_sensors = []
+	sequential_sensors.append_array($Sensors/AnchorFL.get_children())
+	sequential_sensors.append_array($Sensors/AnchorBL.get_children())
+	sequential_sensors.reverse()
+	sequential_sensors.append_array($Sensors/AnchorFR.get_children())
+	sequential_sensors.append_array($Sensors/AnchorBR.get_children())
+	print(sequential_sensors.size())
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	
+	#print("Lap progress: %4.3f" % get_lap_progress())
+	
+	sensor_vision.clear_points()
+	for s in sequential_sensors:
+		if s.is_colliding():
+			sensor_vision.add_point(to_local(s.get_collision_point()))
+		else:
+			sensor_vision.add_point(s.get_parent().position + s.target_position)
+	
+	if not track: return
+	
+	arrow.global_rotation = track.get_track_direction(global_position, 500) + PI
+	
+	closest_point_on_track.clear_points()
+	closest_point_on_track.add_point(Vector2.ZERO)
+	closest_point_on_track.add_point(to_local(track.trajectory.to_global(track.trajectory.curve.sample_baked(track.get_closest_trajectory_offset(global_position)))))
+
+
+func deactivate() -> void:
+	if deactivateable:
+		super.deactivate()
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("reset"):
+		reset(track.spawn_point)
+
+func get_user_inputs() -> Array[float]:
+	var inputs : Array[float] = []
+	inputs.resize(4)
+	inputs[UserInput.FORWARDS] = Input.get_action_strength("accelerate")
+	inputs[UserInput.REVERSE] = Input.get_action_strength("decelerate")
+	inputs[UserInput.TURN_LEFT] = Input.get_action_strength("turn_left")
+	inputs[UserInput.TURN_RIGHT] = Input.get_action_strength("turn_right")
+	return inputs
+
+
+
+func get_throttle_input() -> float:
+	return Input.get_axis("decelerate", "accelerate")
+
+func get_steering_input() -> float:
+	return Input.get_axis("turn_left", "turn_right")

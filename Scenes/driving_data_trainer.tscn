@@ -1,0 +1,109 @@
+[gd_scene load_steps=6 format=3 uid="uid://wdrm2ynsu72b"]
+
+[ext_resource type="Script" path="res://Scenes/driving_data_trainer.gd" id="1_wh7en"]
+[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="3_0yx6m"]
+[ext_resource type="PackedScene" uid="uid://t1n2bft1qmp3" path="res://components/neural_api_client.tscn" id="3_hf4jn"]
+[ext_resource type="Script" path="res://components/console_io_handler.gd" id="4_a12j7"]
+[ext_resource type="Script" path="res://components/server_io_handler.gd" id="5_ud2ef"]
+
+[node name="DrivingDataTrainer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wh7en")
+
+[node name="NeuralAPIClient" parent="." node_paths=PackedStringArray("io_handler") instance=ExtResource("3_hf4jn")]
+io_handler = NodePath("ConsoleIOHandler")
+
+[node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("3_0yx6m")
+num_inputs = 17
+num_outputs = 4
+hidden_layer_sizes = Array[int]([28, 14])
+activation_functions = Array[int]([0, 1, 1, 0])
+input_normalizers = Array[int]([1, 0, 0, 0])
+
+[node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("4_a12j7")
+autostart = true
+
+[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("5_ud2ef")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="StateLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "State: N/A"
+
+[node name="GenerationLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Generation: N/A"
+
+[node name="ErrorLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Error: N/A"
+
+[node name="TimeLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Elapsed Time: N/A"
+
+[node name="StartButton" type="Button" parent="."]
+layout_mode = 0
+anchor_left = 0.116319
+anchor_top = 0.842593
+anchor_right = 0.22309
+anchor_bottom = 0.932099
+text = "Start"
+metadata/_edit_use_anchors_ = true
+
+[node name="StopButton" type="Button" parent="."]
+layout_mode = 0
+anchor_left = 0.733507
+anchor_top = 0.847222
+anchor_right = 0.840278
+anchor_bottom = 0.936728
+text = "Stop"
+metadata/_edit_use_anchors_ = true
+
+[node name="SaveButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.259549
+anchor_top = 0.842593
+anchor_right = 0.36632
+anchor_bottom = 0.932099
+text = "Save"
+metadata/_edit_use_anchors_ = true
+
+[node name="ConnectButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.0173611
+anchor_top = 0.0308642
+anchor_right = 0.124132
+anchor_bottom = 0.12037
+text = "Connect"
+metadata/_edit_use_anchors_ = true
+
+[node name="RefreshTimer" type="Timer" parent="."]
+
+[node name="Node" type="Node" parent="."]
+
+[connection signal="pressed" from="StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="StopButton" to="." method="_on_stop_button_pressed"]
+[connection signal="pressed" from="SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="ConnectButton" to="." method="_on_connect_button_pressed"]
+[connection signal="timeout" from="RefreshTimer" to="." method="_on_refresh_timer_timeout"]

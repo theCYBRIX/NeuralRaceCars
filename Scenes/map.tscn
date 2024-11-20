@@ -1,0 +1,138 @@
+[gd_scene load_steps=5 format=3 uid="uid://cw33bt0wsf2ad"]
+
+[ext_resource type="Script" path="res://Scenes/map.gd" id="1_47awj"]
+[ext_resource type="PackedScene" uid="uid://c33sfflw13k51" path="res://Scenes/neural_car_manager.tscn" id="5_5w0bi"]
+[ext_resource type="PackedScene" uid="uid://bji248xsn4q3q" path="res://Scenes/UI/graph.tscn" id="5_yp4wm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6ewf7"]
+size = Vector2(717.159, 203.01)
+
+[node name="Track1" type="Node2D"]
+script = ExtResource("1_47awj")
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(-40, -58)
+rotation = -1.44164
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+build_mode = 1
+polygon = PackedVector2Array(-444, 1005, 484, 1239, 1044, 1290, 1717, 1275, 2025, 1173, 2343, 990, 2549, 754, 2708, 409, 2732, 44, 2690, -315, 2540, -647, 2271, -896, 1966, -1096, 1562, -1225, 1199, -1243, 894, -1186, 661, -1042, 496, -806, 361, -387, 89, -309, -175, -324, -477, -479, -689, -665, -965, -758, -1228, -734, -1507, -644, -1725, -444, -1824, -228, -1818, 8, -1791, 296, -1653, 526, -1270, 808, -839, 891)
+
+[node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="StaticBody2D"]
+build_mode = 1
+polygon = PackedVector2Array(-716, 496, 430, 772, 1331, 811, 1840, 646, 2115, 263, 2043, -117, 1882, -459, 1582.87, -591.513, 1238, -611, 1098, -372, 1035, 59, 753, 284, 95, 260, -369, 131, -857, -126, -1031, -279, -1279, -273, -1399, -87, -1354, 191, -1138, 383)
+
+[node name="NeuralCarManager" parent="." node_paths=PackedStringArray("spawn_point") instance=ExtResource("5_5w0bi")]
+spawn_point = NodePath("../SpawnPoint")
+num_networks = 200
+parent_selection = 4
+num_inputs = 15
+num_outputs = 15
+hidden_layer_sizes = Array[int]([28])
+activation_functions = Array[int]([0, 1, 1])
+input_normalizers = Array[int]([1, 0, 0])
+
+[node name="Checkpoints" type="Area2D" parent="."]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-435.478, -181.925)
+rotation = -1.20079
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-1006, -499)
+rotation = -1.20079
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-1526, -315)
+rotation = -2.48186
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-1438, 394)
+rotation = 2.20086
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-795, 711)
+rotation = 1.88146
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(125, 938)
+rotation = 1.88146
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D7" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(1290, 1047)
+rotation = 1.56207
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D8" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(2378, 383)
+rotation = 0.280998
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D9" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(2130, -630)
+rotation = -0.748746
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D10" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(1271, -916)
+rotation = -1.62839
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D11" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(762, -463)
+rotation = -2.82918
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CollisionShape2D12" type="CollisionShape2D" parent="Checkpoints"]
+position = Vector2(-48, -45)
+rotation = -1.38928
+shape = SubResource("RectangleShape2D_6ewf7")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_right = 98.0
+offset_bottom = 45.0
+text = "Generation: 1"
+
+[node name="TimerLabel" type="Label" parent="CanvasLayer"]
+offset_top = 30.0
+offset_right = 105.0
+offset_bottom = 75.0
+text = "Time remaining: "
+
+[node name="Graph" parent="CanvasLayer" instance=ExtResource("5_yp4wm")]
+anchors_preset = -1
+anchor_left = 0.715278
+anchor_top = 0.0138889
+anchor_right = 0.996528
+anchor_bottom = 0.388889
+resolution = 1000
+metadata/_edit_use_anchors_ = true
+
+[node name="SaveButton" type="Button" parent="CanvasLayer"]
+anchors_preset = -1
+anchor_left = 0.00607639
+anchor_top = 0.944444
+anchor_right = 0.0746528
+anchor_bottom = 0.992284
+offset_bottom = -1.0
+text = "Save"
+metadata/_edit_use_anchors_ = true
+
+[connection signal="reset" from="NeuralCarManager" to="." method="_on_neural_car_manager_reset"]
+[connection signal="spawned" from="NeuralCarManager" to="." method="_on_neural_car_manager_spawned"]
+[connection signal="body_shape_entered" from="Checkpoints" to="." method="_on_checkpoints_body_shape_entered"]
+[connection signal="pressed" from="CanvasLayer/SaveButton" to="." method="_on_save_button_pressed"]

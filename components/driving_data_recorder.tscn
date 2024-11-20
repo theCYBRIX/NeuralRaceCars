@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b46xjd0plastg"]
+
+[ext_resource type="Script" path="res://components/driving_data_recorder.gd" id="1_rwowo"]
+
+[node name="DrivingDataRecorder" type="Node"]
+script = ExtResource("1_rwowo")

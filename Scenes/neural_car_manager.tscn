@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://c33sfflw13k51"]
+
+[ext_resource type="Script" path="res://Scenes/neural_car_manager.gd" id="1_lrblp"]
+
+[node name="NeuralCarManager" type="Node"]
+script = ExtResource("1_lrblp")
+
+[node name="NeuralCars" type="Node" parent="."]
+
+[node name="GenerationTimer" type="Timer" parent="."]
+wait_time = 60.0
+
+[connection signal="timeout" from="GenerationTimer" to="." method="_on_timer_timeout"]

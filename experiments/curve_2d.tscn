@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://cudsbvwu3t5vy"]
+
+[ext_resource type="Script" path="res://experiments/Curve2D.gd" id="1_867p8"]
+
+[node name="Curve2D" type="Node2D"]
+script = ExtResource("1_867p8")
+
+[node name="A" type="Marker2D" parent="."]
+position = Vector2(-131, -208)
+
+[node name="B" type="Marker2D" parent="."]
+position = Vector2(137, 152)
+
+[node name="Bezier" type="Marker2D" parent="."]
+position = Vector2(194, -167)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]

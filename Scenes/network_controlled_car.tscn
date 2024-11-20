@@ -1,0 +1,82 @@
+[gd_scene load_steps=5 format=3 uid="uid://brc0n71wqkx1f"]
+
+[ext_resource type="PackedScene" uid="uid://6yghlai5jgs6" path="res://Scenes/car.tscn" id="1_os6oc"]
+[ext_resource type="Script" path="res://Scenes/network_controlled_car.gd" id="2_xd58w"]
+[ext_resource type="Shader" path="res://shaders/color_replace.gdshader" id="3_stgws"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4tw2h"]
+resource_local_to_scene = true
+shader = ExtResource("3_stgws")
+shader_parameter/target_color = Color(0, 1, 0, 1)
+shader_parameter/replacement_color = Color(0.839216, 0, 0, 1)
+shader_parameter/color_thresh = 0.75
+
+[node name="NetworkControlledCar" instance=ExtResource("1_os6oc")]
+contact_monitor = true
+max_contacts_reported = 1
+script = ExtResource("2_xd58w")
+num_network_inputs = 17
+
+[node name="Sprite" parent="." index="1"]
+material = SubResource("ShaderMaterial_4tw2h")
+
+[node name="Sensors" type="Node2D" parent="." index="3"]
+visible = false
+
+[node name="AnchorFL" type="Node2D" parent="Sensors" index="0"]
+position = Vector2(-31, -70)
+metadata/_edit_group_ = true
+
+[node name="RayCastL1" type="RayCast2D" parent="Sensors/AnchorFL" index="0"]
+target_position = Vector2(0, -1750)
+
+[node name="RayCastL2" type="RayCast2D" parent="Sensors/AnchorFL" index="1"]
+target_position = Vector2(-285, -1580)
+
+[node name="RayCastL3" type="RayCast2D" parent="Sensors/AnchorFL" index="2"]
+target_position = Vector2(-545, -1280)
+
+[node name="RayCastL4" type="RayCast2D" parent="Sensors/AnchorFL" index="3"]
+target_position = Vector2(-815, -785)
+
+[node name="RayCastL5" type="RayCast2D" parent="Sensors/AnchorFL" index="4"]
+target_position = Vector2(-860, 0)
+
+[node name="AnchorFR" type="Node2D" parent="Sensors" index="1"]
+position = Vector2(31, -70)
+metadata/_edit_group_ = true
+
+[node name="RayCastR1" type="RayCast2D" parent="Sensors/AnchorFR" index="0"]
+target_position = Vector2(0, -1750)
+
+[node name="RayCastR2" type="RayCast2D" parent="Sensors/AnchorFR" index="1"]
+target_position = Vector2(285, -1580)
+
+[node name="RayCastR3" type="RayCast2D" parent="Sensors/AnchorFR" index="2"]
+target_position = Vector2(545, -1280)
+
+[node name="RayCastR4" type="RayCast2D" parent="Sensors/AnchorFR" index="3"]
+target_position = Vector2(815, -785)
+
+[node name="RayCastR5" type="RayCast2D" parent="Sensors/AnchorFR" index="4"]
+target_position = Vector2(860, 0)
+
+[node name="AnchorBL" type="Node2D" parent="Sensors" index="2"]
+position = Vector2(-33, 63)
+metadata/_edit_group_ = true
+
+[node name="RayCastL6" type="RayCast2D" parent="Sensors/AnchorBL" index="0"]
+target_position = Vector2(-860, 0)
+
+[node name="AnchorBR" type="Node2D" parent="Sensors" index="3"]
+position = Vector2(34, 63)
+metadata/_edit_group_ = true
+
+[node name="RayCastR6" type="RayCast2D" parent="Sensors/AnchorBR" index="0"]
+target_position = Vector2(860, 0)
+
+[node name="CheckpointTimer" type="Timer" parent="." index="4"]
+wait_time = 5.0
+autostart = true
+
+[connection signal="timeout" from="CheckpointTimer" to="." method="_on_checkpoint_timer_timeout"]
