@@ -10,7 +10,7 @@ const THROTTLE_NODE = 1
 @onready var sensors: Node2D = $Sensors
 @onready var checkpoint_timer: Timer = $CheckpointTimer
 
-@export var num_network_inputs : int = 17
+@export var num_network_inputs : int = 15
 
 var id : int
 var active : bool = true
@@ -131,21 +131,29 @@ func interpret_model_outputs(outputs : Array):
 
 
 func get_sensor_data() -> Array[float]:
+
+	var index : int = -1
 	
 	if moving_forwards:
-		inputs[0] = linear_velocity.length() / max_forward_speed
-		inputs[1] = linear_velocity.angle()
+		index += 1
+		inputs[index] = linear_velocity.length() / max_forward_speed
+		#index += 1
+		#inputs[index] = linear_velocity.angle() - rotation
 	elif moving:
-		inputs[0] = -(linear_velocity.length() / max_reverse_speed)
-		inputs[1] = linear_velocity.angle()
+		index += 1
+		inputs[index] = -(linear_velocity.length() / max_reverse_speed)
+		#index += 1
+		#inputs[index] = linear_velocity.angle() - rotation
 	else:
-		inputs[0] = 0
-		inputs[1] = 0
+		index += 1
+		inputs[index] = 0
+		#index += 1
+		#inputs[index] = 0
 	
-	inputs[2] = angular_velocity / PI
-	inputs[3] = rotation
-
-	var index : int = 3
+	index += 1
+	inputs[index] = angular_velocity / PI
+	index += 1
+	inputs[index] = rotation
 
 	for sensor : RayCast2D in sensor_list:
 		index += 1

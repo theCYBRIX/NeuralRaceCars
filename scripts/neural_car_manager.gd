@@ -3,7 +3,9 @@ class_name NeuralCarManager
 extends Node
 
 signal reset
-signal new_generation
+signal randomizing_networks
+signal networks_randomized
+signal new_generation(generation : int)
 signal spawned(car : NeuralCar)
 signal generation_countown_updatad(remaining_sec : int)
 
@@ -11,6 +13,7 @@ signal network_outputs_received(data : Dictionary)
 signal network_inputs_set
 
 const INPUT_THRESH : float = 0.5
+const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @export var enabled : bool = true
 @export var load_saved_networks : bool = false
@@ -18,26 +21,39 @@ const INPUT_THRESH : float = 0.5
 @export var api_client : NeuralAPIClient : set = set_api_client
 @export var track : BaseTrack : set = set_track
 
+@export var save_failed_networks := true
+@export var failed_gen_score_thresh : float = 0.6
+@export var network_save_count : int = 200
+
 @export_group("Training Parameters")
 @export_range(0, 1000) var num_networks : int : set = set_num_networks
-@export var batch_size : int = 50
+@export var gens_without_improvement_limit : int = 100
+@export var batch_size : int = 50 : set = set_batch_size
+@export var dynamic_batch := true
 
 @export var parent_selection : NeuralAPIClient.ParentSelection
 
-@onready var timer: Timer = $GenerationTimer
+@onready var generation_timer: Timer = $GenerationTimer
 
 @onready var neural_cars: Node = $NeuralCars
 
 var neural_car : PackedScene = preload("res://Scenes/network_controlled_car.tscn")
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
+var batch_manager : BatchManager = BatchManager.new(batch_size)
+
+var network_ids : Array
+var id_queue_index : int = 0
+var id_queue_semaphore := Semaphore.new()
 
 var network_scores : Dictionary = {}
-var network_ids : Array = []
 
-var batch_start_index : int = 0
 var cars_active_mutex : Mutex = Mutex.new()
 var cars_active : int = 0
+
+var generation : int = 0
+var gens_without_improvement : int = 0
+var improvement_flag : bool = false
 
 var network_outputs : Array[Array]
 
@@ -47,9 +63,14 @@ var highscore_mutex : Mutex = Mutex.new()
 var api_connected : bool = false
 var api_configured : bool = false
 
+var batch_update_semaphore := Semaphore.new()
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	batch_update_semaphore.post()
+	id_queue_semaphore.post()
+	
 	set_process(false)
 	
 	if Engine.is_editor_hint():
@@ -58,6 +79,19 @@ func _ready() -> void:
 	
 	if enabled:
 		__update_car_count() 
+
+
+func pause():
+	set_process(false)
+	generation_timer.set_paused(true)
+
+
+func resume():
+	if api_connected and api_configured:
+		set_process(true)
+		if not dynamic_batch: generation_timer.set_paused(false)
+	else:
+		push_error("Unable to resume: API is not connected.")
 
 
 func get_reward(car : NeuralCar) -> float:
@@ -71,10 +105,10 @@ func get_reward(car : NeuralCar) -> float:
 	
 	if car.active:
 		track_progress = car.laps_completed + track.get_lap_progress(car.global_position, car.checkpoint_index)
-		rotation_bonus = get_rotation_bonus(car.global_position, car.global_rotation)
+		#rotation_bonus = get_rotation_bonus(car.global_position, car.global_rotation)
 	else:
 		track_progress = car.laps_completed + track.get_lap_progress(car.final_pos, car.checkpoint_index)
-		rotation_bonus = get_rotation_bonus(car.final_pos, car.final_rotation)
+		#rotation_bonus = get_rotation_bonus(car.final_pos, car.final_rotation)
 	
 	score += track_progress
 	score += rotation_bonus
@@ -112,6 +146,17 @@ func __add_neural_cars(num_cars : int):
 
 
 func on_car_deactivated(car : NeuralCar):
+	if dynamic_batch:
+		register_score(car)
+		
+		if id_queue_index < network_ids.size():
+			active_cars.erase(str(car.id))
+			reset_neural_car(network_ids[id_queue_index], car)
+			id_queue_index += 1
+			return
+		elif generation_timer.is_stopped():
+			generation_timer.start()
+			
 	decrement_active_count()
 	#if car.checkpoint_index > 1: car.score += (car.laps_completed + track.get_lap_progress(car.position)) * 10
 
@@ -127,26 +172,74 @@ func decrement_active_count():
 
 
 func start_next_batch():
-	var batch_scores : Dictionary = get_network_scores()
-	network_scores.merge(batch_scores, true)
+	if not batch_update_semaphore.try_wait(): return
 	
-	batch_start_index += batch_size
+	generation_timer.stop()
 	
-	if batch_start_index >= num_networks:
-		batch_start_index = 0
-		populate_new_generation()
-		#var values := network_scores.values()
-		#values.sort()
-		#print(values)
+	if not dynamic_batch:
+		var batch_scores : Dictionary = get_network_scores()
+		network_scores.merge(batch_scores, true)
+	else:
+		generation_countown_updatad.emit(generation_timer.wait_time)
 	
+	#if network_scores.size() >= num_networks:
+		#var keys := network_scores.keys()
+		#var start : int = int(keys[0])
+		#for i in range(1, keys.size()):
+			#var next := int(keys[i])
+			#if next == start + 1:
+				#start = next
+				#continue
+			#pass
+	
+	if dynamic_batch or (not batch_manager.has_next()):
+		
+		if improvement_flag:
+			gens_without_improvement = 0
+		else:
+			gens_without_improvement += 1
+		
+		improvement_flag = false
+		
+		if gens_without_improvement >= gens_without_improvement_limit:
+			await populate_random_generation()
+		else:
+			await populate_new_generation()
+			#var values := network_scores.values()
+			#values.sort()
+			#print(values)
 	reset_neural_cars()
-	timer.start()
+	if not dynamic_batch: generation_timer.start()
+	
+	batch_update_semaphore.post()
 
 
 func populate_new_generation():
-	var msg := api_client.populate_new_generation(network_scores)
-	if not msg.is_empty():
+	var msg := await api_client.populate_new_generation(network_scores)
+	#assert(not api_client.error_occurred())
+	if not api_client.error_occurred():
 		update_network_ids(msg)
+	on_new_generation_populated(msg)
+	network_scores.clear()
+	pass
+
+
+func populate_random_generation():
+	randomizing_networks.emit()
+	
+	if save_failed_networks:
+		if highest_score >= failed_gen_score_thresh:
+			save_networks(DEFAULT_SAVE_PATH, network_save_count, false)
+	
+	await api_client.populate_random_generation()
+	var msg := await api_client.populate_new_generation(network_scores)
+	assert(not api_client.error_occurred())
+	if not api_client.error_occurred():
+		update_network_ids(msg)
+		networks_randomized.emit()
+	generation = -1
+	gens_without_improvement = 0
+	highest_score = 0
 	on_new_generation_populated(msg)
 	network_scores.clear()
 
@@ -166,22 +259,20 @@ func instanciate_neural_car(index : int) -> NeuralCar:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	if not timer.is_stopped():
-		generation_countown_updatad.emit(timer.time_left)
+	if not generation_timer.is_stopped():
+		generation_countown_updatad.emit(generation_timer.time_left)
 	
 	if cars_active > 0:
 		var network_inputs : Dictionary = get_network_inputs()
 		var response : Dictionary = await get_network_outputs(network_inputs)
 		
-		if response.is_empty(): return
+		if api_client.error_occurred(): return
 		await set_neural_car_inputs(response["payload"]["networkOutputs"])
 
 
-func get_network_outputs(network_inputs : Dictionary) -> Signal:
-	var response : Dictionary = api_client.get_network_outputs(network_inputs)
-	call_thread_safe("emit_signal", "network_outputs_received", response)
-	
-	return network_outputs_received
+func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
+	var response : Dictionary = await api_client.get_network_outputs(network_inputs)
+	return response
 
 
 func set_neural_car_inputs(data : Dictionary) -> Signal:
@@ -211,7 +302,7 @@ func get_network_inputs() -> Dictionary:
 	for c : NeuralCar in cars:
 		if c.active:
 			var data := c.get_sensor_data()
-			data[16] = track.get_track_direction(c.global_position, 500)
+			#data[16] = track.get_track_direction(c.global_position, 500)
 			inputs[str(c.id)] = data
 	
 	#var mutex : Mutex = Mutex.new()
@@ -238,6 +329,11 @@ func get_network_scores() -> Dictionary:
 	return scores
 
 
+func register_score(car : NeuralCar):
+	network_scores[str(car.id)] = get_reward(car)
+
+
+
 func get_rotation_bonus(global_pos : Vector2, global_rotation : float) -> float:
 	const TWO_PI : float = PI * 2
 	var car_rotation : float = fmod(global_rotation + PI * 3.5, TWO_PI)
@@ -260,35 +356,56 @@ func on_network_score_changed(score : float):
 	highscore_mutex.lock()
 	if score > highest_score:
 		highest_score = score
+		improvement_flag = true
 	highscore_mutex.unlock()
 
 
 func on_new_generation_populated(_server_message: Dictionary) -> void:
-	new_generation.emit()
+	generation += 1
+	new_generation.emit(generation)
 
 
 func reset_neural_cars():
 	#highest_score = -INF
 	#print(cars.map(func(x): return x.get_score()).max())
 	if not track: return
+	#if batch_start_index == 50 or batch_start_index == 200:
+		#pass
 	
-	var car_index : int = batch_start_index
 	active_cars.clear()
 	
-	for c : NeuralCar in cars:
-		var network_id = network_ids[car_index]
-		c.id = network_id
-		active_cars[str(network_id)] = c
-		c.reset(track.spawn_point)
-		car_index += 1
+	var batch_ids : Array
+	if dynamic_batch:
+		batch_ids = network_ids.slice(0, batch_size)
+		id_queue_index = batch_size
+	else:
+		batch_ids = batch_manager.next_batch()
+	if batch_ids.is_empty(): return
+	
+	if cars.size() != batch_manager.batch_size:
+		__update_car_count()
+	
+	for index in range(batch_ids.size()):
+		var network_id := int(batch_ids[index])
+		var car := cars[index]
+		reset_neural_car(network_id, car)
 	
 	reset_active_count()
 	
 	reset.emit()
 
 
+func reset_neural_car(network_id : int, car : NeuralCar):
+	car.id = network_id
+	active_cars[str(network_id)] = car
+	car.reset(track.spawn_point)
+
+
 func update_network_ids(server_msg : Dictionary):
-	network_ids = server_msg["payload"]["networkIDs"]
+	if dynamic_batch:
+		network_ids = server_msg["payload"]["networkIDs"]
+	else:
+		batch_manager.set_elements(server_msg["payload"]["networkIDs"])
 
 
 func free_neural_cars():
@@ -300,20 +417,36 @@ func free_neural_cars():
 
 func _on_api_client_connected() -> void:
 	if not api_configured:
-		var response := api_client.setup_session(num_networks, parent_selection, load_networks() if load_saved_networks else [])
-		if not response.is_empty():
+		var response := await api_client.setup_session(num_networks, parent_selection, load_networks() if load_saved_networks else [])
+		
+		if not api_client.error_occurred():
 			update_network_ids(response)
 			on_server_configured()
+			
 	api_connected = true
 
 
+func set_batch_size(size : int):
+	batch_size = size
+	batch_manager.batch_size = size
 
-func save_networks(n : int):
-	var response := api_client.get_best_networks(n)
+
+func save_networks(path := DEFAULT_SAVE_PATH, n := num_networks, overwrite = false) -> void:
+	var response := await api_client.get_best_networks(n)
 	var networks : Array = response["payload"]["networks"]
-	var save_file = FileAccess.open("user://saved_networks.json", FileAccess.WRITE)
+	if not overwrite: path = make_path_unique(path)
+	var save_file = FileAccess.open(path, FileAccess.WRITE)
 	save_file.store_string(JSON.stringify(networks))
 	save_file.close()
+
+
+func make_path_unique(path := DEFAULT_SAVE_PATH):
+	var duplicate_number : int = 0
+	var unique_path := path
+	while FileAccess.file_exists(unique_path):
+		duplicate_number += 1
+		unique_path = path + ("(%d)" % duplicate_number)
+	return path
 
 
 func load_networks() -> Array:
@@ -328,7 +461,7 @@ func load_networks() -> Array:
 func _on_api_client_disconnected() -> void:
 	api_connected = false
 	set_process(false)
-	timer.stop()
+	generation_timer.stop()
 
 
 func _on_api_client_connection_error() -> void:
@@ -339,11 +472,10 @@ func _on_api_client_connection_error() -> void:
 func on_server_configured() -> void:
 	api_configured = true
 	if not enabled: return
-	
 	reset.emit()
 	reset_neural_cars()
 	set_process(true)
-	timer.start()
+	if not dynamic_batch: generation_timer.start()
 
 
 class NetworkDataPacket:
@@ -365,7 +497,7 @@ class NetworkScorePacket:
 
 
 func _on_timer_timeout() -> void:
-	timer.stop()
+	generation_timer.stop()
 	start_next_batch()
 
 

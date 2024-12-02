@@ -11,9 +11,14 @@ config_version=5
 [application]
 
 config/name="CarGame"
-run/main_scene="res://Scenes/game_area.tscn"
+run/main_scene="res://scenes/game_area.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
+run/max_fps=60
 config/icon="res://icon.svg"
+
+[display]
+
+window/subwindows/embed_subwindows=false
 
 [input]
 

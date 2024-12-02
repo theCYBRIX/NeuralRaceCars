@@ -38,7 +38,7 @@ func _process(delta: float) -> void:
 
 
 func _on_refresh_timer_timeout() -> void:
-	var response := api_client.get_training_status()
+	var response := await api_client.get_training_status()
 	if response.is_empty() or not response.has("payload"): return
 	var status : Dictionary = response["payload"]
 	if status.has("state"):
@@ -105,7 +105,7 @@ func _on_connect_button_pressed() -> void:
 
 
 func save_networks(n : int = num_networks):
-	var networks : Array = api_client.get_best_networks(n)["networks"]
+	var networks : Array = (await api_client.get_best_networks(n))["networks"]
 	var save_file = FileAccess.open("user://saved_networks.json", FileAccess.WRITE)
 	save_file.store_string(JSON.stringify(networks))
 	save_file.close()

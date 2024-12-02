@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://wwxjsmtitoor"]
+
+[ext_resource type="Script" path="res://scripts/popout_window.gd" id="1_y24l8"]
+
+[node name="PopoutWindow" type="Window"]
+disable_3d = true
+script = ExtResource("1_y24l8")
+
+[connection signal="close_requested" from="." to="." method="close" flags=3]

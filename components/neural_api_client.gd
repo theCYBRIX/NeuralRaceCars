@@ -6,7 +6,8 @@ extends Node
 const EMPTY_PATH := NodePath()
 
 @export var io_handler : IOHandler
-var io_mutex : Mutex = Mutex.new()
+@export var print_error_stack_trace := true
+var error_flag : bool = false
 
 var layout_generator_path : NodePath = EMPTY_PATH : set = set_layout_generator_path
 
@@ -27,9 +28,11 @@ func _ready() -> void:
 
 
 func populate_new_generation(network_scores : Dictionary) -> Dictionary:
-	send_request("create_new_generation", { "networkScores" : network_scores })
-	var response : Dictionary = read()
-	return response
+	return await request("create_new_generation", { "networkScores" : network_scores })
+
+
+func populate_random_generation() -> Dictionary:
+	return await request("randomize_networks")
 
 
 func setup_session(num_networks : int, parent_selector : ParentSelection, initial_networks : Array) -> Dictionary:
@@ -43,8 +46,8 @@ func setup_session(num_networks : int, parent_selector : ParentSelection, initia
 	payload["numNetworks"] = network_count
 	payload["parentSelector"] = ParentSelection.keys()[parent_selector]
 	if initial_networks: payload["initialNetworks"] = initial_networks
-	send_request("setup", payload)
-	var response : Dictionary = read()
+	
+	var response : Dictionary = await request("setup", payload)
 	
 	return response; 
 
@@ -54,33 +57,26 @@ func set_layout_generator_path(path : NodePath):
 	update_configuration_warnings()
 
 func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
-	send_request("process_inputs", { "networkInputs" : network_inputs })
-	var outputs : Dictionary = read()
-	return outputs
+	return await request("process_inputs", { "networkInputs" : network_inputs })
 
 
 func get_best_networks(num_networks : int) -> Dictionary:
-	send_request("get_best_networks", { "numRequested" : num_networks})
-	var networks : Dictionary = read()
-	return networks
+	return await request("get_best_networks", { "numRequested" : num_networks})
 
 
 func train_on_dataset(dataset : DrivingData):
-	send_request("train_on_dataset", { "inputs" : dataset.inputs, "outputs" : dataset.outputs })
-	read()
+	request("train_on_dataset", { "inputs" : dataset.inputs, "outputs" : dataset.outputs })
 
 
 func get_training_status() -> Dictionary:
-	send_request("get_training_state")
-	return read()
+	return await request("get_training_state")
 
 
 func stop_training():
-	send_request("stop_training")
-	read()
+	request("stop_training")
 
 
-func send_request(request : String, payload : Dictionary = {}) -> void:
+func request(request : String, payload : Dictionary = {}) -> Dictionary:
 	var packet : Dictionary = {
 		"request" : request,
 	}
@@ -88,39 +84,34 @@ func send_request(request : String, payload : Dictionary = {}) -> void:
 	if not payload.is_empty():
 		packet["payload"] = payload
 	
-	io_mutex.lock()
-	io_handler.write(JSON.stringify(packet, "", true, true))
-	io_mutex.unlock()
-
-
-func send(data : Dictionary) -> void:
-	io_mutex.lock()
-	io_handler.write(JSON.stringify(data, "", true, true))
-	io_mutex.unlock()
-
-
-func read() -> Dictionary:
-	io_mutex.lock()
-	var raw_response : String = io_handler.read()
-	raw_response = raw_response.replace("NaN", "-1")
+	var raw_response : String = await io_handler.query(JSON.stringify(packet, "", true, true)) #Sending and recieving
+	raw_response = raw_response.replace("NaN", "0")
 	var response : Dictionary = JSON.parse_string(raw_response)
 
-	if is_error(response):
+	if not response or (response["status"] == "error"):
 		var error : String
-		if response.has("payload"):
-			var payload : Dictionary = response["payload"]
-			error = payload["message"] if payload.has("message") else "Server Error"
-			if payload.has("details"): error += " " + payload["details"]
+		
+		if not response:
+			error = "Failed to parse response.\n Response was:\"%s\"" % raw_response
+		
+		elif response.has("payload"):
+			var response_payload : Dictionary = response["payload"]
+			error = response_payload["message"] if response_payload.has("message") else "Server Error"
+			if response_payload.has("details"): error += " " + response_payload["details"]
+			if print_error_stack_trace and response_payload.has("stackTrace"): error += "\n" + response_payload["stackTrace"]
+		#print(payload["networkScores"])
 		push_error(error)
 		printerr(error)
-		response = {}
+		
+		error_flag = true
+	else:
+		error_flag = false
 	
-	io_mutex.unlock()
 	return response
 
 
-func is_error(message : Dictionary) -> bool:
-	return (message["status"] == "error")
+func error_occurred() -> bool:
+	return error_flag
 
 
 func _notification(what: int) -> void:

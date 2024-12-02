@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b600ssbgmtj34"
-path="res://.godot/imported/track_tiles.png-3deacb091cd384f4ff824071cd3bb2ea.ctex"
+uid="uid://du7gy501uoka6"
+path="res://.godot/imported/Model 3.png-db0992ff43a546e37f9c9f446a8cd3c5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/track_tiles.png"
-dest_files=["res://.godot/imported/track_tiles.png-3deacb091cd384f4ff824071cd3bb2ea.ctex"]
+source_file="res://assets/Model 3.png"
+dest_files=["res://.godot/imported/Model 3.png-db0992ff43a546e37f9c9f446a8cd3c5.ctex"]
 
 [params]
 

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bo3ui0wlk1dqt"]
 
 [ext_resource type="Script" path="res://components/camera_manager.gd" id="1_i01r3"]
-[ext_resource type="PackedScene" uid="uid://c6afl8m87cwgr" path="res://Scenes/free_camera.tscn" id="2_iy7yc"]
+[ext_resource type="PackedScene" uid="uid://c6afl8m87cwgr" path="res://scenes/free_camera.tscn" id="2_iy7yc"]
 
 [node name="CameraManager" type="Node"]
 script = ExtResource("1_i01r3")
