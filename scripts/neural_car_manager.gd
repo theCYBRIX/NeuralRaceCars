@@ -26,7 +26,7 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 @export var network_save_count : int = 200
 
 @export_group("Training Parameters")
-@export_range(0, 1000) var num_networks : int : set = set_num_networks
+@export_range(0, 5000) var num_networks : int : set = set_num_networks
 @export var gens_without_improvement_limit : int = 100
 @export var batch_size : int = 50 : set = set_batch_size
 @export var dynamic_batch := true

@@ -4,7 +4,6 @@
 
 [node name="NeuralCarManager" type="Node"]
 script = ExtResource("1_lrblp")
-dynamic_batch = null
 
 [node name="NeuralCars" type="Node" parent="."]
 

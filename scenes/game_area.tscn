@@ -37,12 +37,8 @@ print_error_stack_trace = false
 
 [node name="NeuralCarManager" parent="NeuralAPIClient" node_paths=PackedStringArray("api_client") instance=ExtResource("1_jkvqb")]
 api_client = NodePath("..")
-save_failed_networks = null
-failed_gen_score_thresh = null
-network_save_count = null
-num_networks = 1000
+num_networks = 1500
 gens_without_improvement_limit = 50
-dynamic_batch = true
 parent_selection = 4
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]

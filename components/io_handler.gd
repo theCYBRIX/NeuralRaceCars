@@ -7,10 +7,6 @@ signal connected
 signal disconnected
 signal connection_error
 
-signal data_received(data : String)
-
-var io_mutex : Mutex = Mutex.new()
-
 
 func read() -> String:
 	return ""
@@ -18,16 +14,9 @@ func read() -> String:
 func write(msg : String) -> void:
 	pass
 
-func query(msg : String) -> Signal:
-	io_mutex.lock()
-	
+func query(msg : String) -> String:
 	write(msg)
-	var data := read()
-	
-	io_mutex.unlock()
-	
-	call_deferred("emit_signal", "data_received", data)
-	return data_received 
+	return read()
 
 func is_running() -> bool:
 	return false
