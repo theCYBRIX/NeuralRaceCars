@@ -2,7 +2,7 @@ class_name GraphSeries
 extends RefCounted
 
 
-const LEGEND_ITEM : PackedScene = preload("res://Scenes/UI/graph_legend_item.tscn")
+const LEGEND_ITEM : PackedScene = preload("res://scenes/ui/graph_legend_item.tscn")
 const POINTS_REDUCTION_THRESH : int = 200
 
 var parent_graph : DataGraph

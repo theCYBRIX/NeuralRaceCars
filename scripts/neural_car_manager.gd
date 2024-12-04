@@ -37,7 +37,7 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @onready var neural_cars: Node = $NeuralCars
 
-var neural_car : PackedScene = preload("res://Scenes/network_controlled_car.tscn")
+var neural_car : PackedScene = preload("res://scenes/network_controlled_car.tscn")
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
 var batch_manager : BatchManager = BatchManager.new(batch_size)
