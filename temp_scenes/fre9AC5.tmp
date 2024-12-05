@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://c6afl8m87cwgr"]
-
-[ext_resource type="Script" path="res://Scenes/free_camera.gd" id="1_fojmr"]
-
-[node name="FreeCamera" type="Camera2D"]
-script = ExtResource("1_fojmr")
