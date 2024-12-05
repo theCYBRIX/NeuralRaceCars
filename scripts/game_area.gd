@@ -211,10 +211,7 @@ func _on_browse_button_pressed() -> void:
 	browse_save_folder()
 
 func browse_save_folder():
-	var current_path := save_path_edit.get_text()
-	
-	if (not current_path.is_empty()) and current_path.is_relative_path():
-		current_path = ProjectSettings.globalize_path(current_path)
+	var current_path := get_selected_save_path()
 		
 	var dialog = FileDialog.new()
 	dialog.title = "Select save file"
@@ -238,8 +235,17 @@ func browse_save_folder():
 	dialog.confirmed.connect(dialog.queue_free, CONNECT_ONE_SHOT)
 	dialog.file_selected.connect(func(x): dialog.queue_free(), CONNECT_ONE_SHOT)
 	dialog.tree_exiting.connect(browse_button.set_disabled.bind(false), CONNECT_ONE_SHOT)
-	get_tree().get_root().add_child(dialog)
-	dialog.popup_centered()
+	#get_tree().get_root().add_child(dialog)
+	dialog.popup_exclusive(get_tree().get_root(), get_tree().get_root().get_visible_rect())
+
+func get_selected_save_path() -> String:
+	var current_path := save_path_edit.get_text()
+	
+	if (not current_path.is_empty()) and current_path.is_relative_path():
+		current_path = ProjectSettings.globalize_path(current_path)
+	
+	return current_path
+
 
 func localize_path(path : String) -> String:
 	if path.begins_with(USER_DATA_FOLDER):
@@ -247,3 +253,14 @@ func localize_path(path : String) -> String:
 	else:
 		path = ProjectSettings.localize_path(path)
 	return path
+
+
+func _on_file_manager_button_pressed() -> void:
+	var save_path := ProjectSettings.globalize_path(get_selected_save_path())
+	
+	if not FileAccess.file_exists(save_path) and not DirAccess.dir_exists_absolute(save_path):
+		save_path = save_path.get_base_dir()
+		if not DirAccess.dir_exists_absolute(save_path):
+			save_path = USER_DATA_FOLDER
+	
+	OS.shell_show_in_file_manager(save_path)

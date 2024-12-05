@@ -441,12 +441,15 @@ func save_networks(path := DEFAULT_SAVE_PATH, n := num_networks, overwrite = fal
 
 
 func make_path_unique(path := DEFAULT_SAVE_PATH):
+	var extension := path.get_extension()
+	if not extension.is_empty(): extension = "." + extension
+	var raw_path := path.get_basename()
 	var duplicate_number : int = 0
 	var unique_path := path
 	while FileAccess.file_exists(unique_path):
 		duplicate_number += 1
-		unique_path = path + ("(%d)" % duplicate_number)
-	return path
+		unique_path = raw_path + ("(%d)" % duplicate_number) + extension
+	return unique_path
 
 
 func load_networks() -> Array:
