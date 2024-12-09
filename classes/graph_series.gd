@@ -3,12 +3,11 @@ extends RefCounted
 
 
 const LEGEND_ITEM : PackedScene = preload("res://scenes/ui/graph_legend_item.tscn")
-const POINTS_REDUCTION_THRESH : int = 200
 
 var parent_graph : DataGraph
 
 var title : String
-var points : Array[float] = []
+var points : CircularBuffer
 var line2d : Line2D
 var legend_item : Control
 var data_supplier : Callable
@@ -17,14 +16,17 @@ var enabled : bool = true : set = set_enabled
 
 @warning_ignore("shadowed_global_identifier")
 var min : float = INF
-var min_index : int
+var min_index : int = 0
 @warning_ignore("shadowed_global_identifier")
 var max : float = -INF
-var max_index : int
+var max_index : int = 0
 
 @warning_ignore("shadowed_variable", "narrowing_conversion")
 func _init(title : String, color : Color, data_supplier : Callable, max_points : float) -> void:
 	self.title = title
+	
+	points = CircularBuffer.new(max_points)
+	
 	line2d = Line2D.new()
 	line2d.joint_mode = Line2D.LINE_JOINT_ROUND
 	
@@ -50,6 +52,7 @@ func _init(title : String, color : Color, data_supplier : Callable, max_points :
 	self.data_supplier = data_supplier
 	max_data_points = max_points
 
+
 func set_parent(graph : DataGraph):
 	if parent_graph:
 		parent_graph.release_series(self)
@@ -62,6 +65,7 @@ func clear():
 	min = INF
 	max = -INF
 
+
 func update(new_value : float = data_supplier.call()):
 	
 	if new_value <= min or new_value >= max:
@@ -70,39 +74,38 @@ func update(new_value : float = data_supplier.call()):
 			
 		if new_value <= min:
 			min = new_value
-			min_index = points.size()
+			min_index = points.size() % max_data_points
 		elif new_value >= max:
 			max = new_value
-			max_index = points.size()
-		
+			max_index = points.size() % max_data_points
+	
+	var value_removed := (points.size() == max_data_points)
+	
 	points.append(new_value)
 	
-	if points.size() > max_data_points:
-		var list_start : int = points.size() - max_data_points
-		if min_index < list_start or max_index < list_start:
-			update_extremes_in_range(list_start, points.size())
-		if list_start >= POINTS_REDUCTION_THRESH:
-			points = points.slice(list_start)
-			min_index -= list_start
-			max_index -= list_start
+	if value_removed and (points._start_index == max_index || points._start_index == min_index):
+		update_extremes()
+
 
 # start included, end excluded
-func update_extremes_in_range(start : int, end : int):
-	max = points[start]
-	min = points[start]
-	max_index = start
-	min_index = start
-	for i : int in range(start + 1, end):
-		if points[i] >= max:
-			max = points[i]
-			max_index = i
-		elif points[i] <= min:
-			min = points[i]
-			min_index = i
+func update_extremes():
+	var first_item = points.get_item(0)
+	max = first_item
+	min = first_item
+	var index : int = 0
+	for value : float in points:
+		if value >= max:
+			max = value
+			max_index = index
+		elif value <= min:
+			min = value
+			min_index = index
+		index += 1
 
 
 func toggle_enabled():
 	enabled = !enabled
+
 
 func set_enabled(state : bool):
 	if state == enabled: return
@@ -113,15 +116,6 @@ func set_enabled(state : bool):
 	else:
 		legend_item.modulate = Color(0.5, 0.5, 0.5, 0.5)
 
-
-func resize_points_list(new_size : int):
-	points = points.slice(points.size() - new_size, points.size())
-	refresh_extremes()
-
-
-func refresh_extremes():
-	max = points.max()
-	min = points.min()
 
 func free_resources():
 	line2d.queue_free()

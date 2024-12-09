@@ -30,6 +30,10 @@ track_scene = ExtResource("2_6sj2g")
 
 [node name="CameraManager" parent="." instance=ExtResource("3_elaeq")]
 
+[node name="CameraReparentCooldown" type="Timer" parent="."]
+wait_time = 0.5
+one_shot = true
+
 [node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler")]
 script = ExtResource("3_mf48n")
 io_handler = NodePath("ConsoleIOHandler")
@@ -45,8 +49,8 @@ parent_selection = 4
 script = ExtResource("5_eies5")
 num_inputs = 15
 num_outputs = 4
-hidden_layer_sizes = Array[int]([11, 8])
-activation_functions = Array[int]([0, 1, 1, 0])
+hidden_layer_sizes = Array[int]([16, 8])
+activation_functions = Array[int]([0, 1, 1, 2])
 input_normalizers = Array[int]([1, 0, 0, 0])
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
@@ -244,6 +248,7 @@ relative_position = true
 keep_size = true
 relative_size = true
 
+[connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
 [connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
 [connection signal="generation_countown_updatad" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_generation_countown_updatad"]
 [connection signal="networks_randomized" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_networks_randomized"]

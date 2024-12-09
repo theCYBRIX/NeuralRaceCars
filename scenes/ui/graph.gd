@@ -117,10 +117,11 @@ func redraw_graph():
 		if not s.enabled: continue
 		s.line2d.clear_points()
 		var index : int = s.points.size()
+		
 		for i in range(resolution, -1, -1):
 			index -= 1
 			if index < 0: break 
-			s.line2d.add_point(Vector2(i / float(resolution), 1 - ((s.points[index] - minimum) / value_range)) * graphing_area_size)
+			s.line2d.add_point(Vector2(i / float(resolution), 1 - ((s.points.get_item(index) - minimum) / value_range)) * graphing_area_size)
 	
 	min_label.set_text("%-3.2f" % minimum)
 	max_label.set_text("%-3.2f" % maximum)
@@ -162,10 +163,10 @@ func set_update_period(seconds : float):
 func _on_timer_timeout() -> void:
 	refresh()
 
-func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return (data is GraphSeries) and not (data in series.values())
 
-func _drop_data(at_position: Vector2, data: Variant) -> void:
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	if not (data is GraphSeries) or (data in series.values()): return
 	data.set_parent(self)
 	add(data)

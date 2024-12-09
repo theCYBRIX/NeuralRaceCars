@@ -17,6 +17,7 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @export var enabled : bool = true
 @export var load_saved_networks : bool = false
+@export_global_file("*.json") var network_load_path := DEFAULT_SAVE_PATH
 
 @export var api_client : NeuralAPIClient : set = set_api_client
 @export var track : BaseTrack : set = set_track
@@ -417,7 +418,7 @@ func free_neural_cars():
 
 func _on_api_client_connected() -> void:
 	if not api_configured:
-		var response := await api_client.setup_session(num_networks, parent_selection, load_networks() if load_saved_networks else [])
+		var response := await api_client.setup_session(num_networks, parent_selection, load_networks(network_load_path) if load_saved_networks else [])
 		
 		if not api_client.error_occurred():
 			update_network_ids(response)
@@ -452,8 +453,8 @@ func make_path_unique(path := DEFAULT_SAVE_PATH):
 	return unique_path
 
 
-func load_networks() -> Array:
-	var save_file = FileAccess.open("user://saved_networks.json", FileAccess.READ)
+func load_networks(save_path : String) -> Array:
+	var save_file = FileAccess.open(save_path, FileAccess.READ)
 	var file_contents = save_file.get_as_text()
 	save_file.close()
 	if save_file.get_error() != OK: return []

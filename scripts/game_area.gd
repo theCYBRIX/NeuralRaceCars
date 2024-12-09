@@ -11,6 +11,7 @@ var USER_DATA_FOLDER : String = ProjectSettings.globalize_path("user://")
 @onready var timer_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/TimerLabel
 @onready var graph: Control = $CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items/Graph
 @onready var camera_manager: CameraManager = $CameraManager
+@onready var camera_reparent_cooldown: Timer = $CameraReparentCooldown
 @onready var stat_screen: Control = $CanvasLayer/StatScreen
 @onready var popout_component: Node = $CanvasLayer/StatScreen/PopoutComponent
 @onready var popout_button: Button = $CanvasLayer/StatScreen/MarginContainer/Columns/VFlowContainer/PopoutButton
@@ -40,6 +41,8 @@ var since_randomized_int : int = 0
 var total_generations : int = 0
 var previous_id_queue_index : int = 0
 
+var best_network_id : int = 0
+
 func _process(delta: float) -> void:
 	total_time_elapsed += delta
 	var floored := floori(total_time_elapsed)
@@ -55,6 +58,11 @@ func _process(delta: float) -> void:
 	
 	if neural_car_manager.dynamic_batch and previous_id_queue_index != neural_car_manager.id_queue_index:
 		batch_label.set_text("Progress: %d/%d (%d%%)" % [neural_car_manager.id_queue_index, neural_car_manager.network_ids.size(), (float(neural_car_manager.id_queue_index) / neural_car_manager.network_ids.size()) * 100] )
+	
+	if camera_reparent_cooldown.is_stopped() and first_place_car and first_place_car.id != best_network_id: #ID changes when car is reset
+		camera_manager.stop_tracking()
+		camera_manager.camera.global_position = first_place_car.final_pos
+		camera_reparent_cooldown.start()
 
 
 func format_time(seconds : int) -> String:
@@ -107,6 +115,7 @@ func _ready() -> void:
 	
 	neural_car_manager.track = track
 	first_place_car = neural_car_manager.cars[0]
+	best_network_id = first_place_car.id
 	
 	neural_car_manager.ready.connect(_on_neural_car_manager_reset, CONNECT_ONE_SHOT)
 	
@@ -187,9 +196,26 @@ func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_check
 			if checkpoints_reached > highest_checkpoint:
 				highest_checkpoint = checkpoints_reached
 				if car != first_place_car:
-					first_place_car = car
-					camera_manager.start_tracking(car)
+					set_first_place_car(car)
+					camera_reparent_cooldown.stop()
 
+func set_first_place_car(car : NeuralCar):
+	if best_network_id == car.id: return
+	first_place_car = car
+	best_network_id = car.id
+	highest_checkpoint = car.checkpoint_index
+	camera_manager.start_tracking(car)
+	update_first_place_score()
+
+func update_first_place_car():
+	var max_score : float = -INF
+	var first_place : NeuralCar = first_place_car
+	for car : NeuralCar in neural_car_manager.active_cars.values():
+		var score := neural_car_manager.get_reward(car)
+		if score > max_score:
+			max_score = score
+			first_place = car
+	set_first_place_car(first_place_car)
 
 func _on_generation_countown_updatad(remaining_sec: int) -> void:
 	timer_label.set_text("Time Remaining: " + str(roundf(remaining_sec)))
@@ -264,3 +290,7 @@ func _on_file_manager_button_pressed() -> void:
 			save_path = USER_DATA_FOLDER
 	
 	OS.shell_show_in_file_manager(save_path)
+
+
+func _on_camera_reparent_cooldown_timeout() -> void:
+	update_first_place_car()

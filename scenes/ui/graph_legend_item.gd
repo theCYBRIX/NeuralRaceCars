@@ -49,7 +49,7 @@ func _on_mouse_exited() -> void:
 	held_down = false
 
 
-func _get_drag_data(at_position: Vector2) -> Variant:
+func _get_drag_data(_at_position: Vector2) -> Variant:
 	var cpb := ColorPickerButton.new()
 	cpb.color = color
 	cpb.size = Vector2(50, 50)
