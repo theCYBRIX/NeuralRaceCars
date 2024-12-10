@@ -41,7 +41,8 @@ var since_randomized_int : int = 0
 var total_generations : int = 0
 var previous_id_queue_index : int = 0
 
-var best_network_id : int = 0
+var best_network_id : int = -1
+var first_place_score : float = 0
 
 func _process(delta: float) -> void:
 	total_time_elapsed += delta
@@ -58,11 +59,6 @@ func _process(delta: float) -> void:
 	
 	if neural_car_manager.dynamic_batch and previous_id_queue_index != neural_car_manager.id_queue_index:
 		batch_label.set_text("Progress: %d/%d (%d%%)" % [neural_car_manager.id_queue_index, neural_car_manager.network_ids.size(), (float(neural_car_manager.id_queue_index) / neural_car_manager.network_ids.size()) * 100] )
-	
-	if camera_reparent_cooldown.is_stopped() and first_place_car and first_place_car.id != best_network_id: #ID changes when car is reset
-		camera_manager.stop_tracking()
-		camera_manager.camera.global_position = first_place_car.final_pos
-		camera_reparent_cooldown.start()
 
 
 func format_time(seconds : int) -> String:
@@ -105,8 +101,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func update_first_place_score() -> float:
-	var first_place_score := neural_car_manager.get_reward(first_place_car)
-	neural_car_manager.on_network_score_changed(first_place_score)
+	if camera_reparent_cooldown.is_stopped():
+		first_place_score = neural_car_manager.get_reward(first_place_car)
+		neural_car_manager.on_network_score_changed(first_place_score)
 	return first_place_score
 
 
@@ -114,8 +111,7 @@ func update_first_place_score() -> float:
 func _ready() -> void:
 	
 	neural_car_manager.track = track
-	first_place_car = neural_car_manager.cars[0]
-	best_network_id = first_place_car.id
+	set_first_place_car(neural_car_manager.cars[0])
 	
 	neural_car_manager.ready.connect(_on_neural_car_manager_reset, CONNECT_ONE_SHOT)
 	
@@ -195,27 +191,50 @@ func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_check
 				
 			if checkpoints_reached > highest_checkpoint:
 				highest_checkpoint = checkpoints_reached
-				if car != first_place_car:
+				if car.id != best_network_id:
 					set_first_place_car(car)
 					camera_reparent_cooldown.stop()
 
 func set_first_place_car(car : NeuralCar):
 	if best_network_id == car.id: return
+	if first_place_car and first_place_car.deactivated.is_connected(_on_first_place_car_deactevated):
+		first_place_car.deactivated.disconnect(_on_first_place_car_deactevated)
 	first_place_car = car
 	best_network_id = car.id
 	highest_checkpoint = car.checkpoint_index
+	first_place_car.deactivated.connect(_on_first_place_car_deactevated, CONNECT_ONE_SHOT)
 	camera_manager.start_tracking(car)
+	camera_reparent_cooldown.stop()
 	update_first_place_score()
 
 func update_first_place_car():
-	var max_score : float = -INF
-	var first_place : NeuralCar = first_place_car
+	var contenders : Array[NeuralCar] = []
+	var max_checkpoint_index : int = 0
 	for car : NeuralCar in neural_car_manager.active_cars.values():
+		if (not car.active) or (car.checkpoint_index < max_checkpoint_index): continue
+		if car.checkpoint_index > max_checkpoint_index:
+			max_checkpoint_index = car.checkpoint_index
+			contenders.clear()
+		contenders.append(car)
+	
+	if contenders.is_empty(): return
+	
+	var max_score : float = -1
+	var first_place : NeuralCar = contenders[0]
+	for car : NeuralCar in contenders:
+		if not car.active: continue
 		var score := neural_car_manager.get_reward(car)
 		if score > max_score:
 			max_score = score
 			first_place = car
 	set_first_place_car(first_place_car)
+
+
+func _on_first_place_car_deactevated():
+	camera_manager.stop_tracking()
+	camera_manager.camera.global_position = first_place_car.final_pos
+	camera_reparent_cooldown.start()
+
 
 func _on_generation_countown_updatad(remaining_sec: int) -> void:
 	timer_label.set_text("Time Remaining: " + str(roundf(remaining_sec)))

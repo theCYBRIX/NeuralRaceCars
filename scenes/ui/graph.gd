@@ -14,6 +14,7 @@ extends Control
 @export var show_legend : bool = true : set = set_show_legend
 @export var resolution : int = 100 : set = set_resolution
 @export var update_period : float = 0.2 : set = set_update_period
+@export var realtime : bool = false
 
 var series : Dictionary = {}
 
@@ -29,11 +30,13 @@ func _ready() -> void:
 	graphing_area_size = graphing_area.get_size()
 	legend.visible = show_legend
 	set_update_period(update_period)
+	if not realtime: update_timer.start()
 
 
 func _process(_delta: float) -> void:
+	update_series()
 	redraw_graph()
-	set_process(false)
+	if not realtime: set_process(false)
 
 
 func clear_data_points():
@@ -77,36 +80,13 @@ func release_series(s : GraphSeries):
 
 
 func refresh():
-	update_series()
 	call_deferred("set_process", true)
 
 func update_series():
-	var series_array : Array = series.values()
-	
-	maximum = -INF
-	minimum = INF
-	
-	for s : GraphSeries in series_array:
-		if s.points.size() - 20 > resolution:
-			s.resize_points_list(resolution)
-		
+	for s : GraphSeries in series.values():
 		s.update()
-		
-		if not s.enabled: continue
-		
-		if s.max > maximum:
-			maximum = s.max
-		if s.min < minimum:
-			minimum = s.min
 	
-	if maximum < minimum:
-		maximum = 1
-		minimum = -1
-	elif is_equal_approx(maximum, minimum):
-		maximum += 1
-		minimum -= 1 
-	
-	value_range = maximum - minimum
+	refresh_range()
 
 
 func redraw_graph():
@@ -134,6 +114,27 @@ func _on_graphing_area_resized() -> void:
 	redraw_graph()
 
 
+func refresh_range():
+	maximum = -INF
+	minimum = INF
+	for s : GraphSeries in series.values():
+		if not s.enabled: continue
+		
+		if s.max > maximum:
+			maximum = s.max
+		if s.min < minimum:
+			minimum = s.min
+	
+	if maximum < minimum:
+		maximum = 1
+		minimum = -1
+	elif is_equal_approx(maximum, minimum):
+		maximum += 1
+		minimum -= 1 
+	
+	value_range = maximum - minimum
+
+
 func redraw_borders() -> void:
 	top_border.clear_points()
 	top_border.add_point(Vector2.ZERO)
@@ -158,6 +159,14 @@ func set_update_period(seconds : float):
 	update_period = max(0.001, seconds)
 	if is_node_ready():
 		update_timer.set_wait_time(update_period)
+
+
+func set_realtime(enabled : bool):
+	if realtime == enabled: return
+	realtime = enabled
+	if is_node_ready():
+		update_timer.stop()
+		set_process(true)
 
 
 func _on_timer_timeout() -> void:

@@ -49,7 +49,7 @@ parent_selection = 4
 script = ExtResource("5_eies5")
 num_inputs = 15
 num_outputs = 4
-hidden_layer_sizes = Array[int]([16, 8])
+hidden_layer_sizes = Array[int]([16, 16])
 activation_functions = Array[int]([0, 1, 1, 2])
 input_normalizers = Array[int]([1, 0, 0, 0])
 

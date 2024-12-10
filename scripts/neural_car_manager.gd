@@ -102,7 +102,7 @@ func get_reward(car : NeuralCar) -> float:
 	#score += checkpoints_passed * 0.1
 	
 	var track_progress : float
-	var rotation_bonus : float
+	#var rotation_bonus : float
 	
 	if car.active:
 		track_progress = car.laps_completed + track.get_lap_progress(car.global_position, car.checkpoint_index)
@@ -112,7 +112,7 @@ func get_reward(car : NeuralCar) -> float:
 		#rotation_bonus = get_rotation_bonus(car.final_pos, car.final_rotation)
 	
 	score += track_progress
-	score += rotation_bonus
+	#score += rotation_bonus
 	
 	return score
 

@@ -110,7 +110,6 @@ process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 wait_time = 0.2
-autostart = true
 
 [connection signal="resized" from="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea" to="." method="_on_graphing_area_resized"]
 [connection signal="timeout" from="UpdateTimer" to="." method="_on_timer_timeout"]
