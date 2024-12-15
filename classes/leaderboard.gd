@@ -102,7 +102,6 @@ func _enter_tree() -> void:
 
 
 func set_car_manager(manager : NeuralCarManager):
-	print("manager set")
 	if neural_car_manager:
 		if neural_car_manager.instanciated.is_connected(add):
 			neural_car_manager.instanciated.disconnect(add)

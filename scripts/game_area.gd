@@ -44,13 +44,10 @@ var previous_id_queue_index : int = 0
 var best_network_id : int = -1
 var first_place_score : float = 0
 
-<<<<<<< Updated upstream
-=======
 var camera_reparent_cooldown_active := false
 var next_camera_target : NeuralCar
 var next_camera_target_set_flag := false
 
->>>>>>> Stashed changes
 func _process(delta: float) -> void:
 	total_time_elapsed += delta
 	var floored := floori(total_time_elapsed)
@@ -108,14 +105,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func update_first_place_score() -> float:
-<<<<<<< Updated upstream
-	if camera_reparent_cooldown.is_stopped():
-		first_place_score = neural_car_manager.get_reward(first_place_car)
-=======
 	var leader : NeuralCar = next_camera_target if next_camera_target_set_flag else first_place_car
 	if leader.active:
 		first_place_score = neural_car_manager.get_reward(leader)
->>>>>>> Stashed changes
 		neural_car_manager.on_network_score_changed(first_place_score)
 	return first_place_score
 
@@ -204,14 +196,8 @@ func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_check
 				
 			if checkpoints_reached > highest_checkpoint:
 				highest_checkpoint = checkpoints_reached
-<<<<<<< Updated upstream
-				if car.id != best_network_id:
-					set_first_place_car(car)
-					camera_reparent_cooldown.stop()
-=======
 				#if car.id != best_network_id:
 					#set_first_place_car(car)
->>>>>>> Stashed changes
 
 func set_first_place_car(car : NeuralCar):
 	if best_network_id == car.id: return
@@ -221,41 +207,8 @@ func set_first_place_car(car : NeuralCar):
 	best_network_id = car.id
 	highest_checkpoint = car.checkpoint_index
 	first_place_car.deactivated.connect(_on_first_place_car_deactevated, CONNECT_ONE_SHOT)
-<<<<<<< Updated upstream
-	camera_manager.start_tracking(car)
-	camera_reparent_cooldown.stop()
-	update_first_place_score()
+	camera_manager.start_tracking(first_place_car)
 
-func update_first_place_car():
-	var contenders : Array[NeuralCar] = []
-	var max_checkpoint_index : int = 0
-	for car : NeuralCar in neural_car_manager.active_cars.values():
-		if (not car.active) or (car.checkpoint_index < max_checkpoint_index): continue
-		if car.checkpoint_index > max_checkpoint_index:
-			max_checkpoint_index = car.checkpoint_index
-			contenders.clear()
-		contenders.append(car)
-	
-	if contenders.is_empty(): return
-	
-	var max_score : float = -1
-	var first_place : NeuralCar = contenders[0]
-	for car : NeuralCar in contenders:
-		if not car.active: continue
-		var score := neural_car_manager.get_reward(car)
-		if score > max_score:
-			max_score = score
-			first_place = car
-	set_first_place_car(first_place_car)
-
-
-func _on_first_place_car_deactevated():
-	camera_manager.stop_tracking()
-	camera_manager.camera.global_position = first_place_car.final_pos
-	camera_reparent_cooldown.start()
-=======
-	set_camera_target(car)
-	update_first_place_score()
 
 func update_first_place_car():
 	best_network_id = -1
@@ -297,7 +250,6 @@ func _on_first_place_car_deactevated():
 	#if not camera_manager.free_floating: camera_manager.camera.global_position = camera_position
 	
 	#update_first_place_car()
->>>>>>> Stashed changes
 
 
 func _on_generation_countown_updatad(remaining_sec: int) -> void:
@@ -375,10 +327,6 @@ func _on_file_manager_button_pressed() -> void:
 	OS.shell_show_in_file_manager(save_path)
 
 
-<<<<<<< Updated upstream
-func _on_camera_reparent_cooldown_timeout() -> void:
-	update_first_place_car()
-=======
 func set_camera_target(target : Node):
 	if camera_reparent_cooldown_active:
 		next_camera_target = target
@@ -396,6 +344,7 @@ func _on_camera_reparent_cooldown_timeout() -> void:
 		next_camera_target_set_flag = false
 		set_camera_target(next_camera_target)
 
+
 func start_camrera_reparent_cooldown():
 	camera_reparent_cooldown_active = true
 	camera_reparent_cooldown.start()
@@ -403,4 +352,3 @@ func start_camrera_reparent_cooldown():
 
 func _on_leaderboard_first_place_changed(new_first: Car, prev_first: Car) -> void:
 	set_first_place_car(new_first)
->>>>>>> Stashed changes
