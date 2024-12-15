@@ -2,13 +2,14 @@ class_name NeuralCar
 extends Car
 
 signal deactivated
-signal score_changed(score : float)
+signal checkpoint_updated(idx : int)
 
 const STEERING_NODE = 0
 const THROTTLE_NODE = 1
 
 @onready var sensors: Node2D = $Sensors
 @onready var checkpoint_timer: Timer = $CheckpointTimer
+@onready var label: Label = $Label
 
 @export var num_network_inputs : int = 15
 
@@ -17,7 +18,7 @@ var active : bool = true
 var final_pos : Vector2 = Vector2.ZERO
 var final_rotation : float = 0
 
-var checkpoint_index : int = -1
+var checkpoint_index : int = -1 : set = set_checkpoint
 var laps_completed : int = 0
 
 var steering_input : float
@@ -104,7 +105,7 @@ func interpret_model_outputs(outputs : Array):
 	var turn_left : float = clampf(outputs[3], 0, 1)
 	var turn_right : float = clampf(outputs[2], 0, 1)
 	
-	if forwards < 0.5 and backwards < 0.5:
+	if (forwards < 0.5 and backwards < 0.5) or is_equal_approx(forwards, backwards):
 		throttle_input = 0
 	else:
 		throttle_input = 1 if forwards > backwards else -1
@@ -205,3 +206,8 @@ func reset(location : Marker2D):
 
 func _on_checkpoint_timer_timeout() -> void:
 	deactivate()
+
+func set_checkpoint(idx : int):
+	if idx == checkpoint_index: return
+	checkpoint_index = idx
+	checkpoint_updated.emit(checkpoint_index)

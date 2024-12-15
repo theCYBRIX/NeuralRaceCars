@@ -8,6 +8,16 @@ script = ExtResource("1_i01r3")
 
 [node name="Camera" parent="." instance=ExtResource("2_iy7yc")]
 offset = Vector2(0, -200)
+<<<<<<< Updated upstream
 position_smoothing_speed = 20.0
+=======
+position_smoothing_enabled = true
+position_smoothing_speed = 5.0
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="."]
+remote_path = NodePath("../Camera")
+update_rotation = false
+update_scale = false
+>>>>>>> Stashed changes
 
 [connection signal="toggle_free_floating" from="Camera" to="." method="_on_camera_toggle_free_floating"]

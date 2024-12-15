@@ -6,8 +6,10 @@ signal reset
 signal randomizing_networks
 signal networks_randomized
 signal new_generation(generation : int)
-signal spawned(car : NeuralCar)
+signal instanciated(car : NeuralCar)
+signal destroyed(car : NeuralCar)
 signal generation_countown_updatad(remaining_sec : int)
+signal car_reset(car : NeuralCar)
 
 signal network_outputs_received(data : Dictionary)
 signal network_inputs_set
@@ -133,6 +135,7 @@ func __remove_neural_cars(num_cars : int):
 	while removed < num_cars:
 		var c : NeuralCar = cars.pop_back()
 		c.queue_free()
+		destroyed.emit(c)
 		removed += 1
 
 func __add_neural_cars(num_cars : int):
@@ -141,9 +144,10 @@ func __add_neural_cars(num_cars : int):
 	for i in range(current_car_count, cars.size()):
 		var c : NeuralCar = instanciate_neural_car(i)
 		c.deactivated.connect(on_car_deactivated.bind(c), CONNECT_DEFERRED)
-		c.score_changed.connect(on_network_score_changed, CONNECT_DEFERRED)
+		#c.score_changed.connect(on_network_score_changed, CONNECT_DEFERRED)
 		#c.body_color = Color(randf(), randf(), randf())
 		neural_cars.add_child(c, false, Node.INTERNAL_MODE_FRONT)
+		instanciated.emit(c)
 
 
 func on_car_deactivated(car : NeuralCar):
@@ -513,7 +517,7 @@ func set_api_client(client : NeuralAPIClient):
 	
 	api_client = client
 	
-	if api_client:
+	if api_client and not Engine.is_editor_hint():
 		api_client.io_handler.connected.connect(_on_api_client_connected, CONNECT_DEFERRED)
 		api_client.io_handler.disconnected.connect(_on_api_client_disconnected, CONNECT_DEFERRED)
 		api_client.io_handler.connection_error.connect(_on_api_client_connection_error, CONNECT_DEFERRED)

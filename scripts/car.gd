@@ -1,6 +1,8 @@
 class_name Car
 extends RigidBody2D
 
+signal state_reset
+
 const STEERING_THRESH : int = 300
 const STEERING_FORCE_MULTIPLIER : int = 70000000
 
@@ -103,3 +105,4 @@ func set_body_color(color : Color):
 
 func reset(location : Marker2D):
 	set_reset_state(location.position, location.rotation)
+	state_reset.emit()
