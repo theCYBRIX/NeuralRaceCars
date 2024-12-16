@@ -8,7 +8,6 @@ var USER_DATA_FOLDER : String = ProjectSettings.globalize_path("user://")
 @onready var neural_car_manager: NeuralCarManager = $NeuralAPIClient/NeuralCarManager
 @onready var gen_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/GenLabel
 @onready var batch_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/BatchLabel
-@onready var timer_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/TimerLabel
 @onready var graph: Control = $CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items/Graph
 @onready var camera_manager: CameraManager = $CameraManager
 @onready var camera_reparent_cooldown: Timer = $CameraReparentCooldown
@@ -189,13 +188,11 @@ func _on_save_button_pressed() -> void:
 
 func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_checkpoints: int, checkpoints : Area2D) -> void:
 	if car.active and car.moving_forwards:
-		if car.checkpoint_index + 1 == checkpoint_index:
-			car.checkpoint(checkpoint_index == (num_checkpoints - 1))
-			#print(car.checkpoint_index)
-			var checkpoints_reached : int = car.laps_completed * num_checkpoints + checkpoint_index
+		if ((car.checkpoint_index + 1) % num_checkpoints) == checkpoint_index:
+			car.checkpoint()
 				
-			if checkpoints_reached > highest_checkpoint:
-				highest_checkpoint = checkpoints_reached
+			if car.checkpoint_index > highest_checkpoint:
+				highest_checkpoint = car.checkpoint_index
 				#if car.id != best_network_id:
 					#set_first_place_car(car)
 
@@ -250,10 +247,6 @@ func _on_first_place_car_deactevated():
 	#if not camera_manager.free_floating: camera_manager.camera.global_position = camera_position
 	
 	#update_first_place_car()
-
-
-func _on_generation_countown_updatad(remaining_sec: int) -> void:
-	timer_label.set_text("Time Remaining: " + str(roundf(remaining_sec)))
 
 
 func _on_popout_button_pressed() -> void:

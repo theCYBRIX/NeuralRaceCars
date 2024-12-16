@@ -6,8 +6,3 @@
 script = ExtResource("1_lrblp")
 
 [node name="NeuralCars" type="Node" parent="."]
-
-[node name="GenerationTimer" type="Timer" parent="."]
-wait_time = 60.0
-
-[connection signal="timeout" from="GenerationTimer" to="." method="_on_timer_timeout"]

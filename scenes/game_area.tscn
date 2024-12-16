@@ -51,7 +51,7 @@ parent_selection = 4
 script = ExtResource("5_eies5")
 num_inputs = 15
 num_outputs = 4
-hidden_layer_sizes = Array[int]([16, 16])
+hidden_layer_sizes = Array[int]([24, 16])
 activation_functions = Array[int]([0, 1, 1, 2])
 input_normalizers = Array[int]([1, 0, 0, 0])
 
@@ -165,10 +165,6 @@ text = "Generation: --"
 layout_mode = 2
 text = "Batch Progress: --"
 
-[node name="TimerLabel" type="Label" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Time remaining: --"
-
 [node name="ImprovementLabel" type="Label" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Gens without improvement: --"
@@ -256,7 +252,6 @@ relative_size = true
 
 [connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
 [connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
-[connection signal="generation_countown_updatad" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_generation_countown_updatad"]
 [connection signal="networks_randomized" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_networks_randomized"]
 [connection signal="new_generation" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_car_manager_new_generation"]
 [connection signal="reset" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_reset"]

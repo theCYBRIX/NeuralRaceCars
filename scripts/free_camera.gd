@@ -54,4 +54,5 @@ func set_free_floating(floating : bool):
 	if free_floating == floating: return
 	free_floating = floating
 	set_process(free_floating)
+	position_smoothing_enabled = not free_floating
 	toggle_free_floating.emit(free_floating)

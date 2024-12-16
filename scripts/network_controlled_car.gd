@@ -9,6 +9,7 @@ const THROTTLE_NODE = 1
 
 @onready var sensors: Node2D = $Sensors
 @onready var checkpoint_timer: Timer = $CheckpointTimer
+@onready var lifetime_timer: Timer = $LifetimeTimer
 @onready var label: Label = $Label
 
 @export var num_network_inputs : int = 15
@@ -19,7 +20,6 @@ var final_pos : Vector2 = Vector2.ZERO
 var final_rotation : float = 0
 
 var checkpoint_index : int = -1 : set = set_checkpoint
-var laps_completed : int = 0
 
 var steering_input : float
 var throttle_input : float
@@ -28,9 +28,6 @@ var frames_stationary : int = 0
 
 var speed_sum : float = 0
 var speed_sum_ticks : int = 0
-
-var last_checkpoint
-var next_checkpoint
 
 var sensor_list : Array[RayCast2D] = []
 
@@ -80,21 +77,20 @@ func set_throttle_input(input : float) -> void:
 	#else:
 	throttle_input = input
 
-func _physics_process(delta: float) -> void:
-	super._physics_process(delta)
-	
-	if get_contact_count() > 0: 
-		#score -= 0.5
-		#score -= 5
-		deactivate()
-		pass
+#func _physics_process(delta: float) -> void:
+	#super._physics_process(delta)
+	#
+	#if get_contact_count() > 0:
+		#deactivate()
+		#pass
 
 func deactivate():
 	checkpoint_timer.stop()
+	lifetime_timer.stop()
 	active = false
 	set_physics_process(false)
 	set_process(false)
-	final_pos = global_position
+	final_pos = Vector2(global_position)
 	final_rotation = global_rotation
 	deactivated.emit()
 
@@ -165,13 +161,8 @@ func get_sensor_data() -> Array[float]:
 	return inputs
 
 
-func checkpoint(new_lap : bool):
-	last_checkpoint = next_checkpoint
-	if new_lap:
-		checkpoint_index = 0
-		laps_completed += 1
-	else:
-		checkpoint_index += 1
+func checkpoint():
+	checkpoint_index += 1
 	#score += ((speed_sum / speed_sum_ticks) / max_forward_speed) * 5
 	#reset_speed_recording()
 	checkpoint_timer.start(0)
@@ -194,7 +185,6 @@ func reset(location : Marker2D):
 		return
 	steering_input = 0
 	throttle_input = 0
-	laps_completed = 0
 	checkpoint_index = -1
 	frames_stationary = 0
 	super.reset(location)
@@ -203,8 +193,12 @@ func reset(location : Marker2D):
 	set_physics_process(true)
 	set_process(true)
 	checkpoint_timer.start()
+	lifetime_timer.start()
 
 func _on_checkpoint_timer_timeout() -> void:
+	deactivate()
+
+func _on_lifetime_timer_timeout() -> void:
 	deactivate()
 
 func set_checkpoint(idx : int):

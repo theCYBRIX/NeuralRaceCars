@@ -17,6 +17,7 @@ func checkpoint_updated(car : NeuralCar):
 	
 	
 	var new_idx := checkpoint_idxs.bsearch(car.checkpoint_index, true) - 1
+	if new_idx > prev_idx: new_idx -= 1
 	if new_idx < 0: new_idx = 0
 	
 	new_idx = _move_entry(prev_idx, new_idx)
@@ -30,8 +31,6 @@ func _move_entry(index : int, new_index : int) -> int:
 	if  new_index < 0 or new_index > leaderboard.size():
 		push_error("Index out of bounds: new_index %d is out of bounds for leaderboard of size %d." %[new_index, leaderboard.size()])
 		return -1
-	if new_index == leaderboard.size():
-		new_index -= 1
 	
 	if index == new_index: return index
 	
@@ -47,8 +46,15 @@ func _move_entry(index : int, new_index : int) -> int:
 	leaderboard[new_index] = car
 	checkpoint_idxs[new_index] = car.checkpoint_index
 	
-	if new_index == leaderboard.size() - 1:
+	if new_index > 48: print(new_index)
+	
+	var first_place_index := leaderboard.size() - 1
+	
+	if new_index == first_place_index:
 		first_place_changed.emit(car, leaderboard[new_index - 1])
+	elif index == first_place_index:
+		first_place_changed.emit(leaderboard[first_place_index], car)
+		
 	
 	return new_index
 

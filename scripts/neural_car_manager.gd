@@ -8,7 +8,6 @@ signal networks_randomized
 signal new_generation(generation : int)
 signal instanciated(car : NeuralCar)
 signal destroyed(car : NeuralCar)
-signal generation_countown_updatad(remaining_sec : int)
 signal car_reset(car : NeuralCar)
 
 signal network_outputs_received(data : Dictionary)
@@ -35,8 +34,6 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 @export var dynamic_batch := true
 
 @export var parent_selection : NeuralAPIClient.ParentSelection
-
-@onready var generation_timer: Timer = $GenerationTimer
 
 @onready var neural_cars: Node = $NeuralCars
 
@@ -86,13 +83,11 @@ func _ready() -> void:
 
 func pause():
 	set_process(false)
-	generation_timer.set_paused(true)
 
 
 func resume():
 	if api_connected and api_configured:
 		set_process(true)
-		if not dynamic_batch: generation_timer.set_paused(false)
 	else:
 		push_error("Unable to resume: API is not connected.")
 
@@ -104,13 +99,14 @@ func get_reward(car : NeuralCar) -> float:
 	#score += checkpoints_passed * 0.1
 	
 	var track_progress : float
+	var laps_completed : int = floori(car.checkpoint_index / track.num_checkpoints)
 	#var rotation_bonus : float
 	
 	if car.active:
-		track_progress = car.laps_completed + track.get_lap_progress(car.global_position, car.checkpoint_index)
+		track_progress = laps_completed + track.get_lap_progress(car.global_position, car.checkpoint_index)
 		#rotation_bonus = get_rotation_bonus(car.global_position, car.global_rotation)
 	else:
-		track_progress = car.laps_completed + track.get_lap_progress(car.final_pos, car.checkpoint_index)
+		track_progress = laps_completed + track.get_lap_progress(car.final_pos, car.checkpoint_index)
 		#rotation_bonus = get_rotation_bonus(car.final_pos, car.final_rotation)
 	
 	score += track_progress
@@ -159,8 +155,6 @@ func on_car_deactivated(car : NeuralCar):
 			reset_neural_car(network_ids[id_queue_index], car)
 			id_queue_index += 1
 			return
-		elif generation_timer.is_stopped():
-			generation_timer.start()
 			
 	decrement_active_count()
 	#if car.checkpoint_index > 1: car.score += (car.laps_completed + track.get_lap_progress(car.position)) * 10
@@ -179,13 +173,9 @@ func decrement_active_count():
 func start_next_batch():
 	if not batch_update_semaphore.try_wait(): return
 	
-	generation_timer.stop()
-	
 	if not dynamic_batch:
 		var batch_scores : Dictionary = get_network_scores()
 		network_scores.merge(batch_scores, true)
-	else:
-		generation_countown_updatad.emit(generation_timer.wait_time)
 	
 	#if network_scores.size() >= num_networks:
 		#var keys := network_scores.keys()
@@ -214,7 +204,6 @@ func start_next_batch():
 			#values.sort()
 			#print(values)
 	reset_neural_cars()
-	if not dynamic_batch: generation_timer.start()
 	
 	batch_update_semaphore.post()
 
@@ -264,8 +253,6 @@ func instanciate_neural_car(index : int) -> NeuralCar:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	if not generation_timer.is_stopped():
-		generation_countown_updatad.emit(generation_timer.time_left)
 	
 	if cars_active > 0:
 		var network_inputs : Dictionary = get_network_inputs()
@@ -469,7 +456,6 @@ func load_networks(save_path : String) -> Array:
 func _on_api_client_disconnected() -> void:
 	api_connected = false
 	set_process(false)
-	generation_timer.stop()
 
 
 func _on_api_client_connection_error() -> void:
@@ -483,7 +469,6 @@ func on_server_configured() -> void:
 	reset.emit()
 	reset_neural_cars()
 	set_process(true)
-	if not dynamic_batch: generation_timer.start()
 
 
 class NetworkDataPacket:
@@ -505,7 +490,6 @@ class NetworkScorePacket:
 
 
 func _on_timer_timeout() -> void:
-	generation_timer.stop()
 	start_next_batch()
 
 
