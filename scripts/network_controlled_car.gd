@@ -50,6 +50,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	label.rotation = -global_rotation
 	#if (not moving_forwards) and speed > 20: score -= 0.1
 	#speed_sum += speed
 	#speed_sum_ticks += 1

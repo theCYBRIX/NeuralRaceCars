@@ -31,13 +31,7 @@ var first_place_car : NeuralCar
 var track : BaseTrack
 
 var paused := false
-var total_time_elapsed := 0.0
-var total_time_elapsed_int : int = -1
 
-var since_randomized := 0.0
-var since_randomized_int : int = 0
-
-var total_generations : int = 0
 var previous_id_queue_index : int = 0
 
 var best_network_id : int = -1
@@ -47,18 +41,20 @@ var camera_reparent_cooldown_active := false
 var next_camera_target : NeuralCar
 var next_camera_target_set_flag := false
 
+var training_state : TrainingState = TrainingState.new()
+
 func _process(delta: float) -> void:
-	total_time_elapsed += delta
-	var floored := floori(total_time_elapsed)
-	if floored > total_time_elapsed_int:
-		total_time_elapsed_int = floored
-		time_elapsed_label.set_text("Time elapsed: " + format_time(total_time_elapsed_int))
+	training_state.total_time_elapsed += delta
+	var floored := floori(training_state.total_time_elapsed)
+	if floored > training_state.total_time_elapsed_int:
+		training_state.total_time_elapsed_int = floored
+		time_elapsed_label.set_text("Time elapsed: " + format_time(training_state.total_time_elapsed_int))
 	
-	since_randomized += delta
-	floored = floori(since_randomized)
-	if floored > since_randomized_int:
-		since_randomized_int = floored
-		since_randomized_label.set_text("Since Last Randomized: " + format_time(since_randomized_int))
+	training_state.since_randomized += delta
+	floored = floori(training_state.since_randomized)
+	if floored > training_state.since_randomized_int:
+		training_state.since_randomized_int = floored
+		since_randomized_label.set_text("Since Last Randomized: " + format_time(training_state.since_randomized_int))
 	
 	if neural_car_manager.dynamic_batch and previous_id_queue_index != neural_car_manager.id_queue_index:
 		batch_label.set_text("Progress: %d/%d (%d%%)" % [neural_car_manager.id_queue_index, neural_car_manager.network_ids.size(), (float(neural_car_manager.id_queue_index) / neural_car_manager.network_ids.size()) * 100] )
@@ -168,16 +164,17 @@ func _on_neural_car_manager_reset() -> void:
 
 
 func _on_car_manager_new_generation(generation : int) -> void:
-	total_generations += 1
-	total_gens_label.set_text("Total Generations: " + str(total_generations))
+	training_state.total_generations += 1
+	total_gens_label.set_text("Total Generations: " + str(training_state.total_generations))
 	
+	training_state.generation = generation
 	gen_label.set_text("Generation: " + str(generation))
 	improvement_label.set_text("Gens without improvement: " + str(neural_car_manager.gens_without_improvement))
 
 
 func _on_neural_car_manager_networks_randomized() -> void:
-	since_randomized = 0
-	since_randomized_int = 0
+	training_state.since_randomized = 0
+	training_state.since_randomized_int = 0
 
 
 

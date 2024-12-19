@@ -75,11 +75,10 @@ func _on_neural_car_manager_reset() -> void:
 func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_checkpoints: int, checkpoints : Area2D) -> void:
 	if car.active and car.moving_forwards:
 		if car.checkpoint_index + 1 == checkpoint_index:
-			car.checkpoint(checkpoint_index == (num_checkpoints - 1))
+			car.checkpoint()
 			#print(car.checkpoint_index)
-			var checkpoints_reached : int = car.laps_completed * num_checkpoints + checkpoint_index
-			if checkpoints_reached > highest_checkpoint:
-				highest_checkpoint = checkpoints_reached
+			if car.checkpoint_index > highest_checkpoint:
+				highest_checkpoint = car.checkpoint_index
 				camera_manager.start_tracking(car)
 
 

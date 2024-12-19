@@ -39,7 +39,7 @@ func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shap
 
 func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
 	var trajectory_fraction : float = get_trajectory_fraction(global_pos)
-	if trajectory_fraction <= checkpoint_offsets[checkpoint_index + 1]:
+	if trajectory_fraction <= checkpoint_offsets[(checkpoint_index + 1) % num_checkpoints]:
 		return trajectory_fraction
 	else:
 		return 0

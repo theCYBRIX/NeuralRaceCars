@@ -38,10 +38,9 @@ func _on_checkpoints_body_shape_entered(body_rid: RID, body: Node2D, body_shape_
 		var car := body as NeuralCar
 		if car.active and car.moving_forwards:
 			if (car.checkpoint_index % num_checkpoints) == local_shape_index:
-				car.checkpoint(local_shape_index == (num_checkpoints - 1))
+				car.checkpoint()
 				if car.checkpoint_index > highest_checkpoint:
 					highest_checkpoint = car.checkpoint_index
-					car.camera.make_current()
 
 
 
