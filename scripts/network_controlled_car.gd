@@ -24,7 +24,7 @@ var checkpoint_index : int = -1 : set = set_checkpoint
 var steering_input : float
 var throttle_input : float
 
-var frames_stationary : int = 0
+#var frames_stationary : int = 0
 
 var speed_sum : float = 0
 var speed_sum_ticks : int = 0
@@ -34,6 +34,8 @@ var sensor_list : Array[RayCast2D] = []
 var inputs : Array[float]
 
 var reset_marker : Marker2D
+
+var score_adjustment : float = 0
 
 func _ready() -> void:
 	super._ready()
@@ -78,12 +80,13 @@ func set_throttle_input(input : float) -> void:
 	#else:
 	throttle_input = input
 
-#func _physics_process(delta: float) -> void:
-	#super._physics_process(delta)
-	#
-	#if get_contact_count() > 0:
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	
+	if get_contact_count() > 0:
 		#deactivate()
-		#pass
+		score_adjustment -= 0.1 * delta
+		pass
 
 func deactivate():
 	checkpoint_timer.stop()
@@ -187,7 +190,8 @@ func reset(location : Marker2D):
 	steering_input = 0
 	throttle_input = 0
 	checkpoint_index = -1
-	frames_stationary = 0
+	#frames_stationary = 0
+	score_adjustment = 0
 	super.reset(location)
 	active = true
 	reset_speed_recording()

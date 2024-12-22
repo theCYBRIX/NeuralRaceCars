@@ -9,6 +9,7 @@ var parent_graph : DataGraph
 var title : String
 var points : CircularBuffer
 var line2d : Line2D
+var polygon2d : Polygon2D
 var legend_item : Control
 var data_supplier : Callable
 var max_data_points : int
@@ -24,6 +25,8 @@ var max_index : int = 0
 @warning_ignore("shadowed_variable", "narrowing_conversion")
 func _init(title : String, color : Color, data_supplier : Callable, max_points : float) -> void:
 	self.title = title
+	var darkened_color := color * 0.65
+	darkened_color.a = 0.75
 	
 	points = CircularBuffer.new(max_points)
 	
@@ -32,7 +35,7 @@ func _init(title : String, color : Color, data_supplier : Callable, max_points :
 	
 	var line_gradient := Gradient.new()
 	line_gradient.set_color(0, color)
-	line_gradient.set_color(1, Color(color) * Color(1, 1, 1, 0.35))
+	line_gradient.set_color(1, darkened_color)
 	
 	line2d.gradient = line_gradient
 	#line2d.width_curve = Curve.new()
@@ -49,6 +52,10 @@ func _init(title : String, color : Color, data_supplier : Callable, max_points :
 	legend_item.set_text(title)
 	legend_item.pressed.connect(toggle_enabled)
 	legend_item.ready.connect(func(): legend_item.line_2d.gradient = line_gradient, CONNECT_ONE_SHOT)
+	
+	polygon2d = Polygon2D.new()
+	polygon2d.color = darkened_color
+	
 	self.data_supplier = data_supplier
 	max_data_points = max_points
 
@@ -62,6 +69,7 @@ func set_parent(graph : DataGraph):
 func clear():
 	points.clear()
 	line2d.clear_points()
+	polygon2d.polygon.clear()
 	min = INF
 	max = -INF
 
@@ -111,6 +119,7 @@ func set_enabled(state : bool):
 	if state == enabled: return
 	enabled = state
 	line2d.visible = enabled
+	polygon2d.visible = enabled
 	if enabled:
 		legend_item.modulate = Color(1, 1, 1, 1)
 	else:
@@ -119,4 +128,5 @@ func set_enabled(state : bool):
 
 func free_resources():
 	line2d.queue_free()
+	polygon2d.queue_free()
 	legend_item.queue_free()

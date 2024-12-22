@@ -91,23 +91,22 @@ func resume():
 	else:
 		push_error("Unable to resume: API is not connected.")
 
-
+#TODO: Create track.get_absolute_progress method to replace most of this function
 func get_reward(car : NeuralCar) -> float:
-	var score : float = 0
+	var score : float = car.score_adjustment
 	
 	#var checkpoints_passed : int = (car.laps_completed * track.num_checkpoints) + car.checkpoint_index
 	#score += checkpoints_passed * 0.1
 	
 	var track_progress : float
-	var laps_completed : int = floori(car.checkpoint_index / track.num_checkpoints)
 	#var rotation_bonus : float
 	
 	if car.active:
-		track_progress = laps_completed + track.get_lap_progress(car.global_position, car.checkpoint_index)
+		track_progress = track.get_absolute_progress(car.global_position, car.checkpoint_index)
 		#rotation_bonus = get_rotation_bonus(car.global_position, car.global_rotation)
 	else:
-		track_progress = laps_completed + track.get_lap_progress(car.final_pos, car.checkpoint_index)
-		#rotation_bonus = get_rotation_bonus(car.final_pos, car.final_rotation)
+		track_progress = track.get_absolute_progress(car.final_pos, car.checkpoint_index)
+		
 	
 	score += track_progress
 	#score += rotation_bonus

@@ -39,10 +39,24 @@ func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shap
 
 func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
 	var trajectory_fraction : float = get_trajectory_fraction(global_pos)
-	if trajectory_fraction <= checkpoint_offsets[(checkpoint_index + 1) % num_checkpoints]:
+	var true_check_index = (checkpoint_index + 1) % num_checkpoints
+	
+	if trajectory_fraction <= checkpoint_offsets[true_check_index]:
 		return trajectory_fraction
-	else:
-		return 0
+	
+	if true_check_index == 0 and checkpoint_index >= (num_checkpoints - 1):
+		return trajectory_fraction
+	
+	return 0
+
+
+func get_absolute_progress(global_pos : Vector2, checkpoint_index : int) -> float:
+	var laps_completed : int = floori(checkpoint_index / num_checkpoints)
+	var lap_progress : float = get_lap_progress(global_pos, checkpoint_index)
+	if (checkpoint_index % num_checkpoints) == (num_checkpoints - 1):
+		if lap_progress < checkpoint_offsets[0]:
+			laps_completed += 1
+	return laps_completed + lap_progress
 
 
 func get_closest_trajectory_offset(global_pos : Vector2) -> float:

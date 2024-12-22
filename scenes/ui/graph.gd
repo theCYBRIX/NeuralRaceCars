@@ -69,6 +69,11 @@ func add_series(series_name : String, color : Color, data_supplier : Callable, d
 func add(s : GraphSeries):
 	s.set_parent(self)
 	series[s.title] = s
+	if s.polygon2d.get_parent():
+		s.polygon2d.get_parent().remove_child(s.polygon2d)
+	if s.line2d.get_parent():
+		s.line2d.get_parent().remove_child(s.line2d)
+	graphing_area.add_child(s.polygon2d, false, Node.INTERNAL_MODE_BACK)
 	graphing_area.add_child(s.line2d, false, Node.INTERNAL_MODE_BACK)
 	legend_container.add_child(s.legend_item, false, Node.INTERNAL_MODE_BACK)
 
@@ -95,13 +100,32 @@ func redraw_graph():
 	for series_idx : int in range(series_array.size() - 1, -1, -1):
 		var s : GraphSeries = series_array[series_idx]
 		if not s.enabled: continue
-		s.line2d.clear_points()
+		
 		var index : int = s.points.size()
+		var point_index : int = -1
+		var left_most : Vector2
+		
+		var line_points : PackedVector2Array = []
+		line_points.resize(s.points.size())
+		
+		var polygon_points : PackedVector2Array = []
+		polygon_points.resize(s.points.size() + 2)
 		
 		for i in range(resolution, -1, -1):
 			index -= 1
-			if index < 0: break 
-			s.line2d.add_point(Vector2(i / float(resolution), 1 - ((s.points.get_item(index) - minimum) / value_range)) * graphing_area_size)
+			if index < 0: break
+			point_index += 1
+			var point := Vector2(i / float(resolution), 1 - ((s.points.get_item(index) - minimum) / value_range)) * graphing_area_size
+			line_points[point_index] = point
+			polygon_points[point_index] = point
+			left_most = point
+		
+		if left_most:
+			polygon_points[polygon_points.size() - 2] = Vector2(left_most.x, graphing_area_size.y) #Bottom left
+			polygon_points[polygon_points.size() - 1] = graphing_area_size #Bottom right
+		
+		s.line2d.points = line_points
+		s.polygon2d.polygon = polygon_points
 	
 	min_label.set_text("%-3.2f" % minimum)
 	max_label.set_text("%-3.2f" % maximum)
