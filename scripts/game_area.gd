@@ -1,11 +1,13 @@
 extends Node2D
 
 var USER_DATA_FOLDER : String = ProjectSettings.globalize_path("user://")
+const TRAINING_STATE_FILE_EXTENSION := ".tres"
 
 @export var track_scene : PackedScene
 
 
 @onready var neural_car_manager: NeuralCarManager = $NeuralAPIClient/NeuralCarManager
+@onready var neural_api_client: NeuralAPIClient = $NeuralAPIClient
 @onready var gen_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/GenLabel
 @onready var batch_label: Label = $CanvasLayer/StatScreen/MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/BatchLabel
 @onready var graph: Control = $CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items/Graph
@@ -41,9 +43,41 @@ var camera_reparent_cooldown_active := false
 var next_camera_target : NeuralCar
 var next_camera_target_set_flag := false
 
-var training_state : TrainingState = TrainingState.new()
+@export var training_state : TrainingState : set = set_training_state
+@export var use_saved_training_state := true
+@export_global_file("*" + TRAINING_STATE_FILE_EXTENSION) var training_state_path := "user://training_state%s" % TRAINING_STATE_FILE_EXTENSION 
+
+func _enter_tree() -> void:
+	track = track_scene.instantiate()
+	add_child(track, false, Node.INTERNAL_MODE_FRONT)
+	track.car_entered_checkpoint.connect(_on_car_entered_checkpoint.bind())
+	track.car_entered_slow_zone.connect(reward_slow.bind())
+	track.car_exited_slow_zone.connect(reward_slow.bind())
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	if use_saved_training_state:
+		var error : Error = load_training_state(training_state_path)
+		if error != OK:
+			push_warning("Unable to load training state: ", training_state_path, "\nReason: ", error_string(error))
+			training_state = TrainingState.new()
+	else:
+		training_state = TrainingState.new()
+	
+	neural_car_manager.track = track
+	set_first_place_car(neural_car_manager.cars[0])
+	
+	neural_car_manager.ready.connect(_on_neural_car_manager_reset, CONNECT_ONE_SHOT)
+	
+	graph.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
+	graph.add_series("Best Score", Color.SKY_BLUE, func(): return neural_car_manager.highest_score)
+	graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return neural_car_manager.cars_active / float(neural_car_manager.cars.size()))
+	graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
+
 
 func _process(delta: float) -> void:
+	
 	training_state.total_time_elapsed += delta
 	var floored := floori(training_state.total_time_elapsed)
 	if floored > training_state.total_time_elapsed_int:
@@ -58,26 +92,6 @@ func _process(delta: float) -> void:
 	
 	if neural_car_manager.dynamic_batch and previous_id_queue_index != neural_car_manager.id_queue_index:
 		batch_label.set_text("Progress: %d/%d (%d%%)" % [neural_car_manager.id_queue_index, neural_car_manager.network_ids.size(), (float(neural_car_manager.id_queue_index) / neural_car_manager.network_ids.size()) * 100] )
-
-
-func format_time(seconds : int) -> String:
-	var formatted := "%ds" % (seconds % 60)
-	
-	if seconds > 60:
-		formatted = ("%dm " % ((seconds / 60) % 60)) + formatted
-	if seconds > 3600:
-		formatted = ("%dh " % ((seconds / 3600) % 24)) + formatted
-	if seconds > 86400:
-		formatted = ("%dd " % (seconds / 86400)) + formatted
-	
-	return formatted
-
-func _enter_tree() -> void:
-	track = track_scene.instantiate()
-	add_child(track, false, Node.INTERNAL_MODE_FRONT)
-	track.car_entered_checkpoint.connect(_on_car_entered_checkpoint.bind())
-	track.car_entered_slow_zone.connect(reward_slow.bind())
-	track.car_exited_slow_zone.connect(reward_slow.bind())
 
 
 func reward_slow(car : NeuralCar):
@@ -107,20 +121,6 @@ func update_first_place_score() -> float:
 	return first_place_score
 
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	
-	neural_car_manager.track = track
-	set_first_place_car(neural_car_manager.cars[0])
-	
-	neural_car_manager.ready.connect(_on_neural_car_manager_reset, CONNECT_ONE_SHOT)
-	
-	graph.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
-	graph.add_series("Best Score", Color.SKY_BLUE, func(): return neural_car_manager.highest_score)
-	graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return neural_car_manager.cars_active / float(neural_car_manager.cars.size()))
-	graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
-
-
 func pause():
 	if paused: return;
 	paused = true
@@ -142,12 +142,10 @@ func toggle_pause():
 		pause()
 
 
-@warning_ignore("shadowed_variable")
-func set_time_scale(scale : float):
-	Engine.time_scale = scale
-	Engine.max_physics_steps_per_frame = 8 * scale
-	print(Engine.time_scale)
-
+func set_time_scale(time_scale : float):
+	Engine.time_scale = time_scale
+	Engine.max_physics_steps_per_frame = 8 * time_scale
+	print("Time Scale: ", Engine.time_scale)
 
 
 func _on_neural_car_manager_reset() -> void:
@@ -180,7 +178,42 @@ func _on_neural_car_manager_networks_randomized() -> void:
 
 func _on_save_button_pressed() -> void:
 	var save_path := save_path_edit.get_text()
-	await neural_car_manager.save_networks(save_path, min(200, neural_car_manager.num_networks), true)
+	save_training_state(save_path)
+	#await neural_car_manager.save_networks(save_path, min(200, neural_car_manager.num_networks), true)
+
+
+func save_training_state(save_path : String, overwrite := false, rename_existing := false) -> Error:
+	if save_path.get_extension() != TRAINING_STATE_FILE_EXTENSION: save_path += TRAINING_STATE_FILE_EXTENSION
+	if FileAccess.file_exists(save_path):
+		var error := ERR_ALREADY_EXISTS
+		if rename_existing:
+			error = DirAccess.rename_absolute(save_path, neural_car_manager.make_path_unique(save_path))
+		elif overwrite:
+			error = DirAccess.remove_absolute(save_path)
+		if error != OK: return error
+	training_state.networks = await neural_car_manager.get_best_networks(min(200, neural_car_manager.num_networks))
+	return ResourceSaver.save(training_state, save_path)
+
+
+func load_training_state(path : String) -> Error:
+	path = ProjectSettings.globalize_path(path)
+	if not FileAccess.file_exists(path): return ERR_DOES_NOT_EXIST
+	var loaded_state : TrainingState = ResourceLoader.load(path, "TrainingState")
+	training_state = loaded_state
+	return OK
+
+
+func set_training_state(state : TrainingState):
+	if not state: state = TrainingState.new()
+	training_state = state
+	neural_car_manager.initial_networks = training_state.networks
+	neural_car_manager.generation = training_state.generation
+	if neural_api_client.is_node_ready():
+		var io_handler := neural_api_client.io_handler
+		if io_handler and neural_car_manager.api_configured:
+			io_handler.stop()
+			neural_car_manager.api_configured = false
+			io_handler.start()
 
 
 func _on_car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_checkpoints: int, checkpoints : Area2D) -> void:
@@ -304,6 +337,25 @@ func localize_path(path : String) -> String:
 	else:
 		path = ProjectSettings.localize_path(path)
 	return path
+
+
+func format_time(seconds : int) -> String:
+	const SECONDS_PER_MINUTE : int = 60
+	const SECONDS_PER_HOUR : int = 3600
+	const SECONDS_PER_DAY : int = 86400
+	const MINUTES_PER_HOUR : int = 60
+	const HOURS_PER_DAY : int = 24
+	
+	var formatted := "%ds" % (seconds % SECONDS_PER_MINUTE)
+	
+	if seconds > SECONDS_PER_MINUTE:
+		formatted = ("%dm " % ((seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR)) + formatted
+	if seconds > SECONDS_PER_HOUR:
+		formatted = ("%dh " % ((seconds / SECONDS_PER_HOUR) % HOURS_PER_DAY)) + formatted
+	if seconds > SECONDS_PER_DAY:
+		formatted = ("%dd " % (seconds / SECONDS_PER_DAY)) + formatted
+	
+	return formatted
 
 
 func _on_file_manager_button_pressed() -> void:

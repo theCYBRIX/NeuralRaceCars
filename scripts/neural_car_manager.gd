@@ -19,6 +19,7 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 @export var enabled : bool = true
 @export var load_saved_networks : bool = false
 @export_global_file("*.json") var network_load_path := DEFAULT_SAVE_PATH
+var initial_networks : Array = []
 
 @export var api_client : NeuralAPIClient : set = set_api_client
 @export var track : BaseTrack : set = set_track
@@ -408,7 +409,8 @@ func free_neural_cars():
 
 func _on_api_client_connected() -> void:
 	if not api_configured:
-		var response := await api_client.setup_session(num_networks, parent_selection, load_networks(network_load_path) if load_saved_networks else [])
+		if load_saved_networks: initial_networks = load_networks(network_load_path)
+		var response := await api_client.setup_session(num_networks, parent_selection,  initial_networks)
 		
 		if not api_client.error_occurred():
 			update_network_ids(response)
@@ -422,9 +424,13 @@ func set_batch_size(size : int):
 	batch_manager.batch_size = size
 
 
-func save_networks(path := DEFAULT_SAVE_PATH, n := num_networks, overwrite = false) -> void:
+func get_best_networks(n := num_networks) -> Array:
 	var response := await api_client.get_best_networks(n)
 	var networks : Array = response["payload"]["networks"]
+	return networks
+
+func save_networks(path := DEFAULT_SAVE_PATH, n := num_networks, overwrite = false) -> void:
+	var networks : Array = await get_best_networks(n)
 	if not overwrite: path = make_path_unique(path)
 	var save_file = FileAccess.open(path, FileAccess.WRITE)
 	save_file.store_string(JSON.stringify(networks))

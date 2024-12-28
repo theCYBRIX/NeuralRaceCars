@@ -111,5 +111,7 @@ process_thread_group_order = 0
 process_thread_messages = 0
 wait_time = 0.2
 
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
 [connection signal="resized" from="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea" to="." method="_on_graphing_area_resized"]
 [connection signal="timeout" from="UpdateTimer" to="." method="_on_timer_timeout"]

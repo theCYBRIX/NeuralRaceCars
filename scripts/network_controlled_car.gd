@@ -84,8 +84,8 @@ func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	
 	if get_contact_count() > 0:
-		#deactivate()
-		score_adjustment -= 0.1 * delta
+		deactivate()
+		#score_adjustment -= 0.1 * delta
 		pass
 
 func deactivate():

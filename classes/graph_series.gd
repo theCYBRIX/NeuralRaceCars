@@ -79,13 +79,15 @@ func update(new_value : float = data_supplier.call()):
 	if new_value <= min or new_value >= max:
 		if new_value < min or new_value > max:
 			legend_item.call_deferred("set_tooltip_text", "Max: %-3.2f\nMin: %-3.2f" % [max, min])
-			
+		
+		var entry_idx := mini(points.size(), points._max_size - 1)
+		
 		if new_value <= min:
 			min = new_value
-			min_index = points.size() % max_data_points
+			min_index = entry_idx
 		elif new_value >= max:
 			max = new_value
-			max_index = points.size() % max_data_points
+			max_index = entry_idx
 	
 	var value_removed := (points.size() == max_data_points)
 	

@@ -1,6 +1,8 @@
 class_name DataGraph
 extends Control
 
+const POPUP_ALWAYS_SHOW_LEGEND : int = 0
+
 @onready var graphing_area: Control = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea
 @onready var legend: MarginContainer = $Panel/VBoxContainer/Legend
 @onready var legend_container: HFlowContainer = $Panel/VBoxContainer/Legend/HFlowContainer
@@ -11,7 +13,8 @@ extends Control
 @onready var update_timer: Timer = $UpdateTimer
 
 
-@export var show_legend : bool = true : set = set_show_legend
+@export var always_show_legend : bool = true : set = set_always_show_legend
+@export var show_legend_on_hover : bool = true : set = set_show_legend_on_hover
 @export var resolution : int = 100 : set = set_resolution
 @export var update_period : float = 0.2 : set = set_update_period
 @export var realtime : bool = false
@@ -24,19 +27,36 @@ var maximum : float = -INF
 var minimum : float = INF
 var value_range : float
 
+var popup_menu : PopupMenu = PopupMenu.new()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	graphing_area_size = graphing_area.get_size()
-	legend.visible = show_legend
+	legend.visible = always_show_legend
 	set_update_period(update_period)
 	if not realtime: update_timer.start()
+	popup_menu.add_check_item("Always Show Legend", POPUP_ALWAYS_SHOW_LEGEND)
+	popup_menu.id_pressed.connect(_on_popup_menu_id_pressed)
+	popup_menu.visibility_changed.connect(__unparent_popup, CONNECT_DEFERRED)
+	__update_popup_state()
 
 
 func _process(_delta: float) -> void:
 	update_series()
 	redraw_graph()
 	if not realtime: set_process(false)
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var window := get_window()
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed:
+				window.add_child(popup_menu)
+				popup_menu.popup_on_parent(Rect2i(Vector2i(get_global_mouse_position()), popup_menu.min_size))
+				#popup_menu.current_screen = window.current_screen
+				#popup_menu.position = window.get_mouse_position()
+		elif popup_menu.visible:
+			popup_menu.hide()
 
 
 func clear_data_points():
@@ -167,10 +187,17 @@ func redraw_borders() -> void:
 	bottom_border.add_point(Vector2.DOWN * graphing_area_size)
 	bottom_border.add_point(graphing_area_size)
 
-func set_show_legend(enabled : bool):
-	show_legend = enabled
+func set_always_show_legend(enabled : bool):
+	always_show_legend = enabled
 	if is_node_ready():
-		legend.visible = show_legend
+		legend.visible = always_show_legend
+		#__update_popup_state()
+
+
+func set_show_legend_on_hover(enabled : bool):
+	show_legend_on_hover = enabled
+	if is_node_ready():
+		legend.visible = _is_hovered()
 
 
 func set_resolution(n : int):
@@ -203,3 +230,30 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	if not (data is GraphSeries) or (data in series.values()): return
 	data.set_parent(self)
 	add(data)
+
+func _is_hovered() -> bool:
+	return get_global_rect().has_point(get_global_mouse_position())
+
+func _on_mouse_entered() -> void:
+	if always_show_legend: return
+	if show_legend_on_hover:
+		legend.visible = true
+
+
+func _on_mouse_exited() -> void:
+	if always_show_legend: return
+	if show_legend_on_hover:
+		legend.visible = false
+
+
+func _on_popup_menu_id_pressed(id: int) -> void:
+	if id == POPUP_ALWAYS_SHOW_LEGEND:
+		always_show_legend = !always_show_legend
+
+func __update_popup_state():
+	popup_menu.set_item_checked(POPUP_ALWAYS_SHOW_LEGEND, always_show_legend)
+
+func __unparent_popup():
+	if popup_menu.visible: return
+	var parent = popup_menu.get_parent()
+	if parent: parent.remove_child(popup_menu)

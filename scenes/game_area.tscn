@@ -28,6 +28,7 @@ corner_radius_bottom_left = 20
 [node name="GameArea" type="Node2D"]
 script = ExtResource("1_iaiwh")
 track_scene = ExtResource("2_6sj2g")
+training_state_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks.tres"
 
 [node name="CameraManager" parent="." instance=ExtResource("3_elaeq")]
 
@@ -42,7 +43,7 @@ print_error_stack_trace = false
 
 [node name="NeuralCarManager" parent="NeuralAPIClient" node_paths=PackedStringArray("api_client") instance=ExtResource("1_jkvqb")]
 load_saved_networks = true
-network_load_path = "user://saved_networks(16).json"
+network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
 api_client = NodePath("..")
 failed_gen_score_thresh = 2.1
 num_networks = 1500
@@ -79,6 +80,7 @@ neural_car_manager = NodePath("../NeuralAPIClient/NeuralCarManager")
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="StatScreen" type="Control" parent="CanvasLayer"]
+process_mode = 3
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -199,7 +201,6 @@ layout_mode = 2
 text = "Browse"
 
 [node name="ButtonRow" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer"]
-process_mode = 3
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
@@ -221,16 +222,19 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Items" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2"]
+process_mode = 1
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Graph" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
 layout_mode = 2
+always_show_legend = false
 resolution = 1000
 metadata/_edit_use_anchors_ = true
 
 [node name="Graph2" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
 layout_mode = 2
+always_show_legend = false
 resolution = 1000
 metadata/_edit_use_anchors_ = true
 

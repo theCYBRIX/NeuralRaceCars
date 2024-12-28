@@ -6,7 +6,6 @@
 custom_minimum_size = Vector2(60, 25)
 offset_right = 72.0
 offset_bottom = 23.0
-mouse_filter = 0
 mouse_default_cursor_shape = 2
 script = ExtResource("1_yt1ss")
 
@@ -17,6 +16,7 @@ text = "Line"
 [node name="Control" type="Control" parent="."]
 custom_minimum_size = Vector2(35, 0)
 layout_mode = 2
+mouse_filter = 1
 
 [node name="Line2D" type="Line2D" parent="Control"]
 points = PackedVector2Array(1, 13, 33, 13)
