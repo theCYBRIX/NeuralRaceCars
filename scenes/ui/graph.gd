@@ -2,6 +2,8 @@ class_name DataGraph
 extends Control
 
 const POPUP_ALWAYS_SHOW_LEGEND : int = 0
+const POPUP_LIMIT_MAX_VALUE : int = 1
+const POPUP_LIMIT_MIN_VALUE : int = 2
 
 @onready var graphing_area: Control = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea
 @onready var legend: MarginContainer = $Panel/VBoxContainer/Legend
@@ -12,20 +14,28 @@ const POPUP_ALWAYS_SHOW_LEGEND : int = 0
 @onready var bottom_border: Line2D = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/BottomBorder
 @onready var update_timer: Timer = $UpdateTimer
 
-
-@export var always_show_legend : bool = true : set = set_always_show_legend
-@export var show_legend_on_hover : bool = true : set = set_show_legend_on_hover
 @export var resolution : int = 100 : set = set_resolution
 @export var update_period : float = 0.2 : set = set_update_period
 @export var realtime : bool = false
+@export var always_show_legend : bool = true : set = set_always_show_legend
+@export var show_legend_on_hover : bool = true : set = set_show_legend_on_hover
+
+@export_group("Limits")
+@export_subgroup("Maximum")
+@export var limit_maximum_value := false : set = set_limit_max_value
+@export var max_value_floor := 0.0
+@export_subgroup("Minimum")
+@export var limit_minimum_value := false : set = set_limit_min_value
+@export var min_value_cieling := 0.0
 
 var series : Dictionary = {}
 
 var graphing_area_size : Vector2
 
-var maximum : float = -INF
-var minimum : float = INF
+var maximum : float = max_value_floor if limit_maximum_value else -INF
+var minimum : float = min_value_cieling if limit_minimum_value else INF
 var value_range : float
+var range_updated : bool = false
 
 var popup_menu : PopupMenu = PopupMenu.new()
 
@@ -38,12 +48,20 @@ func _ready() -> void:
 	popup_menu.add_check_item("Always Show Legend", POPUP_ALWAYS_SHOW_LEGEND)
 	popup_menu.id_pressed.connect(_on_popup_menu_id_pressed)
 	popup_menu.visibility_changed.connect(__unparent_popup, CONNECT_DEFERRED)
+	popup_menu.add_check_item("Limit Max Value", POPUP_LIMIT_MAX_VALUE)
+	popup_menu.add_check_item("Limit Min Value", POPUP_LIMIT_MIN_VALUE)
 	__update_popup_state()
 
 
 func _process(_delta: float) -> void:
 	update_series()
-	redraw_graph()
+	if range_updated:
+		redraw_graph()
+		min_label.set_text("%-3.2f" % minimum)
+		max_label.set_text("%-3.2f" % maximum)
+		range_updated = false
+	else:
+		update_graph()
 	if not realtime: set_process(false)
 
 func _gui_input(event: InputEvent) -> void:
@@ -146,10 +164,40 @@ func redraw_graph():
 		
 		s.line2d.points = line_points
 		s.polygon2d.polygon = polygon_points
-	
-	min_label.set_text("%-3.2f" % minimum)
-	max_label.set_text("%-3.2f" % maximum)
 
+
+func update_graph() -> void:
+	var series_array : Array = series.values()
+	
+	for series_idx : int in range(series_array.size() - 1, -1, -1):
+		var s : GraphSeries = series_array[series_idx]
+		if not s.enabled: continue
+		
+		var line_points : PackedVector2Array = s.line2d.points
+		var polygon_points : PackedVector2Array
+		
+		var point := Vector2(1, 1 - ((s.points.get_item(s.points.size() - 1) - minimum) / value_range)) * graphing_area_size
+		var point_offset := graphing_area_size * Vector2(1.0 / resolution, 0)
+		
+		if line_points.size() < resolution:
+			line_points.resize(line_points.size() + 1)
+		
+		var index : int = line_points.size() - 1
+		while true:
+			if index == 0: break
+			var next = index - 1
+			line_points[index] = line_points[next] - point_offset
+			index = next
+		line_points[0] = point
+
+		
+		polygon_points = line_points.duplicate()
+		polygon_points.resize(polygon_points.size() + 2)
+		polygon_points[polygon_points.size() - 2] = Vector2(line_points[line_points.size() - 1].x, graphing_area_size.y) #Bottom left
+		polygon_points[polygon_points.size() - 1] = graphing_area_size #Bottom right
+		
+		s.line2d.points = line_points
+		s.polygon2d.polygon = polygon_points
 
 
 func _on_graphing_area_resized() -> void:
@@ -158,25 +206,30 @@ func _on_graphing_area_resized() -> void:
 	redraw_graph()
 
 
-func refresh_range():
-	maximum = -INF
-	minimum = INF
+func refresh_range() -> void:
+	var new_min : float = min_value_cieling if limit_minimum_value else INF
+	var new_max : float = max_value_floor if limit_maximum_value else -INF
+	
 	for s : GraphSeries in series.values():
 		if not s.enabled: continue
 		
-		if s.max > maximum:
-			maximum = s.max
-		if s.min < minimum:
-			minimum = s.min
+		if s.get_max() > new_max:
+			new_max = s.get_max()
+		if s.get_min() < new_min:
+			new_min = s.get_min()
 	
-	if maximum < minimum:
-		maximum = 1
-		minimum = -1
-	elif is_equal_approx(maximum, minimum):
-		maximum += 1
-		minimum -= 1 
+	if new_max < new_min:
+		new_max = 1
+		new_min = -1
+	elif is_equal_approx(new_max, new_min):
+		new_max += 1
+		new_min -= 1 
 	
-	value_range = maximum - minimum
+	if (new_min != minimum) or (new_max != maximum):
+		minimum = new_min
+		maximum = new_max
+		value_range = maximum - minimum
+		range_updated = true
 
 
 func redraw_borders() -> void:
@@ -191,13 +244,25 @@ func set_always_show_legend(enabled : bool):
 	always_show_legend = enabled
 	if is_node_ready():
 		legend.visible = always_show_legend
-		#__update_popup_state()
+		__update_popup_state()
 
 
 func set_show_legend_on_hover(enabled : bool):
 	show_legend_on_hover = enabled
 	if is_node_ready():
 		legend.visible = _is_hovered()
+
+
+func set_limit_max_value(enabled : bool):
+	limit_maximum_value = enabled
+	if is_node_ready():
+		__update_popup_state()
+
+
+func set_limit_min_value(enabled : bool):
+	limit_minimum_value = enabled
+	if is_node_ready():
+		__update_popup_state()
 
 
 func set_resolution(n : int):
@@ -247,11 +312,18 @@ func _on_mouse_exited() -> void:
 
 
 func _on_popup_menu_id_pressed(id: int) -> void:
-	if id == POPUP_ALWAYS_SHOW_LEGEND:
-		always_show_legend = !always_show_legend
+	match id:
+		POPUP_ALWAYS_SHOW_LEGEND:
+			always_show_legend = !always_show_legend
+		POPUP_LIMIT_MAX_VALUE:
+			limit_maximum_value = !limit_maximum_value
+		POPUP_LIMIT_MIN_VALUE:
+			limit_minimum_value = !limit_minimum_value
 
 func __update_popup_state():
 	popup_menu.set_item_checked(POPUP_ALWAYS_SHOW_LEGEND, always_show_legend)
+	popup_menu.set_item_checked(POPUP_LIMIT_MAX_VALUE, limit_maximum_value)
+	popup_menu.set_item_checked(POPUP_LIMIT_MIN_VALUE, limit_minimum_value)
 
 func __unparent_popup():
 	if popup_menu.visible: return

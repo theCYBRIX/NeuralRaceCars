@@ -7,7 +7,7 @@ const LEGEND_ITEM : PackedScene = preload("res://scenes/ui/graph_legend_item.tsc
 var parent_graph : DataGraph
 
 var title : String
-var points : CircularBuffer
+var points : MinMaxCircularBuffer
 var line2d : Line2D
 var polygon2d : Polygon2D
 var legend_item : Control
@@ -15,20 +15,13 @@ var data_supplier : Callable
 var max_data_points : int
 var enabled : bool = true : set = set_enabled
 
-@warning_ignore("shadowed_global_identifier")
-var min : float = INF
-var min_index : int = 0
-@warning_ignore("shadowed_global_identifier")
-var max : float = -INF
-var max_index : int = 0
-
 @warning_ignore("shadowed_variable", "narrowing_conversion")
 func _init(title : String, color : Color, data_supplier : Callable, max_points : float) -> void:
 	self.title = title
 	var darkened_color := color * 0.65
 	darkened_color.a = 0.75
 	
-	points = CircularBuffer.new(max_points)
+	points = MinMaxCircularBuffer.new(max_points)
 	
 	line2d = Line2D.new()
 	line2d.joint_mode = Line2D.LINE_JOINT_ROUND
@@ -70,47 +63,15 @@ func clear():
 	points.clear()
 	line2d.clear_points()
 	polygon2d.polygon.clear()
-	min = INF
-	max = -INF
 
 
 func update(new_value : float = data_supplier.call()):
-	
-	if new_value <= min or new_value >= max:
-		if new_value < min or new_value > max:
-			legend_item.call_deferred("set_tooltip_text", "Max: %-3.2f\nMin: %-3.2f" % [max, min])
-		
-		var entry_idx := mini(points.size(), points._max_size - 1)
-		
-		if new_value <= min:
-			min = new_value
-			min_index = entry_idx
-		elif new_value >= max:
-			max = new_value
-			max_index = entry_idx
-	
-	var value_removed := (points.size() == max_data_points)
+	var _min = points.get_min()
+	var _max = points.get_max()
+	if new_value < _min or new_value > _max:
+		legend_item.call_deferred("set_tooltip_text", "Max: %-3.2f\nMin: %-3.2f" % [_max, _min])
 	
 	points.append(new_value)
-	
-	if value_removed and (points._start_index == max_index || points._start_index == min_index):
-		update_extremes()
-
-
-# start included, end excluded
-func update_extremes():
-	var first_item = points.get_item(0)
-	max = first_item
-	min = first_item
-	var index : int = 0
-	for value : float in points:
-		if value >= max:
-			max = value
-			max_index = index
-		elif value <= min:
-			min = value
-			min_index = index
-		index += 1
 
 
 func toggle_enabled():
@@ -132,3 +93,9 @@ func free_resources():
 	line2d.queue_free()
 	polygon2d.queue_free()
 	legend_item.queue_free()
+
+func get_min():
+	return points.get_min()
+
+func get_max():
+	return points.get_max()

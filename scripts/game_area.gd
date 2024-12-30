@@ -1,7 +1,7 @@
 extends Node2D
 
 var USER_DATA_FOLDER : String = ProjectSettings.globalize_path("user://")
-const TRAINING_STATE_FILE_EXTENSION := ".tres"
+const TRAINING_STATE_FILE_EXTENSION := "res"
 
 @export var track_scene : PackedScene
 
@@ -45,7 +45,7 @@ var next_camera_target_set_flag := false
 
 @export var training_state : TrainingState : set = set_training_state
 @export var use_saved_training_state := true
-@export_global_file("*" + TRAINING_STATE_FILE_EXTENSION) var training_state_path := "user://training_state%s" % TRAINING_STATE_FILE_EXTENSION 
+@export_global_file("*.res", "*.tres") var training_state_path := "user://training_state.%s" % TRAINING_STATE_FILE_EXTENSION 
 
 func _enter_tree() -> void:
 	track = track_scene.instantiate()
@@ -178,7 +178,9 @@ func _on_neural_car_manager_networks_randomized() -> void:
 
 func _on_save_button_pressed() -> void:
 	var save_path := save_path_edit.get_text()
-	save_training_state(save_path)
+	var error := await save_training_state(save_path)
+	if error != OK:
+		push_warning("Failed to save state. Reason: ", error_string(error))
 	#await neural_car_manager.save_networks(save_path, min(200, neural_car_manager.num_networks), true)
 
 
@@ -198,7 +200,7 @@ func save_training_state(save_path : String, overwrite := false, rename_existing
 func load_training_state(path : String) -> Error:
 	path = ProjectSettings.globalize_path(path)
 	if not FileAccess.file_exists(path): return ERR_DOES_NOT_EXIST
-	var loaded_state : TrainingState = ResourceLoader.load(path, "TrainingState")
+	var loaded_state : TrainingState = ResourceLoader.load(path)
 	training_state = loaded_state
 	return OK
 
@@ -302,6 +304,8 @@ func browse_save_folder():
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	dialog.add_filter("*.json", "JavaScript Object Notation")
+	dialog.add_filter("*.res", "Resource File")
+	dialog.add_filter("*.tres", "Text Resource File")
 	
 	if FileAccess.file_exists(current_path):
 		if current_path.get_extension() == "json":

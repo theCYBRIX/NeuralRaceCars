@@ -15,7 +15,7 @@ const THROTTLE_NODE = 1
 @export var num_network_inputs : int = 15
 
 var id : int
-var active : bool = true
+var active : bool = true : set = set_active
 var final_pos : Vector2 = Vector2.ZERO
 var final_rotation : float = 0
 
@@ -89,14 +89,24 @@ func _physics_process(delta: float) -> void:
 		pass
 
 func deactivate():
-	checkpoint_timer.stop()
-	lifetime_timer.stop()
 	active = false
-	set_physics_process(false)
-	set_process(false)
 	final_pos = Vector2(global_position)
 	final_rotation = global_rotation
 	deactivated.emit()
+
+
+func set_active(enabled : bool = true):
+	active = enabled
+	set_physics_process(active)
+	set_process(active)
+	if is_node_ready():
+		if active:
+			checkpoint_timer.start()
+			lifetime_timer.start()
+		else:
+			checkpoint_timer.stop()
+			lifetime_timer.stop()
+
 
 
 func interpret_model_outputs(outputs : Array):
@@ -193,12 +203,8 @@ func reset(location : Marker2D):
 	#frames_stationary = 0
 	score_adjustment = 0
 	super.reset(location)
-	active = true
 	reset_speed_recording()
-	set_physics_process(true)
-	set_process(true)
-	checkpoint_timer.start()
-	lifetime_timer.start()
+	active = true
 
 func _on_checkpoint_timer_timeout() -> void:
 	deactivate()

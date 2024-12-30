@@ -9,6 +9,7 @@ signal new_generation(generation : int)
 signal instanciated(car : NeuralCar)
 signal destroyed(car : NeuralCar)
 signal car_reset(car : NeuralCar)
+signal network_ids_updated
 
 signal network_outputs_received(data : Dictionary)
 signal network_inputs_set
@@ -17,13 +18,15 @@ const INPUT_THRESH : float = 0.5
 const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @export var enabled : bool = true
-@export var load_saved_networks : bool = false
-@export_global_file("*.json") var network_load_path := DEFAULT_SAVE_PATH
-var initial_networks : Array = []
 
 @export var api_client : NeuralAPIClient : set = set_api_client
 @export var track : BaseTrack : set = set_track
 
+@export_group("Autoload")
+@export var load_saved_networks : bool = false
+@export_global_file("*.json") var network_load_path := DEFAULT_SAVE_PATH
+
+@export_group("Autosave")
 @export var save_failed_networks := true
 @export var failed_gen_score_thresh : float = 0.6
 @export var network_save_count : int = 200
@@ -42,6 +45,8 @@ var neural_car : PackedScene = preload("res://scenes/network_controlled_car.tscn
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
 var batch_manager : BatchManager = BatchManager.new(batch_size)
+
+var initial_networks : Array = []
 
 var network_ids : Array
 var id_queue_index : int = 0
@@ -66,6 +71,7 @@ var api_configured : bool = false
 
 var batch_update_semaphore := Semaphore.new()
 
+var ignoring_deactivations := false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -137,16 +143,19 @@ func __remove_neural_cars(num_cars : int):
 func __add_neural_cars(num_cars : int):
 	var current_car_count := cars.size()
 	cars.resize(current_car_count + num_cars)
+	if not track: ignoring_deactivations = true
 	for i in range(current_car_count, cars.size()):
 		var c : NeuralCar = instanciate_neural_car(i)
 		c.deactivated.connect(on_car_deactivated.bind(c), CONNECT_DEFERRED)
+		
+		neural_cars.add_child(c, false, Node.INTERNAL_MODE_FRONT)
 		#c.score_changed.connect(on_network_score_changed, CONNECT_DEFERRED)
 		#c.body_color = Color(randf(), randf(), randf())
-		neural_cars.add_child(c, false, Node.INTERNAL_MODE_FRONT)
 		instanciated.emit(c)
 
 
 func on_car_deactivated(car : NeuralCar):
+	if not track or ignoring_deactivations: return
 	if dynamic_batch:
 		register_score(car)
 		
@@ -336,6 +345,21 @@ func get_rotation_bonus(global_pos : Vector2, global_rotation : float) -> float:
 
 func set_track(new_track : BaseTrack):
 	track = new_track
+	
+	if not network_ids or network_ids.is_empty():
+		await network_ids_updated
+	
+	var idx = -1
+	for car in cars:
+		idx += 1
+		reset_neural_car(network_ids[idx], car)
+	
+	await get_tree().create_timer(0.5).timeout
+	
+	for car in cars:
+		car.active = true
+	
+	ignoring_deactivations = false
 
 
 func set_num_networks(n : int):
@@ -398,6 +422,7 @@ func update_network_ids(server_msg : Dictionary):
 		network_ids = server_msg["payload"]["networkIDs"]
 	else:
 		batch_manager.set_elements(server_msg["payload"]["networkIDs"])
+	network_ids_updated.emit()
 
 
 func free_neural_cars():

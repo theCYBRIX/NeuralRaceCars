@@ -11,7 +11,7 @@ var _iterator_index : int = 0
 func _init(max_size : int) -> void:
 	self._max_size = max_size
 
-func append(value : float):
+func append(value : float) -> void:
 	var index : int = _start_index + _size
 	if index < _max_size:
 		if _buffer.size() < _max_size:
@@ -29,14 +29,12 @@ func append(value : float):
 
 func get_item(index : int) -> float:
 	if index < 0 or index > _size:
-		push_error("index %d out of bounds for buffer of size %d" % [index, _size])
+		push_error("index %d out of bounds for buffer of size %d. Returning 0." % [index, _size])
+		return 0
 	
-	var offset_index = _start_index + index
+	var local_idx = __idx_to_local(index)
 	
-	if offset_index >= _size:
-		offset_index -= _size
-	
-	return _buffer[offset_index]
+	return _buffer[local_idx]
 
 func get_as_array() -> PackedFloat32Array:
 	return PackedFloat32Array(_buffer.slice(_start_index, _buffer.size()) + _buffer.slice(0, _start_index))
@@ -68,3 +66,11 @@ func _iter_should_continue() -> bool:
 		return (_iterator_index > _start_index) or (_iterator_index < _start_index - 1) 
 	else:
 		return (_iterator_index < _size - 1)
+
+func __idx_to_local(idx : int) -> int:
+	var local_idx = _start_index + idx
+	
+	if local_idx >= _size:
+		local_idx -= _size
+	
+	return local_idx
