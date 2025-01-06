@@ -1,0 +1,76 @@
+[gd_scene load_steps=3 format=3 uid="uid://vmbxcw7j1qu8"]
+
+[ext_resource type="Script" path="res://scenes/save_selection_menu.gd" id="1_7e6it"]
+[ext_resource type="PackedScene" uid="uid://dbfw2qma5day0" path="res://scenes/ui/save_file_list.tscn" id="2_safoo"]
+
+[node name="SaveSelectionMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7e6it")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SaveFileList" parent="VBoxContainer" instance=ExtResource("2_safoo")]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="FolderPathEdit" type="LineEdit" parent="VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BrowseButton" type="Button" parent="VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+text = "Browse"
+
+[node name="RefreshButton" type="Button" parent="VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Refresh"
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Control" type="HBoxContainer" parent="VBoxContainer/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="LoadButton" type="Button" parent="VBoxContainer/MarginContainer2/Control"]
+layout_mode = 2
+disabled = true
+text = "Load"
+
+[node name="BackButton" type="Button" parent="VBoxContainer/MarginContainer2/Control"]
+layout_mode = 2
+text = "Back"
+
+[connection signal="item_deselected" from="VBoxContainer/SaveFileList" to="." method="_on_file_list_item_deselected"]
+[connection signal="item_pressed" from="VBoxContainer/SaveFileList" to="." method="_on_save_file_list_item_pressed"]
+[connection signal="item_selected" from="VBoxContainer/SaveFileList" to="." method="_on_file_list_item_selected"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/RefreshButton" to="." method="_on_refresh_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer2/Control/LoadButton" to="." method="_on_load_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer2/Control/BackButton" to="." method="_on_back_button_pressed"]

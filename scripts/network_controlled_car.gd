@@ -80,13 +80,13 @@ func set_throttle_input(input : float) -> void:
 	#else:
 	throttle_input = input
 
-func _physics_process(delta: float) -> void:
-	super._physics_process(delta)
-	
-	if get_contact_count() > 0:
-		deactivate()
-		#score_adjustment -= 0.1 * delta
-		pass
+#func _physics_process(delta: float) -> void:
+	#super._physics_process(delta)
+	#
+	#if get_contact_count() > 0:
+		#deactivate()
+		##score_adjustment -= 0.1 * delta
+		#pass
 
 func deactivate():
 	active = false

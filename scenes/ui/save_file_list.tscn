@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbfw2qma5day0"]
+
+[ext_resource type="Script" path="res://scripts/save_file_list.gd" id="1_2yniv"]
+
+[node name="SaveFileList" type="PanelContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_2yniv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MarginContainer4" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer4"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MarginContainer4/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_right = 15
+
+[node name="ListItems" type="VBoxContainer" parent="VBoxContainer/MarginContainer4/ScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

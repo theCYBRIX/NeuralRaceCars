@@ -28,7 +28,8 @@ corner_radius_bottom_left = 20
 [node name="GameArea" type="Node2D"]
 script = ExtResource("1_iaiwh")
 track_scene = ExtResource("2_6sj2g")
-training_state_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(1).res"
+use_saved_training_state = false
+training_state_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_state(funny wallride).res"
 
 [node name="CameraManager" parent="." instance=ExtResource("3_elaeq")]
 
@@ -118,6 +119,9 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer"]
+layout_mode = 2
+
 [node name="Columns" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer"]
 layout_mode = 2
 
@@ -180,75 +184,94 @@ text = "Since Last Randomized: --"
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items"]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 10
 alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer"]
 layout_mode = 2
 
-[node name="SavePathEdit" type="TextEdit" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="SavePathEdit" type="LineEdit" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "user://saved_state.res"
 placeholder_text = "Save Path"
-scroll_fit_content_height = true
 
-[node name="BrowseButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="BrowseButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "Browse"
 
-[node name="ButtonRow" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer"]
+[node name="ButtonRow" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
 
-[node name="PauseButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow"]
+[node name="PauseButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
 layout_mode = 2
 text = "Pause"
 
-[node name="SaveButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow"]
+[node name="SaveButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
 layout_mode = 2
 text = "Save"
 
-[node name="FileManagerButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow"]
+[node name="FileManagerButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
 layout_mode = 2
 text = "Open in File Manager"
 
-[node name="ScrollContainer2" type="ScrollContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Items" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Items" type="VBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2"]
 process_mode = 1
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Graph" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
+[node name="Graph" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
 layout_mode = 2
 resolution = 1000
 always_show_legend = false
-limit_minimum_value = true
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
-[node name="Graph2" parent="CanvasLayer/StatScreen/MarginContainer/Columns/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
+[node name="Graph2" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("3_q1c5e")]
 layout_mode = 2
 resolution = 1000
 always_show_legend = false
-limit_minimum_value = true
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
-[node name="VFlowContainer" type="VFlowContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns"]
+[node name="VFlowContainer" type="VFlowContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="PopoutButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VFlowContainer"]
+[node name="PopoutButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 icon = ExtResource("10_roe6o")
 icon_alignment = 1
 expand_icon = true
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer"]
+layout_mode = 2
+
+[node name="ExitButton" type="Button" parent="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Exit"
 
 [node name="PopoutComponent" type="Node" parent="CanvasLayer/StatScreen"]
 script = ExtResource("11_87okm")
@@ -258,15 +281,25 @@ relative_position = true
 keep_size = true
 relative_size = true
 
+[node name="ExitDialog" type="ConfirmationDialog" parent="."]
+disable_3d = true
+title = "Are you sure?"
+size = Vector2i(245, 100)
+unresizable = true
+popup_window = true
+keep_title_visible = false
+dialog_text = "Any unsaved data will be lost."
+
 [connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
 [connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
-[connection signal="networks_randomized" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_networks_randomized"]
 [connection signal="new_generation" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_car_manager_new_generation"]
-[connection signal="reset" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_reset"]
+[connection signal="randomizing_networks" from="NeuralAPIClient/NeuralCarManager" to="." method="_on_neural_car_manager_networks_randomized"]
 [connection signal="first_place_changed" from="Leaderboard" to="." method="_on_leaderboard_first_place_changed"]
-[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow/PauseButton" to="." method="_on_pause_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/ButtonRow/FileManagerButton" to="." method="_on_file_manager_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/VFlowContainer/PopoutButton" to="." method="_on_popout_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow/PauseButton" to="." method="_on_pause_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/Items/VBoxContainer/ButtonRow/FileManagerButton" to="." method="_on_file_manager_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer/PopoutButton" to="." method="_on_popout_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/StatScreen/MarginContainer/Columns/VBoxContainer/HBoxContainer2/ExitButton" to="." method="_on_exit_button_pressed"]
 [connection signal="popout_state_changed" from="CanvasLayer/StatScreen/PopoutComponent" to="." method="_on_stat_screen_popout_state_changed"]
+[connection signal="confirmed" from="ExitDialog" to="." method="_on_exit_dialog_confirmed"]

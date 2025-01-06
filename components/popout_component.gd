@@ -27,6 +27,7 @@ func popout(header_text := window_title, size := initial_size, position := initi
 	if is_instance_valid(popout_window): return
 	
 	popout_window = Window.new()
+	popout_window.disable_3d = true
 	popout_window.close_requested.connect(set_popped_out.bind(false))
 	
 	get_tree().get_root().add_child(popout_window)

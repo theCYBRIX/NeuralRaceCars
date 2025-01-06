@@ -11,14 +11,34 @@ config_version=5
 [application]
 
 config/name="CarGame"
-run/main_scene="res://scenes/game_area.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 run/max_fps=60
 config/icon="res://icon.svg"
 
+[autoload]
+
+SceneManager="*res://singletons/scene_manager.gd"
+CommonTools="*res://singletons/common_tools.gd"
+SaveManager="*res://singletons/save_manager.gd"
+GameSettings="*res://singletons/game_settings.gd"
+
 [display]
 
 window/subwindows/embed_subwindows=false
+
+[file_customization]
+
+folder_colors={
+"res://assets/": "green",
+"res://classes/": "yellow",
+"res://components/": "purple",
+"res://resources/": "teal",
+"res://scenes/": "orange",
+"res://scripts/": "blue",
+"res://shaders/": "red",
+"res://singletons/": "pink"
+}
 
 [input]
 

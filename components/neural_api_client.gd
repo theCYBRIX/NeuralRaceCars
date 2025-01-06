@@ -37,7 +37,12 @@ func populate_random_generation() -> Dictionary:
 
 func setup_session(num_networks : int, parent_selector : ParentSelection, initial_networks : Array) -> Dictionary:
 	
-	var network_layout : Dictionary = get_node(layout_generator_path).create_network_layout().to_dict()
+	var network_layout : Dictionary
+	if initial_networks.is_empty():
+		network_layout = get_node(layout_generator_path).create_network_layout().to_dict()
+	else:
+		network_layout = initial_networks.front()["layout"]
+	
 	var network_count := num_networks
 	var parent_selection = ParentSelection.keys()[parent_selector]
 		
@@ -85,21 +90,27 @@ func request(request : String, payload : Dictionary = {}) -> Dictionary:
 		packet["payload"] = payload
 	
 	var raw_response : String = await io_handler.query(JSON.stringify(packet, "", true, true)) #Sending and recieving
-	raw_response = raw_response.replace("NaN", "0")
-	var response : Dictionary = JSON.parse_string(raw_response)
+	
+	var parser := JSON.new()
+	var parse_error := parser.parse(raw_response)
+	
+	var response : Dictionary = parser.data
 
-	if not response or (response["status"] == "error"):
+	if parse_error != OK or (not response) or (response["status"] == "error"):
 		var error : String
+	
+		if parse_error != OK:
+			error = "Error on line %d when parcing server response. Error: %s" % [parser.get_error_line(), parser.get_error_message()]
 		
-		if not response:
-			error = "Failed to parse response.\n Response was:\"%s\"" % raw_response
+		elif not response:
+			error = "Parser returned null.\n Response was:\"%s\"" % raw_response
 		
 		elif response.has("payload"):
 			var response_payload : Dictionary = response["payload"]
 			error = response_payload["message"] if response_payload.has("message") else "Server Error"
 			if response_payload.has("details"): error += " " + response_payload["details"]
 			if print_error_stack_trace and response_payload.has("stackTrace"): error += "\n" + response_payload["stackTrace"]
-		#print(payload["networkScores"])
+		
 		push_error(error)
 		printerr(error)
 		

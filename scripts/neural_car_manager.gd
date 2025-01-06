@@ -15,7 +15,6 @@ signal network_outputs_received(data : Dictionary)
 signal network_inputs_set
 
 const INPUT_THRESH : float = 0.5
-const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @export var enabled : bool = true
 
@@ -24,7 +23,7 @@ const DEFAULT_SAVE_PATH := "user://saved_networks.json"
 
 @export_group("Autoload")
 @export var load_saved_networks : bool = false
-@export_global_file("*.json") var network_load_path := DEFAULT_SAVE_PATH
+@export_global_file("*.json") var network_load_path := SaveManager.DEFAULT_SAVE_FILE_PATH
 
 @export_group("Autosave")
 @export var save_failed_networks := true
@@ -232,7 +231,8 @@ func populate_random_generation():
 	
 	if save_failed_networks:
 		if highest_score >= failed_gen_score_thresh:
-			save_networks(DEFAULT_SAVE_PATH, network_save_count, false)
+			var networks := await get_best_networks(network_save_count)
+			SaveManager.save_networks(networks)
 	
 	await api_client.populate_random_generation()
 	var msg := await api_client.populate_new_generation(network_scores)
@@ -417,7 +417,7 @@ func reset_neural_car(network_id : int, car : NeuralCar):
 	car.reset(track.spawn_point)
 
 
-func update_network_ids(server_msg : Dictionary):
+func update_network_ids(server_msg : Dictionary) -> void:
 	if dynamic_batch:
 		network_ids = server_msg["payload"]["networkIDs"]
 	else:
@@ -425,7 +425,7 @@ func update_network_ids(server_msg : Dictionary):
 	network_ids_updated.emit()
 
 
-func free_neural_cars():
+func free_neural_cars() -> void:
 	if cars.size() > 0:
 		for c : NeuralCar in cars:
 			if c: c.queue_free()
@@ -434,7 +434,7 @@ func free_neural_cars():
 
 func _on_api_client_connected() -> void:
 	if not api_configured:
-		if load_saved_networks: initial_networks = load_networks(network_load_path)
+		if load_saved_networks: initial_networks = SaveManager.load_networks(network_load_path)
 		var response := await api_client.setup_session(num_networks, parent_selection,  initial_networks)
 		
 		if not api_client.error_occurred():
@@ -452,34 +452,6 @@ func set_batch_size(size : int):
 func get_best_networks(n := num_networks) -> Array:
 	var response := await api_client.get_best_networks(n)
 	var networks : Array = response["payload"]["networks"]
-	return networks
-
-func save_networks(path := DEFAULT_SAVE_PATH, n := num_networks, overwrite = false) -> void:
-	var networks : Array = await get_best_networks(n)
-	if not overwrite: path = make_path_unique(path)
-	var save_file = FileAccess.open(path, FileAccess.WRITE)
-	save_file.store_string(JSON.stringify(networks))
-	save_file.close()
-
-
-func make_path_unique(path := DEFAULT_SAVE_PATH):
-	var extension := path.get_extension()
-	if not extension.is_empty(): extension = "." + extension
-	var raw_path := path.get_basename()
-	var duplicate_number : int = 0
-	var unique_path := path
-	while FileAccess.file_exists(unique_path):
-		duplicate_number += 1
-		unique_path = raw_path + ("(%d)" % duplicate_number) + extension
-	return unique_path
-
-
-func load_networks(save_path : String) -> Array:
-	var save_file = FileAccess.open(save_path, FileAccess.READ)
-	var file_contents = save_file.get_as_text()
-	save_file.close()
-	if save_file.get_error() != OK: return []
-	var networks : Array = JSON.parse_string(file_contents)
 	return networks
 
 

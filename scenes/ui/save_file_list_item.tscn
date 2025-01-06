@@ -1,0 +1,62 @@
+[gd_scene load_steps=2 format=3 uid="uid://chxejmnpfsj1l"]
+
+[ext_resource type="Script" path="res://scripts/save_file_list_item.gd" id="1_gkpno"]
+
+[node name="SaveFileListItem" type="PanelContainer"]
+clip_contents = true
+offset_right = 864.0
+offset_bottom = 117.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+script = ExtResource("1_gkpno")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="FileNameLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Save File Name"
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Details" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Column1" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GenerationsLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column1"]
+layout_mode = 2
+text = "Num Generations"
+
+[node name="TrainingTimeLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column1"]
+layout_mode = 2
+text = "Training time"
+
+[node name="Column2" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HighestScoreLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column2"]
+layout_mode = 2
+text = "Highest Score"
+
+[node name="NumNetworksLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column2"]
+layout_mode = 2
+text = "Number of Networks"
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

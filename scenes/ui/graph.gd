@@ -21,19 +21,34 @@ const POPUP_LIMIT_MIN_VALUE : int = 2
 @export var show_legend_on_hover : bool = true : set = set_show_legend_on_hover
 
 @export_group("Limits")
-@export_subgroup("Maximum")
-@export var limit_maximum_value := false : set = set_limit_max_value
+@export_subgroup("Maximum", "max_value")
+@export var max_value_use_padding := false
+@export var max_value_padding_mode := PaddingMode.FRACTION
+@export var max_value_padding := 0.0 : set = set_max_value_padding
+@export var max_value_restrict_floor := false : set = set_limit_max_value
 @export var max_value_floor := 0.0
-@export_subgroup("Minimum")
-@export var limit_minimum_value := false : set = set_limit_min_value
+@export_subgroup("Minimum", "min_value")
+@export var min_value_use_padding := false
+@export var min_value_padding_mode := PaddingMode.FRACTION
+@export var min_value_padding := 0.0 : set = set_min_value_padding
+@export var min_value_restrict_ceiling := false : set = set_limit_min_value
 @export var min_value_cieling := 0.0
+
+
+enum PaddingMode {
+	FRACTION,
+	VALUE
+}
+
 
 var series : Dictionary = {}
 
 var graphing_area_size : Vector2
 
-var maximum : float = max_value_floor if limit_maximum_value else -INF
-var minimum : float = min_value_cieling if limit_minimum_value else INF
+var maximum : float = max_value_floor if max_value_restrict_floor else -INF
+var minimum : float = min_value_cieling if min_value_restrict_ceiling else INF
+var max_value : float = -INF
+var min_value : float = INF
 var value_range : float
 var range_updated : bool = false
 
@@ -207,23 +222,44 @@ func _on_graphing_area_resized() -> void:
 
 
 func refresh_range() -> void:
-	var new_min : float = min_value_cieling if limit_minimum_value else INF
-	var new_max : float = max_value_floor if limit_maximum_value else -INF
+	min_value = INF
+	max_value = -INF
 	
 	for s : GraphSeries in series.values():
 		if not s.enabled: continue
 		
-		if s.get_max() > new_max:
-			new_max = s.get_max()
-		if s.get_min() < new_min:
-			new_min = s.get_min()
+		if s.get_max() > max_value:
+			max_value = s.get_max()
+		if s.get_min() < min_value:
+			min_value = s.get_min()
+	
+	var new_min : float = min_value
+	var new_max : float = max_value
+	
+	if max_value_use_padding or min_value_use_padding:
+		var new_range := (new_max - new_min)
+		if max_value_use_padding:
+			match max_value_padding_mode:
+				PaddingMode.VALUE:
+					new_max += max_value_padding
+				PaddingMode.FRACTION:
+					new_max += max_value_padding * new_range
+		if min_value_use_padding:
+			match min_value_padding_mode:
+				PaddingMode.VALUE:
+					new_min -= min_value_padding
+				PaddingMode.FRACTION:
+					new_min -= min_value_padding * new_range
+	
+	if min_value_restrict_ceiling: new_min = minf(new_min, min_value_cieling)
+	if max_value_restrict_floor: new_max = maxf(new_max, max_value_floor)
 	
 	if new_max < new_min:
 		new_max = 1
 		new_min = -1
 	elif is_equal_approx(new_max, new_min):
 		new_max += 1
-		new_min -= 1 
+		new_min -= 1
 	
 	if (new_min != minimum) or (new_max != maximum):
 		minimum = new_min
@@ -254,16 +290,30 @@ func set_show_legend_on_hover(enabled : bool):
 
 
 func set_limit_max_value(enabled : bool):
-	limit_maximum_value = enabled
+	max_value_restrict_floor = enabled
 	if is_node_ready():
 		__update_popup_state()
 
 
 func set_limit_min_value(enabled : bool):
-	limit_minimum_value = enabled
+	min_value_restrict_ceiling = enabled
 	if is_node_ready():
 		__update_popup_state()
 
+
+func set_max_value_padding(padding : float):
+	match max_value_padding_mode:
+		PaddingMode.FRACTION:
+			max_value_padding = clampf(padding, 0, 1)
+		PaddingMode.VALUE:
+			max_value_padding = max(0, padding)
+
+func set_min_value_padding(padding : float):
+	match max_value_padding_mode:
+		PaddingMode.FRACTION:
+			min_value_padding = clampf(padding, 0, 1)
+		PaddingMode.VALUE:
+			min_value_padding = max(0, padding)
 
 func set_resolution(n : int):
 	resolution = n
@@ -316,14 +366,14 @@ func _on_popup_menu_id_pressed(id: int) -> void:
 		POPUP_ALWAYS_SHOW_LEGEND:
 			always_show_legend = !always_show_legend
 		POPUP_LIMIT_MAX_VALUE:
-			limit_maximum_value = !limit_maximum_value
+			max_value_restrict_floor = !max_value_restrict_floor
 		POPUP_LIMIT_MIN_VALUE:
-			limit_minimum_value = !limit_minimum_value
+			min_value_restrict_ceiling = !min_value_restrict_ceiling
 
 func __update_popup_state():
 	popup_menu.set_item_checked(POPUP_ALWAYS_SHOW_LEGEND, always_show_legend)
-	popup_menu.set_item_checked(POPUP_LIMIT_MAX_VALUE, limit_maximum_value)
-	popup_menu.set_item_checked(POPUP_LIMIT_MIN_VALUE, limit_minimum_value)
+	popup_menu.set_item_checked(POPUP_LIMIT_MAX_VALUE, max_value_restrict_floor)
+	popup_menu.set_item_checked(POPUP_LIMIT_MIN_VALUE, min_value_restrict_ceiling)
 
 func __unparent_popup():
 	if popup_menu.visible: return

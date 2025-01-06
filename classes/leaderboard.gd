@@ -7,7 +7,14 @@ signal first_place_changed(new_first : Car, prev_first : Car)
 
 var leaderboard : Array[NeuralCar] = []
 var checkpoint_idxs : PackedInt32Array = []
+var first_place_car : NeuralCar
 
+func _process(delta: float) -> void:
+	var current_first = leaderboard.back()
+	if current_first != first_place_car:
+		first_place_changed.emit(current_first, first_place_car)
+		first_place_car = current_first
+	set_process(false)
 
 func checkpoint_updated(car : NeuralCar):
 	var prev_idx := get_current_leaderboard_idx(car, car.checkpoint_index - 1)
@@ -17,8 +24,10 @@ func checkpoint_updated(car : NeuralCar):
 	
 	
 	var new_idx := checkpoint_idxs.bsearch(car.checkpoint_index, true) - 1
-	if new_idx > prev_idx: new_idx -= 1
-	if new_idx < 0: new_idx = 0
+	if new_idx < 0:
+		new_idx = 0
+	
+	#assert(new_idx == 0 or checkpoint_idxs[new_idx] > checkpoint_idxs[new_idx - 1])
 	
 	new_idx = _move_entry(prev_idx, new_idx)
 	car.label.set_text(str(leaderboard.size() - new_idx))
@@ -34,9 +43,7 @@ func _move_entry(index : int, new_index : int) -> int:
 	
 	if index == new_index: return index
 	
-	
 	var car := leaderboard[index]
-	
 	var direction : int = 1 if index < new_index else -1
 	
 	for i : int in range(index, new_index, direction):
@@ -46,15 +53,10 @@ func _move_entry(index : int, new_index : int) -> int:
 	leaderboard[new_index] = car
 	checkpoint_idxs[new_index] = car.checkpoint_index
 	
-	if new_index > 48: print(new_index)
-	
 	var first_place_index := leaderboard.size() - 1
 	
-	if new_index == first_place_index:
-		first_place_changed.emit(car, leaderboard[new_index - 1])
-	elif index == first_place_index:
-		first_place_changed.emit(leaderboard[first_place_index], car)
-		
+	if new_index == first_place_index or index == first_place_index:
+		set_process(true)
 	
 	return new_index
 
@@ -68,8 +70,8 @@ func add(car : NeuralCar):
 	var insert_index := checkpoint_idxs.bsearch(car.checkpoint_index, true)
 	leaderboard.insert(insert_index, car)
 	checkpoint_idxs.insert(insert_index, car.checkpoint_index)
-	car.state_reset.connect(checkpoint_updated.bind(car))
-	car.checkpoint_updated.connect(checkpoint_updated.bind(car).unbind(1))
+	car.state_reset.connect(checkpoint_updated.bind(car), CONNECT_DEFERRED)
+	car.checkpoint_updated.connect(checkpoint_updated.bind(car).unbind(1), CONNECT_DEFERRED)
 	car.label.set_text(str(get_current_leaderboard_idx(car)))
 
 
@@ -80,8 +82,15 @@ func remove(car : NeuralCar):
 
 
 func refresh():
-	leaderboard.sort_custom(func(a : NeuralCar, b : NeuralCar): a.checkpoint_index < b.checkpoint_index)
+	leaderboard.sort_custom(_sort_ascending)
 	checkpoint_idxs = leaderboard.map(func(a : NeuralCar) -> int: return a.checkpoint_index)
+
+
+func _sort_ascending(a : NeuralCar, b : NeuralCar) -> bool:
+	if a.checkpoint_index == b.checkpoint_index:
+		return leaderboard.find(a) < leaderboard.find(b)
+	else: 
+		return a.checkpoint_index < b.checkpoint_index
 
 
 func get_current_leaderboard_idx(car : NeuralCar, checkpoint_index := car.checkpoint_index) -> int:
@@ -101,10 +110,6 @@ func get_current_leaderboard_idx(car : NeuralCar, checkpoint_index := car.checkp
 
 func _on_car_reset(car : NeuralCar):
 	checkpoint_updated(car)
-
-
-func _enter_tree() -> void:
-	pass
 
 
 func set_car_manager(manager : NeuralCarManager):

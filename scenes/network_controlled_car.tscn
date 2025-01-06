@@ -45,6 +45,9 @@ label_settings = SubResource("LabelSettings_upjlg")
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="CameraMount" parent="." index="3"]
+position = Vector2(0, -60.975)
+
 [node name="Sensors" type="Node2D" parent="." index="4"]
 visible = false
 
