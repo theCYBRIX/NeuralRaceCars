@@ -50,13 +50,15 @@ func _process(delta: float) -> void:
 	closest_point_on_track.add_point(to_local(track.trajectory.to_global(track.trajectory.curve.sample_baked(track.get_closest_trajectory_offset(global_position)))))
 
 
-func deactivate() -> void:
+func deactivate(cancel_signal := false) -> void:
 	if deactivateable:
-		super.deactivate()
+		super.deactivate(cancel_signal)
+
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset"):
-		reset(track.spawn_point)
+		reset()
+
 
 func get_user_inputs() -> Array[float]:
 	var inputs : Array[float] = []

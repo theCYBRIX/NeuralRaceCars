@@ -1,0 +1,92 @@
+[gd_scene load_steps=10 format=3 uid="uid://yy25v74l726j"]
+
+[ext_resource type="Script" path="res://components/neural_api_client.gd" id="1_2vvgq"]
+[ext_resource type="Script" path="res://scripts/gameplay_scene.gd" id="1_j3b3t"]
+[ext_resource type="Script" path="res://scripts/neural_car_manager.gd" id="2_edios"]
+[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="3_k7364"]
+[ext_resource type="Script" path="res://components/console_io_handler.gd" id="4_8p6vn"]
+[ext_resource type="Script" path="res://components/server_io_handler.gd" id="5_wnbxj"]
+[ext_resource type="Script" path="res://components/track_provider.gd" id="6_tnyg7"]
+[ext_resource type="PackedScene" uid="uid://bo3ui0wlk1dqt" path="res://components/camera_manager.tscn" id="8_jn773"]
+[ext_resource type="PackedScene" uid="uid://bji248xsn4q3q" path="res://scenes/ui/graph.tscn" id="9_rhwj5"]
+
+[node name="GameplayScene" type="Node2D"]
+script = ExtResource("1_j3b3t")
+
+[node name="CameraManager" parent="." node_paths=PackedStringArray("target") instance=ExtResource("8_jn773")]
+target = NodePath(".")
+
+[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "layout_generator")]
+script = ExtResource("1_2vvgq")
+io_handler = NodePath("ConsoleIOHandler")
+layout_generator = NodePath("NetworkLayoutGenerator")
+
+[node name="NeuralCarManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("car_parent", "track_provider")]
+script = ExtResource("2_edios")
+car_parent = NodePath(".")
+track_provider = NodePath("../../TrackProvider")
+
+[node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("3_k7364")
+num_inputs = 15
+num_outputs = 4
+hidden_layer_sizes = Array[int]([24, 16])
+activation_functions = Array[int]([0, 1, 1, 2])
+input_normalizers = Array[int]([1, 0, 0, 0])
+
+[node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("4_8p6vn")
+
+[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("5_wnbxj")
+host_address = "localhost"
+host_port = 3050
+
+[node name="TrackProvider" type="Node" parent="."]
+script = ExtResource("6_tnyg7")
+track_internal_mode = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="PauseMenu" type="Control" parent="CanvasLayer"]
+process_mode = 2
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/PauseMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PauseMenu/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="ResumeButton" type="Button" parent="CanvasLayer/PauseMenu/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Resume"
+
+[node name="QuitButton" type="Button" parent="CanvasLayer/PauseMenu/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[node name="Graph" parent="CanvasLayer" instance=ExtResource("9_rhwj5")]
+anchors_preset = -1
+anchor_left = 0.652778
+anchor_bottom = 0.385802
+grow_horizontal = 0
+grow_vertical = 1
+metadata/_edit_use_anchors_ = true
+
+[connection signal="track_updated" from="TrackProvider" to="." method="_on_track_provider_track_updated"]
+[connection signal="pressed" from="CanvasLayer/PauseMenu/HBoxContainer/VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/PauseMenu/HBoxContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

@@ -1,3 +1,4 @@
+class_name ConsoleIOHandler
 extends IOHandler
 
 @export var app_path : String = "./SimpleNeuralNetwork/SimpleNeuralNetwork.jar"
@@ -12,6 +13,7 @@ var shutdown_requested : bool = false
 func _ready() -> void:
 	if not Engine.is_editor_hint() and autostart:
 		start()
+	set_process(false)
 
 func _process(_delta: float) -> void:
 	if is_running(): return
@@ -27,7 +29,7 @@ func read() -> String:
 	return std_io.get_pascal_string()
 
 func is_running() -> bool:
-	return OS.is_process_running(app_properties.pid)
+	return app_properties and app_properties.has("pid") and OS.is_process_running(app_properties.pid)
 
 func start() -> bool:
 	if app_properties and is_running():

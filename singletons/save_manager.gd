@@ -58,13 +58,13 @@ func load_training_state_json(path : String, default_value : TrainingState = nul
 
 func save_training_state_res(training_state : TrainingState, save_path : String, overwrite := false) -> Error:
 	if save_path.get_extension() != TRAINING_STATE_FILE_EXTENSION: save_path += "." + TRAINING_STATE_FILE_EXTENSION
-	if not overwrite: CommonTools.make_path_unique(save_path)
+	if not overwrite: Util.make_path_unique(save_path)
 	return ResourceSaver.save(training_state, save_path)
 
 
 func save_training_state_json(training_state : TrainingState, path := DEFAULT_SAVE_DIR_PATH, overwrite := false) -> Error:
 	if path.get_extension() != TRAINING_STATE_FILE_EXTENSION: path += "." + TRAINING_STATE_FILE_EXTENSION
-	if not overwrite: path = CommonTools.make_path_unique(path)
+	if not overwrite: path = Util.make_path_unique(path)
 	var save_file = FileAccess.open(path, FileAccess.WRITE)
 	if not save_file: return FileAccess.get_open_error()
 	save_file.store_string(JSON.stringify(training_state.to_dictionary(), "", true, true))

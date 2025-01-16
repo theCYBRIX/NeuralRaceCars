@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0r5hxbekunfm"]
+
+[ext_resource type="Script" path="res://components/replay_recorder.gd" id="1_rlomq"]
+
+[node name="ReplayRecorder" type="Node"]
+script = ExtResource("1_rlomq")
+
+[node name="Timer" type="Timer" parent="."]
+process_callback = 0
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

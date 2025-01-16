@@ -1,0 +1,125 @@
+[gd_scene load_steps=7 format=3 uid="uid://cgk37yafien3"]
+
+[ext_resource type="Script" path="res://scripts/network_visualizer.gd" id="1_lfskc"]
+[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="2_fck8j"]
+[ext_resource type="Script" path="res://components/draggable.gd" id="3_20vra"]
+
+[sub_resource type="Animation" id="Animation_hqdsp"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("NetworkLayoutGenerator:num_inputs")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [15]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("NetworkLayoutGenerator:num_outputs")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("NetworkLayoutGenerator:hidden_layer_sizes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [Array[int]([])]
+}
+
+[sub_resource type="Animation" id="Animation_id3ha"]
+resource_name = "network_growth"
+length = 8.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("NetworkLayoutGenerator:num_inputs")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 4.23333, 5.66667, 7.96667),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [1, 1, 10, 15]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("NetworkLayoutGenerator:num_outputs")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1.75),
+"transitions": PackedFloat32Array(1, 0.5),
+"update": 0,
+"values": [1, 4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("NetworkLayoutGenerator:hidden_layer_sizes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 2, 4.2, 5.66667, 6.4, 7.06667, 7.96667),
+"transitions": PackedFloat32Array(0, 2, 0, 0.5, 1, 1, 1),
+"update": 0,
+"values": [Array[int]([]), Array[int]([1]), Array[int]([7]), Array[int]([7, 0]), Array[int]([7, 7]), Array[int]([15, 7]), Array[int]([24, 16])]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_3t74j"]
+_data = {
+"RESET": SubResource("Animation_hqdsp"),
+"network_growth": SubResource("Animation_id3ha")
+}
+
+[node name="NetworkVisualizer" type="Control" node_paths=PackedStringArray("layout_generator")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(576, 324)
+mouse_filter = 1
+script = ExtResource("1_lfskc")
+layout_generator = NodePath("NetworkLayoutGenerator")
+node_separation = Vector2(-0.29, 10)
+node_size_multiplier = 0.588
+background_color = Color(0, 0, 0, 0.576471)
+line_stroke_width = 0.545
+
+[node name="NetworkLayoutGenerator" type="Node" parent="."]
+script = ExtResource("2_fck8j")
+num_inputs = 15
+num_outputs = 4
+activation_functions = Array[int]([0, 2])
+use_default_behaviour = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_3t74j")
+}
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("3_20vra")
+enable_rotating = true
+enable_scaling = true
+
+[connection signal="gui_input" from="." to="Node" method="_gui_input"]

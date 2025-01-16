@@ -24,9 +24,13 @@ alignment = 1
 layout_mode = 2
 alignment = 1
 
+[node name="PlayButton" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Play"
+
 [node name="StartButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "Start"
+text = "Start  Training"
 
 [node name="LoadButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
@@ -36,6 +40,7 @@ text = "Load previous"
 layout_mode = 2
 text = "Exit"
 
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]

@@ -20,17 +20,17 @@ deactivateable = false
 [node name="Sprite" parent="." index="1"]
 material = SubResource("ShaderMaterial_5qdpt")
 
-[node name="Sensors" parent="." index="3"]
+[node name="Sensors" parent="." index="4"]
 visible = true
-
-[node name="CheckpointTimer" parent="." index="4"]
-autostart = false
 
 [node name="SensorVision" type="Line2D" parent="." index="5"]
 
 [node name="DrivingDataRecorder" type="Node" parent="." index="6" node_paths=PackedStringArray("target_car")]
 script = ExtResource("4_uj6nw")
 target_car = NodePath("..")
+
+[node name="CheckpointTimer" parent="." index="7"]
+autostart = false
 
 [node name="Arrow" type="Sprite2D" parent="." index="9"]
 position = Vector2(-6.10352e-05, -3.05176e-05)
@@ -40,4 +40,3 @@ texture = ExtResource("5_kj3km")
 
 [node name="ClosestPointOnTrack" type="Line2D" parent="." index="10"]
 default_color = Color(1, 0.25098, 1, 0.584314)
-

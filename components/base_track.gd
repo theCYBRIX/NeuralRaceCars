@@ -1,7 +1,15 @@
 class_name BaseTrack
 extends Node2D
 
-signal car_entered_checkpoint(car: NeuralCar, checkpoint_index: int, num_checkpoints : int, checkpoints : Area2D)
+signal car_entered_checkpoint(car: Car, checkpoint_index: int, num_checkpoints : int, checkpoints : Area2D)
+
+enum SpawnType {
+	TRACK_START,
+	CLOSEST_POINT,
+	LAST_CHECKPOINT
+}
+
+const CAR_FORWARDS_ANGLE := PI / 2.0
 
 @onready var spawn_point: Marker2D = $SpawnPoint
 @onready var checkpoints: Area2D = $Checkpoints
@@ -13,11 +21,13 @@ var checkpoint_offsets : Array[float]
 
 var raycast_query_param : PhysicsRayQueryParameters2D
 
+
 func _init() -> void:
 	raycast_query_param = PhysicsRayQueryParameters2D.new()
 	raycast_query_param.collision_mask = 0b00000000_00000000_00000000_000001
 	raycast_query_param.collide_with_areas = false
 	raycast_query_param.collide_with_bodies = true
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -33,8 +43,13 @@ func _ready() -> void:
 
 
 func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shape_index: int, local_shape_index: int) -> void:
-	if body is NeuralCar:
+	if body is Car:
 		car_entered_checkpoint.emit(body, local_shape_index, num_checkpoints, checkpoints)
+		var car : Car = body
+		if car is NeuralCar and not car.active:
+			return
+		#print("%d == %d" %[car.checkpoint_index, local_shape_index - 1])
+		car.checkpoint(((car.checkpoint_index + 1) / num_checkpoints) * num_checkpoints + local_shape_index)
 
 
 func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
@@ -48,6 +63,21 @@ func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
 		return trajectory_fraction
 	
 	return 0
+
+
+func get_spawn_point(type := SpawnType.TRACK_START, for_whom : Car = null) -> SpawnPoint:
+	match type:
+		SpawnType.TRACK_START:
+			return SpawnPoint.from(spawn_point)
+		SpawnType.LAST_CHECKPOINT:
+			return SpawnPoint.from(spawn_point if for_whom.checkpoint_index < 0 else checkpoints.get_children(true)[for_whom.checkpoint_index % num_checkpoints])
+		SpawnType.CLOSEST_POINT:
+			var trajectory_offset := get_closest_trajectory_offset(for_whom.global_position)
+			var local_transform := trajectory.curve.sample_baked_with_rotation(trajectory_offset)
+			return SpawnPoint.new(trajectory.to_global(local_transform.get_origin()), (trajectory.global_rotation + local_transform.get_rotation()) + CAR_FORWARDS_ANGLE)
+		_:
+			push_error("Unknown SpawnType requested: %d" % type)
+			return SpawnPoint.from(spawn_point)
 
 
 func get_absolute_progress(global_pos : Vector2, checkpoint_index : int) -> float:
@@ -89,11 +119,6 @@ func get_track_direction(global_pos : Vector2, look_ahead_px : float, search_dep
 		look_ahead_px = best_valid_look_ahead
 	
 	var trajectory_point := trajectory.to_global(trajectory.curve.sample_baked( fmod(trajectory_px + look_ahead_px, trajectory.curve.get_baked_length()) ))
-	
-	#line_2d.clear_points()
-	#line_2d.add_point(trajectory.to_global(trajectory.curve.sample_baked(trajectory_px)))
-	#line_2d.add_point(global_pos)
-	#line_2d.add_point(trajectory_point)
 	
 	var direction := global_pos.angle_to_point(trajectory_point)
 	return direction

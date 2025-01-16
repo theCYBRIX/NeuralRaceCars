@@ -153,9 +153,9 @@ curve = SubResource("Curve2D_qyqht")
 
 [node name="SpawnPoint" parent="." index="3"]
 position = Vector2(1282, 323)
-rotation = -1.5708
 
 [node name="SlowZone" type="Area2D" parent="." index="5"]
+visible = false
 collision_layer = 2
 collision_mask = 2
 

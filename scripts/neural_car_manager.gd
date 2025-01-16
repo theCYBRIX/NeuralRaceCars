@@ -2,125 +2,80 @@
 class_name NeuralCarManager
 extends Node
 
-signal reset
-signal randomizing_networks
-signal networks_randomized
-signal new_generation(generation : int)
 signal instanciated(car : NeuralCar)
-signal destroyed(car : NeuralCar)
-signal car_reset(car : NeuralCar)
-signal network_ids_updated
+signal freed(car : NeuralCar)
 
-signal network_outputs_received(data : Dictionary)
+signal car_respawned(car : NeuralCar)
+signal car_deactivated(car : NeuralCar)
+
+signal track_ready(track : BaseTrack)
+
 signal network_inputs_set
+
 
 const INPUT_THRESH : float = 0.5
 
+
+
+@export var car_parent: Node = self as Node: set = set_car_parent
+@export var track_provider : TrackProvider = null : set = set_track_provider
+
 @export var enabled : bool = true
 
-@export var api_client : NeuralAPIClient : set = set_api_client
-@export var track : BaseTrack : set = set_track
+@export_range(0, Util.INT_32_MAX_VALUE) var num_cars : int : set = set_num_cars
 
 @export_group("Autoload")
 @export var load_saved_networks : bool = false
 @export_global_file("*.json") var network_load_path := SaveManager.DEFAULT_SAVE_FILE_PATH
 
-@export_group("Autosave")
-@export var save_failed_networks := true
-@export var failed_gen_score_thresh : float = 0.6
-@export var network_save_count : int = 200
-
-@export_group("Training Parameters")
-@export_range(0, 5000) var num_networks : int : set = set_num_networks
-@export var gens_without_improvement_limit : int = 100
-@export var batch_size : int = 50 : set = set_batch_size
-@export var dynamic_batch := true
-
-@export var parent_selection : NeuralAPIClient.ParentSelection
-
-@onready var neural_cars: Node = $NeuralCars
+var track : BaseTrack : set = set_track
 
 var neural_car : PackedScene = preload("res://scenes/network_controlled_car.tscn")
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
-var batch_manager : BatchManager = BatchManager.new(batch_size)
-
-var initial_networks : Array = []
-
-var network_ids : Array
-var id_queue_index : int = 0
-var id_queue_semaphore := Semaphore.new()
-
-var network_scores : Dictionary = {}
-
-var cars_active_mutex : Mutex = Mutex.new()
-var cars_active : int = 0
-
-var generation : int = 0
-var gens_without_improvement : int = 0
-var improvement_flag : bool = false
+var inactive_cars : Array[NeuralCar] = []
 
 var network_outputs : Array[Array]
 
-var highest_score : float = 0
-var highscore_mutex : Mutex = Mutex.new()
-
 var api_connected : bool = false
-var api_configured : bool = false
-
-var batch_update_semaphore := Semaphore.new()
-
 var ignoring_deactivations := false
+
+var _api_client : NeuralAPIClient : set = set_api_client
+
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	batch_update_semaphore.post()
-	id_queue_semaphore.post()
-	
 	set_process(false)
+	
+	if not car_parent:
+		car_parent = self
 	
 	if Engine.is_editor_hint():
 		update_configuration_warnings()
 		return
 	
-	if enabled:
-		__update_car_count() 
+	if enabled and track:
+		__update_car_count()
 
 
-func pause():
-	set_process(false)
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_PARENTED:
+			if not _api_client:
+				var parent = get_parent()
+				if parent is NeuralAPIClient:
+					_api_client = parent
+				else:
+					_api_client = null
+		NOTIFICATION_UNPARENTED:
+			_api_client = null
 
-
-func resume():
-	if api_connected and api_configured:
-		set_process(true)
-	else:
-		push_error("Unable to resume: API is not connected.")
-
-#TODO: Create track.get_absolute_progress method to replace most of this function
-func get_reward(car : NeuralCar) -> float:
-	var score : float = car.score_adjustment
-	
-	#var checkpoints_passed : int = (car.laps_completed * track.num_checkpoints) + car.checkpoint_index
-	#score += checkpoints_passed * 0.1
-	
-	var track_progress : float
-	#var rotation_bonus : float
-	
-	if car.active:
-		track_progress = track.get_absolute_progress(car.global_position, car.checkpoint_index)
-		#rotation_bonus = get_rotation_bonus(car.global_position, car.global_rotation)
-	else:
-		track_progress = track.get_absolute_progress(car.final_pos, car.checkpoint_index)
-		
-	
-	score += track_progress
-	#score += rotation_bonus
-	
-	return score
 
 func __update_car_count():
-	var num_cars_needed = batch_size
+	if not track: return
+	
+	var num_cars_needed = num_cars
 	if cars.size() > 0:
 		num_cars_needed -= cars.size()
 		if num_cars_needed == 0: return
@@ -131,148 +86,74 @@ func __update_car_count():
 	__add_neural_cars(num_cars_needed)
 
 
-func __remove_neural_cars(num_cars : int):
+func __remove_neural_cars(count : int):
 	var removed : int = 0
-	while removed < num_cars:
+	while removed < count:
 		var c : NeuralCar = cars.pop_back()
 		c.queue_free()
-		destroyed.emit(c)
+		freed.emit(c)
 		removed += 1
 
-func __add_neural_cars(num_cars : int):
-	var current_car_count := cars.size()
-	cars.resize(current_car_count + num_cars)
+
+func __add_neural_cars(count : int):
 	if not track: ignoring_deactivations = true
+	var current_car_count := cars.size()
+	cars.resize(current_car_count + count)
 	for i in range(current_car_count, cars.size()):
 		var c : NeuralCar = instanciate_neural_car(i)
-		c.deactivated.connect(on_car_deactivated.bind(c), CONNECT_DEFERRED)
-		
-		neural_cars.add_child(c, false, Node.INTERNAL_MODE_FRONT)
-		#c.score_changed.connect(on_network_score_changed, CONNECT_DEFERRED)
-		#c.body_color = Color(randf(), randf(), randf())
+		c.deactivated.connect(_on_car_deactivated.bind(c), CONNECT_DEFERRED)
+		c.respawned.connect(_on_car_respawned.bind(c), CONNECT_DEFERRED)
+		car_parent.add_child(c, false, Node.INTERNAL_MODE_FRONT)
 		instanciated.emit(c)
 
 
-func on_car_deactivated(car : NeuralCar):
+func _on_car_deactivated(car : NeuralCar):
 	if not track or ignoring_deactivations: return
-	if dynamic_batch:
-		register_score(car)
-		
-		if id_queue_index < network_ids.size():
-			active_cars.erase(str(car.id))
-			reset_neural_car(network_ids[id_queue_index], car)
-			id_queue_index += 1
-			return
-			
-	decrement_active_count()
-	#if car.checkpoint_index > 1: car.score += (car.laps_completed + track.get_lap_progress(car.position)) * 10
+	set_inactive(car)
+	car_deactivated.emit(car)
 
 
-func decrement_active_count():
-	cars_active_mutex.lock()
-	cars_active -= 1
-	
-	if cars_active == 0 and api_connected:
-		start_next_batch()
-	
-	cars_active_mutex.unlock()
+func set_inactive(car : NeuralCar):
+	if active_cars.erase(str(car.id)):
+		inactive_cars.append(car)
 
 
-func start_next_batch():
-	if not batch_update_semaphore.try_wait(): return
-	
-	if not dynamic_batch:
-		var batch_scores : Dictionary = get_network_scores()
-		network_scores.merge(batch_scores, true)
-	
-	#if network_scores.size() >= num_networks:
-		#var keys := network_scores.keys()
-		#var start : int = int(keys[0])
-		#for i in range(1, keys.size()):
-			#var next := int(keys[i])
-			#if next == start + 1:
-				#start = next
-				#continue
-			#pass
-	
-	if dynamic_batch or (not batch_manager.has_next()):
-		
-		if improvement_flag:
-			gens_without_improvement = 0
-		else:
-			gens_without_improvement += 1
-		
-		improvement_flag = false
-		
-		if gens_without_improvement >= gens_without_improvement_limit:
-			await populate_random_generation()
-		else:
-			await populate_new_generation()
-			#var values := network_scores.values()
-			#values.sort()
-			#print(values)
-	reset_neural_cars()
-	
-	batch_update_semaphore.post()
-
-
-func populate_new_generation():
-	var msg := await api_client.populate_new_generation(network_scores)
-	#assert(not api_client.error_occurred())
-	if not api_client.error_occurred():
-		update_network_ids(msg)
-	on_new_generation_populated(msg)
-	network_scores.clear()
-	pass
-
-
-func populate_random_generation():
-	randomizing_networks.emit()
-	
-	if save_failed_networks:
-		if highest_score >= failed_gen_score_thresh:
-			var networks := await get_best_networks(network_save_count)
-			SaveManager.save_networks(networks)
-	
-	await api_client.populate_random_generation()
-	var msg := await api_client.populate_new_generation(network_scores)
-	assert(not api_client.error_occurred())
-	if not api_client.error_occurred():
-		update_network_ids(msg)
-		networks_randomized.emit()
-	generation = -1
-	gens_without_improvement = 0
-	highest_score = 0
-	on_new_generation_populated(msg)
-	network_scores.clear()
-
-
-func reset_active_count():
-	cars_active_mutex.lock()
-	cars_active = batch_size
-	cars_active_mutex.unlock()
+func _on_car_respawned(car : NeuralCar):
+	car_respawned.emit(car)
 
 
 func instanciate_neural_car(index : int) -> NeuralCar:
 	var c : Car = neural_car.instantiate()
 	c.id = index
 	c.set_name("Neural Car " + str(index))
+	if track and track.is_node_ready():
+		c.track_path = NodePath("../" + str(car_parent.get_path_to(track)))
 	cars[index] = c
+	inactive_cars.append(c)
 	return c
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
+	if active_cars.is_empty(): return
 	
-	if cars_active > 0:
-		var network_inputs : Dictionary = get_network_inputs()
-		var response : Dictionary = await get_network_outputs(network_inputs)
-		
-		if api_client.error_occurred(): return
-		await set_neural_car_inputs(response["payload"]["networkOutputs"])
+	var network_inputs : Dictionary = get_network_inputs()
+	var response : Dictionary = get_network_outputs(network_inputs)
+	
+	if _api_client.error_occurred(): return
+	for id in response.keys():
+		var str_id = str(id)
+		var c : NeuralCar = active_cars[str_id]
+		var outputs : Array = response[str_id]
+		c.interpret_model_outputs(outputs)
+	
+	#var cars_to_update : Array[NeuralCar] = []
+	#cars_to_update.append_array(active_cars.values())
+	#_api_client.update_car_inputs(cars_to_update, 16)
+
 
 
 func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
-	var response : Dictionary = await api_client.get_network_outputs(network_inputs)
+	var response : Dictionary = _api_client.get_network_outputs(network_inputs)
 	return response
 
 
@@ -285,9 +166,10 @@ func set_neural_car_inputs(data : Dictionary) -> Signal:
 
 func set_neural_car_input(network_index : int, data : Dictionary):
 	var id := str(data.keys()[network_index])
-	var c = active_cars[id]
+	var c : NeuralCar = active_cars[id]
 	var outputs : Array = data[id]
 	c.interpret_model_outputs(outputs)
+
 
 func get_input_axis(positive : float, negative : float) -> float:
 	if (positive >= INPUT_THRESH and negative > INPUT_THRESH) or (positive < INPUT_THRESH and negative < INPUT_THRESH):
@@ -321,108 +203,70 @@ func get_inputs(index : int, car_array : Array[NeuralCar], registry : Dictionary
 	registry[car.id] = inputs
 	registry_mutex.unlock()
 
-func get_network_scores() -> Dictionary:
-	var scores : Dictionary = {}
-	
-	for c : Car in cars:
-		scores[str(c.id)] = get_reward(c)
-	
-	return scores
-
-
-func register_score(car : NeuralCar):
-	network_scores[str(car.id)] = get_reward(car)
-
-
-
-func get_rotation_bonus(global_pos : Vector2, global_rotation : float) -> float:
-	const TWO_PI : float = PI * 2
-	var car_rotation : float = fmod(global_rotation + PI * 3.5, TWO_PI)
-	var track_rotation : float = fmod(track.trajectory.curve.sample_baked_with_rotation(track.get_closest_trajectory_offset(global_pos) + 100).get_rotation() + TWO_PI, TWO_PI)
-	var rotation_diff : float = fmod(abs(track_rotation - car_rotation), PI)
-	return ((PI - rotation_diff) / PI) * 0.01
-
 
 func set_track(new_track : BaseTrack):
+	if track:
+		Util.disconnect_from_signal(_on_track_ready, track.ready)
+	
 	track = new_track
 	
-	if not network_ids or network_ids.is_empty():
-		await network_ids_updated
+	if not track:
+		return
 	
-	var idx = -1
-	for car in cars:
-		idx += 1
-		reset_neural_car(network_ids[idx], car)
+	ignoring_deactivations = false
 	
-	await get_tree().create_timer(0.5).timeout
+	if track.is_node_ready():
+		_on_track_ready()
+	else:
+		track.ready.connect(_on_track_ready, CONNECT_ONE_SHOT)
+
+
+func set_car_parent(node : Node):
+	car_parent = node if node else self as Node
+
+
+
+func _on_track_ready():
 	
-	for car in cars:
-		car.active = true
+	if enabled:
+		__update_car_count()
+	
+	if not _api_client.simulation_network_ids or _api_client.simulation_network_ids.is_empty():
+		await _api_client.network_ids_updated
+	
+	#var idx = -1
+	#for car in cars:
+		#idx += 1
+		#car.track_path = car.get_path_to(track)
+		#reset_neural_car(_api_client.simulation_network_ids[idx], car)
+	#
+	#await get_tree().create_timer(0.5).timeout
+	#
+	#for car in cars:
+		#car.active = true
 	
 	ignoring_deactivations = false
 
 
-func set_num_networks(n : int):
-	num_networks = n
+func set_num_cars(n : int):
+	num_cars = n
 	if is_node_ready() and not Engine.is_editor_hint():
 		__update_car_count()
-
-
-func on_network_score_changed(score : float):
-	highscore_mutex.lock()
-	if score > highest_score:
-		highest_score = score
-		improvement_flag = true
-	highscore_mutex.unlock()
-
-
-func on_new_generation_populated(_server_message: Dictionary) -> void:
-	generation += 1
-	new_generation.emit(generation)
-
-
-func reset_neural_cars():
-	#highest_score = -INF
-	#print(cars.map(func(x): return x.get_score()).max())
-	if not track: return
-	#if batch_start_index == 50 or batch_start_index == 200:
-		#pass
-	
-	active_cars.clear()
-	
-	var batch_ids : Array
-	if dynamic_batch:
-		batch_ids = network_ids.slice(0, batch_size)
-		id_queue_index = batch_size
-	else:
-		batch_ids = batch_manager.next_batch()
-	if batch_ids.is_empty(): return
-	
-	if cars.size() != batch_manager.batch_size:
-		__update_car_count()
-	
-	for index in range(batch_ids.size()):
-		var network_id := int(batch_ids[index])
-		var car := cars[index]
-		reset_neural_car(network_id, car)
-	
-	reset_active_count()
-	
-	reset.emit()
 
 
 func reset_neural_car(network_id : int, car : NeuralCar):
 	car.id = network_id
 	active_cars[str(network_id)] = car
-	car.reset(track.spawn_point)
+	car.reset()
 
 
-func update_network_ids(server_msg : Dictionary) -> void:
-	if dynamic_batch:
-		network_ids = server_msg["payload"]["networkIDs"]
-	else:
-		batch_manager.set_elements(server_msg["payload"]["networkIDs"])
-	network_ids_updated.emit()
+func activate_neural_car(network_id : int) -> Error:
+	if inactive_cars.is_empty(): return ERR_CANT_ACQUIRE_RESOURCE
+	
+	var car : NeuralCar = inactive_cars.pop_back()
+	reset_neural_car(network_id, car)
+	
+	return OK
 
 
 func free_neural_cars() -> void:
@@ -433,26 +277,7 @@ func free_neural_cars() -> void:
 
 
 func _on_api_client_connected() -> void:
-	if not api_configured:
-		if load_saved_networks: initial_networks = SaveManager.load_networks(network_load_path)
-		var response := await api_client.setup_session(num_networks, parent_selection,  initial_networks)
-		
-		if not api_client.error_occurred():
-			update_network_ids(response)
-			on_server_configured()
-			
 	api_connected = true
-
-
-func set_batch_size(size : int):
-	batch_size = size
-	batch_manager.batch_size = size
-
-
-func get_best_networks(n := num_networks) -> Array:
-	var response := await api_client.get_best_networks(n)
-	var networks : Array = response["payload"]["networks"]
-	return networks
 
 
 func _on_api_client_disconnected() -> void:
@@ -464,57 +289,65 @@ func _on_api_client_connection_error() -> void:
 	_on_api_client_disconnected()
 
 
-
-func on_server_configured() -> void:
-	api_configured = true
-	if not enabled: return
-	reset.emit()
-	reset_neural_cars()
-	set_process(true)
+func _on_track_updated(new_track : BaseTrack) -> void:
+	track = new_track
 
 
-class NetworkDataPacket:
-	var id : int
-	var node_values : Array[float]
+func set_track_provider(provider : TrackProvider) -> void:
+	if track_provider and is_instance_valid(track_provider) and not Engine.is_editor_hint():
+		Util.disconnect_from_signal(_on_track_updated, track_provider.track_updated)
+	track_provider = provider
 	
-	@warning_ignore("shadowed_variable")
-	func _init(id : int, data : Array[float]):
-		self.id = id
-		self.node_values = data
+	if not Engine.is_editor_hint():
+		if track_provider:
+			track_provider.track_updated.connect(_on_track_updated)
+			track = track_provider.track
+		else:
+			track = null
+	update_configuration_warnings()
 
-class NetworkScorePacket:
-	var id : int
-	var score : float
+
+func deactivate_all() -> void:
+	for car : NeuralCar in active_cars.values():
+		car.deactivate(true)
 	
-	func _init(id : int, score : float):
-		self.id = id
-		self.score = score
-
-
-func _on_timer_timeout() -> void:
-	start_next_batch()
+	active_cars.clear()
 
 
 func set_api_client(client : NeuralAPIClient):
-	if api_client and not Engine.is_editor_hint():
-		api_client.io_handler.connected.disconnect(_on_api_client_connected)
-		api_client.io_handler.disconnected.disconnect(_on_api_client_disconnected)
-		api_client.io_handler.connection_error.disconnect(_on_api_client_connection_error)
+	if _api_client and not Engine.is_editor_hint():
+		Util.disconnect_from_signal(_on_api_client_connected, _api_client.connected)
+		Util.disconnect_from_signal(_on_api_client_disconnected, _api_client.disconnected)
+		Util.disconnect_from_signal(_on_api_client_connection_error, _api_client.connection_error)
 	
-	api_client = client
+	api_connected = false
+	_api_client = client
 	
-	if api_client and not Engine.is_editor_hint():
-		api_client.io_handler.connected.connect(_on_api_client_connected, CONNECT_DEFERRED)
-		api_client.io_handler.disconnected.connect(_on_api_client_disconnected, CONNECT_DEFERRED)
-		api_client.io_handler.connection_error.connect(_on_api_client_connection_error, CONNECT_DEFERRED)
+	if _api_client and not Engine.is_editor_hint():
+		_api_client.connected.connect(_on_api_client_connected, CONNECT_DEFERRED)
+		_api_client.disconnected.connect(_on_api_client_disconnected, CONNECT_DEFERRED)
+		_api_client.connection_error.connect(_on_api_client_connection_error, CONNECT_DEFERRED)
+		if not api_connected and _api_client.is_api_connected():
+			_on_api_client_connected()
 	
 	update_configuration_warnings()
+
+
+func _connect_io_handler_signals() -> void:
+	var io_handler := _api_client.io_handler
+	
+	
 
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings : PackedStringArray = []
 	
-	if not api_client:
-		warnings.append("NeuralCarManager requires a NeuralAPIClient.")
+	if not _api_client:
+		warnings.append("Node must be a child of a NeuralAPIClient.")
+	
+	if not track_provider:
+		warnings.append("No TrackProvider has been set.")
+	elif not (track_provider is TrackProvider):
+		warnings.append("TrackProvider path is not valid.")
 	
 	return warnings

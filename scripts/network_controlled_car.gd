@@ -2,7 +2,6 @@ class_name NeuralCar
 extends Car
 
 signal deactivated
-signal checkpoint_updated(idx : int)
 
 const STEERING_NODE = 0
 const THROTTLE_NODE = 1
@@ -10,7 +9,6 @@ const THROTTLE_NODE = 1
 @onready var sensors: Node2D = $Sensors
 @onready var checkpoint_timer: Timer = $CheckpointTimer
 @onready var lifetime_timer: Timer = $LifetimeTimer
-@onready var label: Label = $Label
 
 @export var num_network_inputs : int = 15
 
@@ -18,8 +16,6 @@ var id : int
 var active : bool = true : set = set_active
 var final_pos : Vector2 = Vector2.ZERO
 var final_rotation : float = 0
-
-var checkpoint_index : int = -1 : set = set_checkpoint
 
 var steering_input : float
 var throttle_input : float
@@ -29,30 +25,25 @@ var throttle_input : float
 var speed_sum : float = 0
 var speed_sum_ticks : int = 0
 
-var sensor_list : Array[RayCast2D] = []
-
 var inputs : Array[float]
 
 var reset_marker : Marker2D
 
 var score_adjustment : float = 0
 
+var deactivate_on_contact := true : set = set_deactivate_on_contact
+
+
 func _ready() -> void:
 	super._ready()
 	
 	inputs = []
 	inputs.resize(num_network_inputs)
-	
-	sensor_list.clear()
-	for anchor : Node2D in sensors.get_children():
-		for sensor : RayCast2D in anchor.get_children():
-			sensor_list.append(sensor)
-	
-	if reset_marker: reset(reset_marker)
+
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	label.rotation = -global_rotation
+	
 	#if (not moving_forwards) and speed > 20: score -= 0.1
 	#speed_sum += speed
 	#speed_sum_ticks += 1
@@ -64,9 +55,11 @@ func get_steering_input() -> float:
 	#return super.get_steering_input()
 	return steering_input
 
+
 func get_throttle_input() -> float:
 	#return super.get_throttle_input()
 	return throttle_input
+
 
 func set_steering_input(input : float) -> void:
 	#if steering_input == input:
@@ -74,28 +67,32 @@ func set_steering_input(input : float) -> void:
 	#else:
 	steering_input = input
 
+
 func set_throttle_input(input : float) -> void:
 	#if throttle_input == input:
 		#if active: score += 0.05
 	#else:
 	throttle_input = input
 
-#func _physics_process(delta: float) -> void:
-	#super._physics_process(delta)
-	#
-	#if get_contact_count() > 0:
-		#deactivate()
-		##score_adjustment -= 0.1 * delta
-		#pass
 
-func deactivate():
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	
+	if deactivate_on_contact and get_contact_count() > 0:
+		deactivate()
+		#score_adjustment -= 0.1 * delta
+		pass
+
+
+func deactivate(cancel_signal := false) -> void:
 	active = false
 	final_pos = Vector2(global_position)
 	final_rotation = global_rotation
-	deactivated.emit()
+	if not cancel_signal:
+		deactivated.emit()
 
 
-func set_active(enabled : bool = true):
+func set_active(enabled : bool = true) -> void:
 	active = enabled
 	set_physics_process(active)
 	set_process(active)
@@ -166,20 +163,11 @@ func get_sensor_data() -> Array[float]:
 	index += 1
 	inputs[index] = rotation
 
-	for sensor : RayCast2D in sensor_list:
+	for reading in sensors.get_sensor_readings():
 		index += 1
-		if sensor.is_colliding():
-			inputs[index] = sensor.get_collision_point().distance_squared_to(sensor.global_position) / sensor.target_position.length_squared()
-		else:
-			inputs[index] = 1
+		inputs[index] = reading
+	
 	return inputs
-
-
-func checkpoint():
-	checkpoint_index += 1
-	#score += ((speed_sum / speed_sum_ticks) / max_forward_speed) * 5
-	#reset_speed_recording()
-	checkpoint_timer.start(0)
 
 
 func get_average(array : Array[float]) -> float:
@@ -189,30 +177,33 @@ func get_average(array : Array[float]) -> float:
 	average /= array.size()
 	return average
 
+
 func reset_speed_recording():
 	speed_sum = 0
 	speed_sum_ticks = 0
 
-func reset(location : Marker2D):
-	if not is_node_ready():
-		reset_marker = location
-		return
+
+func reset(spawn_type := BaseTrack.SpawnType.TRACK_START):
 	steering_input = 0
 	throttle_input = 0
-	checkpoint_index = -1
 	#frames_stationary = 0
 	score_adjustment = 0
-	super.reset(location)
+	super.reset(spawn_type)
 	reset_speed_recording()
 	active = true
+
 
 func _on_checkpoint_timer_timeout() -> void:
 	deactivate()
 
+
 func _on_lifetime_timer_timeout() -> void:
 	deactivate()
 
-func set_checkpoint(idx : int):
-	if idx == checkpoint_index: return
-	checkpoint_index = idx
-	checkpoint_updated.emit(checkpoint_index)
+
+func set_deactivate_on_contact(enabled := true):
+	deactivate_on_contact = enabled
+
+
+func _on_checkpoint_updated(idx: int) -> void:
+	checkpoint_timer.start(0)

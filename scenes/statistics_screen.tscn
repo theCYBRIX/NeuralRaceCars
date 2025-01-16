@@ -1,0 +1,242 @@
+[gd_scene load_steps=6 format=3 uid="uid://b0jd27uwnldue"]
+
+[ext_resource type="Script" path="res://scripts/statistics_screen.gd" id="1_3hfig"]
+[ext_resource type="PackedScene" uid="uid://bji248xsn4q3q" path="res://scenes/ui/graph.tscn" id="1_yu65y"]
+[ext_resource type="Texture2D" uid="uid://c8ybn1ts1xxbf" path="res://assets/popout_white.png" id="2_qdj24"]
+[ext_resource type="Script" path="res://components/popout_component.gd" id="3_pweg3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xt7i1"]
+bg_color = Color(0.15967, 0.15967, 0.15967, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.166853, 0.166853, 0.166853, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="StatisticsScreen" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_force_pass_scroll_events = false
+script = ExtResource("1_3hfig")
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.745098)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Columns" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Items" type="VBoxContainer" parent="MarginContainer/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PanelContainer2" type="PanelContainer" parent="MarginContainer/Columns/Items"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xt7i1")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Columns/Items/PanelContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Columns/Items/PanelContainer2/MarginContainer"]
+layout_mode = 2
+
+[node name="TotalGensLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Generation: --"
+
+[node name="TimeElapsedLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Time elapsed: --"
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/Columns/Items"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xt7i1")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Columns/Items/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Columns/Items/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="GenLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Generation: --"
+
+[node name="BatchLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Batch Progress: --"
+
+[node name="ImprovementLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Gens without improvement: --"
+
+[node name="SinceRandomizedLabel" type="Label" parent="MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Since Last Randomized: --"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Columns/Items"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Columns/Items/VBoxContainer"]
+layout_mode = 2
+
+[node name="SavePathEdit" type="LineEdit" parent="MarginContainer/Columns/Items/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Save Path"
+
+[node name="BrowseButton" type="Button" parent="MarginContainer/Columns/Items/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Browse"
+
+[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/Columns/Items/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="PauseButton" type="Button" parent="MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Pause"
+
+[node name="SaveButton" type="Button" parent="MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Save"
+
+[node name="FileManagerButton" type="Button" parent="MarginContainer/Columns/Items/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Open in File Manager"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Columns/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Items" type="VBoxContainer" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2"]
+process_mode = 1
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Graph" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 2
+resolution = 1000
+always_show_legend = false
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
+metadata/_edit_use_anchors_ = true
+
+[node name="Graph2" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 2
+resolution = 1000
+always_show_legend = false
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
+metadata/_edit_use_anchors_ = true
+
+[node name="VFlowContainer" type="VFlowContainer" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="PopoutButton" type="Button" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+icon = ExtResource("2_qdj24")
+icon_alignment = 1
+expand_icon = true
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/Columns/VBoxContainer"]
+layout_mode = 2
+
+[node name="ExitButton" type="Button" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Exit"
+
+[node name="PopoutComponent" type="Node" parent="."]
+script = ExtResource("3_pweg3")
+window_title = "Stats"
+keep_position = true
+relative_position = true
+keep_size = true
+relative_size = true
+
+[node name="ExitDialog" type="ConfirmationDialog" parent="."]
+auto_translate_mode = 1
+disable_3d = true
+title = "Are you sure?"
+size = Vector2i(245, 190)
+unresizable = true
+popup_window = true
+keep_title_visible = false
+dialog_text = "Any unsaved data will be lost."
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]
+[connection signal="pressed" from="MarginContainer/Columns/Items/VBoxContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Columns/Items/VBoxContainer/ButtonRow/PauseButton" to="." method="_on_pause_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Columns/Items/VBoxContainer/ButtonRow/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Columns/Items/VBoxContainer/ButtonRow/FileManagerButton" to="." method="_on_file_manager_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer/PopoutButton" to="." method="_on_popout_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Columns/VBoxContainer/HBoxContainer2/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="popout_state_changed" from="PopoutComponent" to="." method="_on_popout_component_popout_state_changed"]
+[connection signal="confirmed" from="ExitDialog" to="." method="_on_exit_dialog_confirmed"]

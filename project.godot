@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 SceneManager="*res://singletons/scene_manager.gd"
-CommonTools="*res://singletons/common_tools.gd"
+Util="*res://singletons/util.gd"
 SaveManager="*res://singletons/save_manager.gd"
 GameSettings="*res://singletons/game_settings.gd"
 
@@ -39,6 +39,14 @@ folder_colors={
 "res://shaders/": "red",
 "res://singletons/": "pink"
 }
+
+[global_group]
+
+Cars=""
+
+[gui]
+
+theme/default_theme_scale=2.0
 
 [input]
 

@@ -15,6 +15,9 @@ func _ready() -> void:
 
 
 func start_tracking(node : Node):
+	if not node:
+		node = self
+	
 	if node is Car:
 		target = node.camera_mount
 		return

@@ -1,6 +1,17 @@
 extends Node
 
+
+const INT_32_MAX_VALUE := 0xFFFFFFFF
+
+const SECONDS_PER_MINUTE : int = 60
+const SECONDS_PER_HOUR : int = 3600
+const SECONDS_PER_DAY : int = 86400
+const MINUTES_PER_HOUR : int = 60
+const HOURS_PER_DAY : int = 24
+
+
 var USER_DATA_FOLDER : String = ProjectSettings.globalize_path("user://")
+
 
 func localize_path(path : String) -> String:
 	if not FileAccess.file_exists(path) and DirAccess.dir_exists_absolute(path): if not path.ends_with("/"): path += "/"
@@ -33,7 +44,7 @@ func browse_folder(file_mode : FileDialog.FileMode, on_item_selected : Callable,
 	dialog.access = access
 	dialog.file_mode = file_mode
 	
-	initial_path = CommonTools.globalize_path(initial_path)
+	initial_path = Util.globalize_path(initial_path)
 	
 	for filter in filters:
 		dialog.add_filter("*." + filter.file_extension, filter.description)
@@ -71,11 +82,6 @@ func browse_folder(file_mode : FileDialog.FileMode, on_item_selected : Callable,
 
 @warning_ignore("integer_division")
 func format_time(seconds : int) -> String:
-	const SECONDS_PER_MINUTE : int = 60
-	const SECONDS_PER_HOUR : int = 3600
-	const SECONDS_PER_DAY : int = 86400
-	const MINUTES_PER_HOUR : int = 60
-	const HOURS_PER_DAY : int = 24
 	
 	var formatted := "%ds" % (seconds % SECONDS_PER_MINUTE)
 	
@@ -87,3 +93,10 @@ func format_time(seconds : int) -> String:
 		formatted = ("%dd " % (seconds / SECONDS_PER_DAY)) + formatted
 	
 	return formatted
+
+
+func disconnect_from_signal(callable : Callable, from : Signal) -> bool:
+	if from.is_connected(callable):
+		from.disconnect(callable)
+		return true
+	return false

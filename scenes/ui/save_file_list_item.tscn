@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://chxejmnpfsj1l"]
+[gd_scene load_steps=3 format=3 uid="uid://chxejmnpfsj1l"]
 
 [ext_resource type="Script" path="res://scripts/save_file_list_item.gd" id="1_gkpno"]
+[ext_resource type="Script" path="res://scripts/network_visualizer.gd" id="2_0e7bo"]
 
 [node name="SaveFileListItem" type="PanelContainer"]
 clip_contents = true
@@ -8,6 +9,7 @@ offset_right = 864.0
 offset_bottom = 117.0
 size_flags_horizontal = 3
 size_flags_vertical = 0
+mouse_filter = 1
 script = ExtResource("1_gkpno")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -34,9 +36,23 @@ theme_override_constants/margin_bottom = 5
 [node name="Details" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="NetworkVisualizer" type="Control" parent="MarginContainer/VBoxContainer/MarginContainer/Details/MarginContainer"]
+custom_minimum_size = Vector2(320, 200)
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("2_0e7bo")
+node_size_multiplier = 0.6
+line_stroke_width = -1.0
+
 [node name="Column1" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
 [node name="GenerationsLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column1"]
 layout_mode = 2
@@ -49,6 +65,7 @@ text = "Training time"
 [node name="Column2" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
 [node name="HighestScoreLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column2"]
 layout_mode = 2

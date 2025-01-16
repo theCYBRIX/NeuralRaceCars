@@ -67,9 +67,7 @@ text = "Load"
 layout_mode = 2
 text = "Back"
 
-[connection signal="item_deselected" from="VBoxContainer/SaveFileList" to="." method="_on_file_list_item_deselected"]
 [connection signal="item_pressed" from="VBoxContainer/SaveFileList" to="." method="_on_save_file_list_item_pressed"]
-[connection signal="item_selected" from="VBoxContainer/SaveFileList" to="." method="_on_file_list_item_selected"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/RefreshButton" to="." method="_on_refresh_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer2/Control/LoadButton" to="." method="_on_load_button_pressed"]
