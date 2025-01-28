@@ -130,10 +130,20 @@ func respawn(pos : Vector2, angle : float):
 func _set_position_and_rotation(pos : Vector2, angle : float):
 	set_physics_process(false)
 	await get_tree().physics_frame
-	position = pos
-	rotation = angle
+	#position = pos
+	#rotation = angle
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0
+	
+	#var new_transform = transform.rotated(angle_difference(rotation, angle))
+	var new_transform = Transform2D(angle, transform.get_scale(), transform.get_skew(), pos)
+	#new_transform.origin = pos
+	PhysicsServer2D.body_set_state(
+		self,
+		PhysicsServer2D.BODY_STATE_TRANSFORM,
+		new_transform
+	)
+	#force_update_transform()
 	set_physics_process(true)
 
 

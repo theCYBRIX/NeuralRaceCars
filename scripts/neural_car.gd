@@ -6,7 +6,7 @@ signal deactivated
 @export var num_network_inputs : int = 15
 
 var id : int
-var active : bool = true : set = set_active
+var active : bool = false : set = set_active
 var final_pos : Vector2 = Vector2.ZERO
 var final_rotation : float = 0
 
@@ -77,11 +77,13 @@ func _physics_process(delta: float) -> void:
 		pass
 
 
-func deactivate(cancel_signal := false) -> void:
+func deactivate(emit_signal := true) -> void:
+	if not active:
+		return
 	active = false
 	final_pos = Vector2(global_position)
 	final_rotation = global_rotation
-	if not cancel_signal:
+	if emit_signal:
 		deactivated.emit()
 
 
@@ -174,7 +176,7 @@ func reset(spawn_type := BaseTrack.SpawnType.TRACK_START):
 	throttle_input = 0
 	#frames_stationary = 0
 	score_adjustment = 0
-	super.reset(spawn_type)
+	await super.reset(spawn_type)
 	reset_speed_recording()
 	active = true
 

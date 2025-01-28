@@ -36,7 +36,7 @@ script = ExtResource("4_1idkt")
 num_networks = 1500
 car_parent = NodePath(".")
 track_provider = NodePath("../../TrackProvider")
-num_cars = 50
+num_cars = 35
 network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]

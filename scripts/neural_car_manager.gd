@@ -265,14 +265,14 @@ func set_num_cars(n : int):
 func reset_neural_car(network_id : int, car : NeuralCar):
 	car.id = network_id
 	active_cars[str(network_id)] = car
-	car.reset()
+	await car.reset()
 
 
 func activate_neural_car(network_id : int) -> Error:
 	if inactive_cars.is_empty(): return ERR_CANT_ACQUIRE_RESOURCE
 	
 	var car : NeuralCar = inactive_cars.pop_back()
-	reset_neural_car(network_id, car)
+	await reset_neural_car(network_id, car)
 	
 	return OK
 
@@ -317,9 +317,15 @@ func set_track_provider(provider : TrackProvider) -> void:
 
 func deactivate_all() -> void:
 	for car : NeuralCar in active_cars.values():
-		car.deactivate(true)
+		car.deactivate(false)
 	
 	active_cars.clear()
+
+
+func activate_all() -> void:
+	for car : NeuralCar in cars:
+		active_cars[str(car.id)] = car
+		car.set_active(true)
 
 
 func set_api_client(client : NeuralAPIClient):

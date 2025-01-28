@@ -240,6 +240,7 @@ func set_camera_target(target : Node):
 
 
 func exit() -> void:
+	get_tree().set_deferred("paused", false)
 	get_tree().change_scene_to_packed(SceneManager.get_packed(SceneManager.Scene.MAIN_MENU))
 
 

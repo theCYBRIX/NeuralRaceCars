@@ -40,6 +40,7 @@ var api_configured : bool = false
 
 func _init() -> void:
 	_neural_car_scene = preload("res://scenes/training_car.tscn")
+	ignore_deactivations = true
 
 
 func _ready() -> void:
@@ -63,10 +64,13 @@ func _on_new_generation_populated() -> void:
 	new_generation.emit(generation)
 
 
+func _instantiate_neural_car() -> void:
+	pass
+
+
 func _on_car_deactivated(car : NeuralCar):
 	if _should_ignore_deactivations():
 		return
-	
 	assert(_api_client._api_connected)
 	register_score(car)
 	
@@ -93,8 +97,13 @@ func start_training() -> void:
 
 func _on_server_configured() -> void:
 	api_configured = true
-	reset_neural_cars()
+	await reset_neural_cars()
 	set_process(true)
+	_training_started()
+
+
+func _training_started() -> void:
+	ignore_deactivations = false
 	training_started.emit()
 
 
@@ -113,7 +122,7 @@ func reset_neural_cars():
 	
 	for index in range(batch_ids.size()):
 		var network_id := int(batch_ids[index])
-		var error := activate_neural_car(network_id)
+		var error := await activate_neural_car(network_id)
 		if error != OK:
 			push_warning("Unable to activate neural car: " + error_string(error))
 
