@@ -4,8 +4,10 @@ extends RigidBody2D
 signal respawned
 signal checkpoint_updated(idx : int)
 
+const HALF_PI := PI / 2
 const STEERING_THRESH : int = 300
 const STEERING_FORCE_MULTIPLIER : int = 70000000
+const MAX_STEERING_ANGLE := deg_to_rad(45)
 
 @export var forward_acceleration : float = 150000
 @export var reverse_acceleration : float = 100000
@@ -29,11 +31,17 @@ var forwards : Vector2 = Vector2.UP
 var speed : float
 var moving : bool
 var moving_forwards : bool
+var breaking : bool
 
 var checkpoint_index : int = -1 : set = set_checkpoint
 
-@onready var camera_mount: Node2D = $CameraMount
+@onready var camera_pivot: Node2D = $CameraPivot
 @onready var sprite: Sprite2D = $Sprite
+
+@onready var tire_fl: Node2D = $TireFL
+@onready var tire_fr: Node2D = $TireFR
+@onready var tire_rl: Node2D = $TireRL
+@onready var tire_rr: Node2D = $TireRR
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -61,7 +69,11 @@ func _physics_process(delta: float) -> void:
 	moving_forwards = forwards.dot(linear_velocity) > 0
 	
 	var throttle_input = get_throttle_input()
+	breaking = moving_forwards and (throttle_input < 0)
+	
 	var steering_input = get_steering_input()
+	
+	_update_tire_angles(steering_input)
 	
 	if speed < STEERING_THRESH:
 		steering_input *= steering_dropoff.sample(speed / STEERING_THRESH)
@@ -89,6 +101,14 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	forwards = Vector2.UP.rotated(state.transform.get_rotation())
 
 
+func get_slip_angle() -> float:
+	return get_velocity_angle_difference(global_rotation)
+
+
+func get_velocity_angle_difference(angle : float):
+	return angle_difference(angle, linear_velocity.angle() + HALF_PI)
+
+
 func checkpoint(idx : int) -> bool:
 	if (checkpoint_index + 1) != idx:
 		return false
@@ -103,6 +123,11 @@ func set_checkpoint(idx : int):
 
 
 func respawn(pos : Vector2, angle : float):
+	await _set_position_and_rotation(pos, angle)
+	respawned.emit()
+
+
+func _set_position_and_rotation(pos : Vector2, angle : float):
 	set_physics_process(false)
 	await get_tree().physics_frame
 	position = pos
@@ -110,7 +135,6 @@ func respawn(pos : Vector2, angle : float):
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0
 	set_physics_process(true)
-	respawned.emit()
 
 
 func set_body_color(color : Color):
@@ -138,3 +162,9 @@ func reset(spawn_type : BaseTrack.SpawnType = BaseTrack.SpawnType.TRACK_START):
 		checkpoint_index = -1
 	
 	await respawn(spawn_point.position, spawn_point.rotation)
+
+
+func _update_tire_angles(steering_input : float) -> void:
+	var tire_angle := steering_input * MAX_STEERING_ANGLE
+	tire_fl.rotation = tire_angle
+	tire_fr.rotation = tire_angle

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://yy25v74l726j"]
+[gd_scene load_steps=11 format=3 uid="uid://yy25v74l726j"]
 
 [ext_resource type="Script" path="res://components/neural_api_client.gd" id="1_2vvgq"]
 [ext_resource type="Script" path="res://scripts/gameplay_scene.gd" id="1_j3b3t"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://components/track_provider.gd" id="6_tnyg7"]
 [ext_resource type="PackedScene" uid="uid://bo3ui0wlk1dqt" path="res://components/camera_manager.tscn" id="8_jn773"]
 [ext_resource type="PackedScene" uid="uid://bji248xsn4q3q" path="res://scenes/ui/graph.tscn" id="9_rhwj5"]
+[ext_resource type="Script" path="res://scripts/car_follow_camera.gd" id="10_rk7xv"]
 
 [node name="GameplayScene" type="Node2D"]
 script = ExtResource("1_j3b3t")
@@ -86,6 +87,10 @@ anchor_bottom = 0.385802
 grow_horizontal = 0
 grow_vertical = 1
 metadata/_edit_use_anchors_ = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("10_rk7xv")
+enable_rotation = true
 
 [connection signal="track_updated" from="TrackProvider" to="." method="_on_track_provider_track_updated"]
 [connection signal="pressed" from="CanvasLayer/PauseMenu/HBoxContainer/VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]

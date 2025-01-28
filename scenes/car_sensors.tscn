@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://oot1uvi3gb2t"]
 
 [node name="Sensors" type="Node2D"]
+process_physics_priority = -2
 visible = false
 
 [node name="AnchorFL" type="Node2D" parent="."]
@@ -8,18 +9,23 @@ position = Vector2(-31, -70)
 metadata/_edit_group_ = true
 
 [node name="RayCastL1" type="RayCast2D" parent="AnchorFL"]
+process_physics_priority = -2
 target_position = Vector2(0, -1750)
 
 [node name="RayCastL2" type="RayCast2D" parent="AnchorFL"]
+process_physics_priority = -2
 target_position = Vector2(-285, -1580)
 
 [node name="RayCastL3" type="RayCast2D" parent="AnchorFL"]
+process_physics_priority = -2
 target_position = Vector2(-545, -1280)
 
 [node name="RayCastL4" type="RayCast2D" parent="AnchorFL"]
+process_physics_priority = -2
 target_position = Vector2(-815, -785)
 
 [node name="RayCastL5" type="RayCast2D" parent="AnchorFL"]
+process_physics_priority = -2
 target_position = Vector2(-860, 0)
 
 [node name="AnchorFR" type="Node2D" parent="."]
@@ -27,18 +33,23 @@ position = Vector2(31, -70)
 metadata/_edit_group_ = true
 
 [node name="RayCastR1" type="RayCast2D" parent="AnchorFR"]
+process_physics_priority = -2
 target_position = Vector2(0, -1750)
 
 [node name="RayCastR2" type="RayCast2D" parent="AnchorFR"]
+process_physics_priority = -2
 target_position = Vector2(285, -1580)
 
 [node name="RayCastR3" type="RayCast2D" parent="AnchorFR"]
+process_physics_priority = -2
 target_position = Vector2(545, -1280)
 
 [node name="RayCastR4" type="RayCast2D" parent="AnchorFR"]
+process_physics_priority = -2
 target_position = Vector2(815, -785)
 
 [node name="RayCastR5" type="RayCast2D" parent="AnchorFR"]
+process_physics_priority = -2
 target_position = Vector2(860, 0)
 
 [node name="AnchorBL" type="Node2D" parent="."]
@@ -46,6 +57,7 @@ position = Vector2(-33, 63)
 metadata/_edit_group_ = true
 
 [node name="RayCastL6" type="RayCast2D" parent="AnchorBL"]
+process_physics_priority = -2
 target_position = Vector2(-860, 0)
 
 [node name="AnchorBR" type="Node2D" parent="."]
@@ -53,4 +65,5 @@ position = Vector2(34, 63)
 metadata/_edit_group_ = true
 
 [node name="RayCastR6" type="RayCast2D" parent="AnchorBR"]
+process_physics_priority = -2
 target_position = Vector2(860, 0)

@@ -14,18 +14,29 @@ const PLAYER_CAR = preload("res://scenes/car.tscn")
 var _player : Car
 
 func _ready() -> void:
-	if not _player and track_provider and track_provider.has_track():
+	if include_player and not _player and track_provider and track_provider.has_track():
 		spawn_player()
 	
 	var state : TrainingState = SaveManager.load_training_state("C:\\Users\\math_\\AppData\\Roaming\\Godot\\app_userdata\\CarGame\\saved_networks(18 - 3.89).json")
-	neural_api_client.add_networks(state.networks)
-	var num_cars := 75
-	neural_car_manager.num_cars = num_cars
-	for id in neural_api_client.network_ids.slice(0, num_cars):
-		neural_car_manager.activate_neural_car(id)
 	
-	graph.add_series("FPS", Color.WEB_GREEN, Engine.get_frames_per_second)
-	graph.add_series("Networks Alive", Color.YELLOW, func(): return neural_car_manager.active_cars.size())
+	if not neural_api_client.is_node_ready():
+		await neural_api_client.ready
+	if not neural_api_client.io_handler.is_node_ready():
+		await neural_api_client.io_handler.ready
+	
+	#neural_api_client.start()
+	#await get_tree().create_timer(2).timeout
+	#
+	#neural_api_client.add_networks(state.networks)
+	#var num_cars := 25
+	#neural_car_manager.num_cars = num_cars
+	#for id in neural_api_client.simulation_network_ids.slice(0, num_cars):
+		#neural_car_manager.activate_neural_car(id)
+	#
+	#graph.add_series("FPS", Color.WEB_GREEN, Engine.get_frames_per_second)
+	##graph.add_series("Networks Alive", Color.YELLOW, func(): return neural_car_manager.active_cars.size())
+	#
+	#neural_car_manager.set_deactivate_on_contact(false)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -36,7 +47,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _on_track_provider_track_updated(track: BaseTrack) -> void:
-	if is_node_ready():
+	if is_node_ready() and include_player:
 		spawn_player()
 
 
@@ -51,7 +62,9 @@ func spawn_player() -> void:
 	_player.track_path = ".."
 	_player.set_body_color(Color.DARK_RED)
 	track_provider.track.add_child(_player)
-	camera_manager.start_tracking(_player)
+	#camera_manager.start_tracking(_player)
+	$Camera2D.target = _player
+	$Camera2D.start()
 
 
 func pause():

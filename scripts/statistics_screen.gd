@@ -1,6 +1,6 @@
 extends Control
 
-signal save_button_pressed(save_path : String)
+signal save_button_pressed(save_path : String, network_count : int)
 signal exit_button_pressed
 
 @onready var gen_label: Label = $MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/GenLabel
@@ -10,10 +10,11 @@ signal exit_button_pressed
 @onready var popout_component: Node = $PopoutComponent
 @onready var popout_button: Button = $MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer/PopoutButton
 @onready var pause_button: Button = $MarginContainer/Columns/Items/VBoxContainer/ButtonRow/PauseButton
-@onready var save_path_edit: LineEdit = $MarginContainer/Columns/Items/VBoxContainer/HBoxContainer/SavePathEdit
+@onready var save_path_edit: LineEdit = $MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer/SavePathEdit
+@onready var num_networks: SpinBox = $MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer2/NumNetworks
 @onready var improvement_label: Label = $MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/ImprovementLabel
 @onready var since_randomized_label: Label = $MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/SinceRandomizedLabel
-@onready var browse_button: Button = $MarginContainer/Columns/Items/VBoxContainer/HBoxContainer/BrowseButton
+@onready var browse_button: Button = $MarginContainer/Columns/Items/VBoxContainer/VBoxContainer/HBoxContainer/BrowseButton
 @onready var color_rect_2: ColorRect = $ColorRect2
 @onready var exit_dialog: ConfirmationDialog = $ExitDialog
 
@@ -130,7 +131,7 @@ func _on_file_manager_button_pressed() -> void:
 
 func _on_save_button_pressed() -> void:
 	var save_path := save_path_edit.get_text()
-	save_button_pressed.emit(save_path)
+	save_button_pressed.emit(save_path, roundi(num_networks.value))
 
 
 func _on_exit_button_pressed() -> void:

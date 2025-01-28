@@ -27,6 +27,10 @@ GameSettings="*res://singletons/game_settings.gd"
 
 window/subwindows/embed_subwindows=false
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/script-ide/plugin.cfg")
+
 [file_customization]
 
 folder_colors={
@@ -125,11 +129,14 @@ toggle_free_cam={
 
 [layer_names]
 
+2d_render/layer_1="Map"
+2d_render/layer_2="Tire Marks"
+2d_render/layer_3="Cars"
 2d_physics/layer_1="track"
 2d_physics/layer_2="cars"
 2d_physics/layer_3="progress sensor"
 
 [physics]
 
-3d/run_on_separate_thread=true
+2d/run_on_separate_thread=true
 2d/default_gravity_vector=Vector2(0, 0)

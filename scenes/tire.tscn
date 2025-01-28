@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://dxai0kbqdhp8q"]
+
+[ext_resource type="Script" path="res://scripts/tire.gd" id="1_xp21e"]
+
+[sub_resource type="Gradient" id="Gradient_wjspw"]
+offsets = PackedFloat32Array(0, 0.885496, 1)
+colors = PackedColorArray(0.424931, 0.424931, 0.424931, 0.654902, 0.0962047, 0.0962048, 0.0962047, 1, 0.32549, 0.32549, 0.32549, 0.768627)
+
+[node name="Tire" type="Node2D"]
+visibility_layer = 2
+z_index = -1
+z_as_relative = false
+script = ExtResource("1_xp21e")
+gradient = SubResource("Gradient_wjspw")
+tire_mark_show_time = 5.0

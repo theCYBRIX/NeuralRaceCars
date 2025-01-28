@@ -9,7 +9,8 @@ var _session_configured := false
 var _test_sequence_running := false
 
 func _ready() -> void:
-	pass
+	await neural_api_client.connected
+	print(neural_api_client.request("setup", { "something" : true }))
 
 
 

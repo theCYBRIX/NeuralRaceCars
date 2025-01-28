@@ -3,3 +3,4 @@
 builds/
 SimpleNeuralNetwork/
 *.tmp
+addons/script-ide

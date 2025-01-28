@@ -20,3 +20,7 @@ func get_sensor_readings() -> PackedFloat64Array:
 		else:
 			readings[index] = 1
 	return readings
+
+
+func get_sensor_count() -> int:
+	return sensor_list.size()

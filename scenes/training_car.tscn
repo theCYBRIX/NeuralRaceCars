@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://olf1u6ddfbjl"]
+
+[ext_resource type="PackedScene" uid="uid://brc0n71wqkx1f" path="res://scenes/neural_car.tscn" id="1_165iq"]
+[ext_resource type="Script" path="res://scripts/training_car.gd" id="2_g0ako"]
+[ext_resource type="Shader" path="res://shaders/dual_color_replace.gdshader" id="3_owupe"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4xo2h"]
+resource_local_to_scene = true
+shader = ExtResource("3_owupe")
+shader_parameter/target_color_1 = Color(0, 1, 0, 1)
+shader_parameter/replacement_color_1 = Color(0, 0.726788, 1.34766e-06, 1)
+shader_parameter/target_color_2 = Color(0, 0, 1, 1)
+shader_parameter/replacement_color_2 = Color(0.132235, 0.405147, 0.565815, 1)
+shader_parameter/color_thresh = 0.75
+
+[node name="TrainingCar" instance=ExtResource("1_165iq")]
+z_index = 0
+script = ExtResource("2_g0ako")
+
+[node name="Sprite" parent="." index="1"]
+visibility_layer = 1
+z_index = 0
+material = SubResource("ShaderMaterial_4xo2h")
+
+[node name="CheckpointTimer" type="Timer" parent="." index="6"]
+wait_time = 5.0
+autostart = true
+
+[node name="LifetimeTimer" type="Timer" parent="." index="7"]
+wait_time = 120.0
+one_shot = true
+
+[connection signal="checkpoint_updated" from="." to="." method="_on_checkpoint_updated"]
+[connection signal="timeout" from="CheckpointTimer" to="." method="_on_checkpoint_timer_timeout"]
+[connection signal="timeout" from="LifetimeTimer" to="." method="_on_lifetime_timer_timeout"]

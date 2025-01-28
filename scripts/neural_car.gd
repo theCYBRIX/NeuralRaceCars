@@ -3,13 +3,6 @@ extends Car
 
 signal deactivated
 
-const STEERING_NODE = 0
-const THROTTLE_NODE = 1
-
-@onready var sensors: Node2D = $Sensors
-@onready var checkpoint_timer: Timer = $CheckpointTimer
-@onready var lifetime_timer: Timer = $LifetimeTimer
-
 @export var num_network_inputs : int = 15
 
 var id : int
@@ -25,7 +18,7 @@ var throttle_input : float
 var speed_sum : float = 0
 var speed_sum_ticks : int = 0
 
-var inputs : Array[float]
+var inputs : PackedFloat64Array
 
 var reset_marker : Marker2D
 
@@ -33,16 +26,16 @@ var score_adjustment : float = 0
 
 var deactivate_on_contact := true : set = set_deactivate_on_contact
 
+@onready var sensors: Node2D = $Sensors
+@onready var input_mapper: Node = $InputMapper
 
-func _ready() -> void:
-	super._ready()
-	
-	inputs = []
+func _init() -> void:
+	inputs = PackedFloat64Array()
 	inputs.resize(num_network_inputs)
 
 
-func _process(delta: float) -> void:
-	super._process(delta)
+#func _process(delta: float) -> void:
+	#super._process(delta)
 	
 	#if (not moving_forwards) and speed > 20: score -= 0.1
 	#speed_sum += speed
@@ -96,13 +89,6 @@ func set_active(enabled : bool = true) -> void:
 	active = enabled
 	set_physics_process(active)
 	set_process(active)
-	if is_node_ready():
-		if active:
-			checkpoint_timer.start()
-			lifetime_timer.start()
-		else:
-			checkpoint_timer.stop()
-			lifetime_timer.stop()
 
 
 
@@ -138,36 +124,36 @@ func interpret_model_outputs(outputs : Array):
 	#print(outputs)
 
 
-func get_sensor_data() -> Array[float]:
-
-	var index : int = -1
-	
-	if moving_forwards:
-		index += 1
-		inputs[index] = linear_velocity.length() / max_forward_speed
-		#index += 1
-		#inputs[index] = linear_velocity.angle() - rotation
-	elif moving:
-		index += 1
-		inputs[index] = -(linear_velocity.length() / max_reverse_speed)
-		#index += 1
-		#inputs[index] = linear_velocity.angle() - rotation
-	else:
-		index += 1
-		inputs[index] = 0
-		#index += 1
-		#inputs[index] = 0
-	
-	index += 1
-	inputs[index] = angular_velocity / PI
-	index += 1
-	inputs[index] = rotation
-
-	for reading in sensors.get_sensor_readings():
-		index += 1
-		inputs[index] = reading
-	
+func get_sensor_data() -> PackedFloat64Array:
 	return inputs
+
+
+func update_sensor_data() -> void:
+	inputs = input_mapper.get_inputs_array()
+	
+	#var index : int = -1
+	#
+	#index += 1
+	#inputs[index] = get_normalized_speed()
+	#
+	#index += 1
+	#inputs[index] = angular_velocity / PI
+	#index += 1
+	#inputs[index] = rotation
+#
+	#for reading in sensors.get_sensor_readings():
+		#index += 1
+		#inputs[index] = reading
+	
+
+
+func get_normalized_speed() -> float:
+	if not moving:
+		return 0
+	elif moving_forwards:
+		return speed / max_forward_speed
+	else:
+		return -(speed / max_reverse_speed)
 
 
 func get_average(array : Array[float]) -> float:
@@ -193,17 +179,11 @@ func reset(spawn_type := BaseTrack.SpawnType.TRACK_START):
 	active = true
 
 
-func _on_checkpoint_timer_timeout() -> void:
-	deactivate()
-
-
-func _on_lifetime_timer_timeout() -> void:
-	deactivate()
+func respawn(pos : Vector2, angle : float) -> void:
+	_set_position_and_rotation(pos, angle)
+	update_sensor_data()
+	respawned.emit()
 
 
 func set_deactivate_on_contact(enabled := true):
 	deactivate_on_contact = enabled
-
-
-func _on_checkpoint_updated(idx: int) -> void:
-	checkpoint_timer.start(0)

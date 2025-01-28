@@ -7,6 +7,7 @@ extends Node2D
 @onready var stat_screen: Control = $CanvasLayer/StatScreen
 @onready var exit_dialog: ConfirmationDialog = $ExitDialog
 @onready var leaderboard: Leaderboard = $Leaderboard
+@onready var start_button: Button = $CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton
 
 @export var training_state : TrainingState : set = set_training_state
 @export var use_saved_training_state := true
@@ -47,6 +48,8 @@ func _init() -> void:
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	set_process(false)
+	get_tree().paused = true
 	
 	assert(training_state != null)
 	
@@ -58,7 +61,7 @@ func _ready() -> void:
 	evolution_manager.generation = training_state.generation
 	evolution_manager.car_respawned.connect(set_first_place_car, CONNECT_ONE_SHOT)
 	
-	evolution_manager.ready.connect(_on_neural_car_manager_reset, CONNECT_ONE_SHOT)
+	evolution_manager.ready.connect(_on_evolution_manager_reset, CONNECT_ONE_SHOT)
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
 	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
@@ -140,14 +143,14 @@ func set_time_scale(time_scale : float):
 	print("Time Scale: ", Engine.time_scale)
 
 
-func _on_neural_car_manager_reset() -> void:
+func _on_evolution_manager_reset() -> void:
 	var current_id_index := evolution_manager.id_queue_index
 	var total_id_count := neural_api_client.training_network_ids.size()
 	var gen_progress := (current_id_index / float(total_id_count)) * 100
 	stat_screen.batch_label.set_text("Progress: %d/%d (%d%%)" % [ current_id_index, total_id_count, gen_progress] )
 
 
-func _on_car_manager_new_generation(generation : int) -> void:
+func _on_evolution_manager_new_generation(generation : int) -> void:
 	total_generations += 1
 	stat_screen.total_gens_label.set_text("Total Generations: " + str(total_generations))
 	
@@ -156,16 +159,23 @@ func _on_car_manager_new_generation(generation : int) -> void:
 	stat_screen.improvement_label.set_text("Gens without improvement: " + str(evolution_manager.gens_without_improvement))
 
 
-func _on_neural_car_manager_networks_randomized() -> void:
+func _on_evolution_manager_networks_randomized() -> void:
 	since_randomized = 0
 	since_randomized_int = 0
 
 
-func _on_stat_screen_save_button_pressed(save_path : String) -> void:
-	training_state.networks = await evolution_manager.get_best_networks(min(200, evolution_manager.num_networks))
+func _on_stat_screen_save_button_pressed(save_path : String, network_count : int) -> void:
+	var error := OK
+	training_state.networks = await neural_api_client.get_best_networks(min(network_count, evolution_manager.num_networks))
+	
+	if neural_api_client.error_occurred():
+		error = FAILED
+	
 	training_state.highest_score = evolution_manager.highest_score
 	
-	var error := SaveManager.save_training_state(training_state, save_path)
+	if error == OK:
+		error = SaveManager.save_training_state(training_state, save_path)
+	
 	if error != OK:
 		push_warning("Failed to save state. Reason: ", error_string(error))
 	#await evolution_manager.save_networks(save_path, min(200, evolution_manager.num_networks), true)
@@ -254,7 +264,9 @@ func _on_track_provider_track_updated(new_track: BaseTrack) -> void:
 
 
 func _on_start_button_pressed() -> void:
+	start_button.disabled = true
 	evolution_manager.start_training()
+	start_button.disabled = false
 
 
 func _on_exit_button_pressed() -> void:
@@ -271,3 +283,8 @@ func _on_stat_screen_exit_button_pressed() -> void:
 
 func _on_evolution_manager_car_instanciated(car: NeuralCar) -> void:
 	leaderboard.add(car)
+
+
+func _on_evolution_manager_training_started() -> void:
+	start_button.hide()
+	set_process(true)

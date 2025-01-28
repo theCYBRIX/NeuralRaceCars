@@ -3,7 +3,7 @@
 class_name EvolutionManager
 extends NeuralCarManager
 
-
+signal training_started
 signal randomizing_networks
 signal networks_randomized
 
@@ -38,10 +38,15 @@ var id_queue_index : int = 0
 var api_configured : bool = false
 
 
+func _init() -> void:
+	_neural_car_scene = preload("res://scenes/training_car.tscn")
+
+
 func _ready() -> void:
 	super._ready()
 	
-	_api_client.call_deferred("start")
+	if not Engine.is_editor_hint():
+		_api_client.call_deferred("start")
 
 
 func on_network_score_changed(score : float):
@@ -54,12 +59,15 @@ func on_network_score_changed(score : float):
 	highscore_mutex.unlock()
 
 
-func on_new_generation_populated() -> void:
-	generation += 1
+func _on_new_generation_populated() -> void:
 	new_generation.emit(generation)
 
 
 func _on_car_deactivated(car : NeuralCar):
+	if _should_ignore_deactivations():
+		return
+	
+	assert(_api_client._api_connected)
 	register_score(car)
 	
 	super._on_car_deactivated(car)
@@ -87,6 +95,7 @@ func _on_server_configured() -> void:
 	api_configured = true
 	reset_neural_cars()
 	set_process(true)
+	training_started.emit()
 
 
 func set_num_networks(n : int):
@@ -149,7 +158,7 @@ func populate_new_generation():
 	
 	if error == OK:
 		generation += 1
-		on_new_generation_populated()
+		_on_new_generation_populated()
 
 
 func populate_random_generation():
@@ -170,7 +179,7 @@ func populate_random_generation():
 		highest_score = 0
 		generation = 0
 		
-		on_new_generation_populated()
+		_on_new_generation_populated()
 		
 		get_tree().call_group("Cars", "set_deactivate_on_contact", true)
 
@@ -179,8 +188,14 @@ func get_best_networks(n := num_networks) -> Array:
 	return await _api_client.get_best_networks(n)
 
 
+func _should_ignore_deactivations() -> bool:
+	if super._should_ignore_deactivations():
+		return true
+	return not api_connected or not api_configured
+
+
 func _on_api_client_connected():
 	super._on_api_client_connected()
-	
-	if not api_configured:
-		start_training()
+	#
+	#if not api_configured:
+		#start_training()

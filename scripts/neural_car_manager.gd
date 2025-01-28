@@ -10,8 +10,6 @@ signal car_deactivated(car : NeuralCar)
 
 signal track_ready(track : BaseTrack)
 
-signal network_inputs_set
-
 
 const INPUT_THRESH : float = 0.5
 
@@ -19,6 +17,7 @@ const INPUT_THRESH : float = 0.5
 
 @export var car_parent: Node = self as Node: set = set_car_parent
 @export var track_provider : TrackProvider = null : set = set_track_provider
+@export var deactivate_on_contact := true : set = set_deactivate_on_contact
 
 @export var enabled : bool = true
 
@@ -30,7 +29,6 @@ const INPUT_THRESH : float = 0.5
 
 var track : BaseTrack : set = set_track
 
-var neural_car : PackedScene = preload("res://scenes/network_controlled_car.tscn")
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
 var inactive_cars : Array[NeuralCar] = []
@@ -38,9 +36,11 @@ var inactive_cars : Array[NeuralCar] = []
 var network_outputs : Array[Array]
 
 var api_connected : bool = false
-var ignoring_deactivations := false
+
+var ignore_deactivations := false
 
 var _api_client : NeuralAPIClient : set = set_api_client
+var _neural_car_scene : PackedScene = preload("res://scenes/neural_car.tscn")
 
 
 
@@ -55,8 +55,31 @@ func _ready() -> void:
 		update_configuration_warnings()
 		return
 	
+	process_physics_priority = -1
+	
 	if enabled and track:
-		__update_car_count()
+		_update_car_count()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _physics_process(_delta: float) -> void:
+	if active_cars.is_empty(): return
+	
+	var network_inputs : Dictionary = get_network_inputs()
+	var response : Dictionary = get_network_outputs(network_inputs)
+	
+	if _api_client.error_occurred(): return
+	
+	response.make_read_only()
+	set_neural_car_inputs(response)
+	#for id in response.keys():
+		#var str_id = str(id)
+		#var c : NeuralCar = active_cars[str_id]
+		#var outputs : Array = response[str_id]
+		#c.interpret_model_outputs(outputs)
+	
+	#var cars_to_update : Array[NeuralCar] = []
+	#cars_to_update.append_array(active_cars.values())
+	#_api_client.update_car_inputs(cars_to_update, 16)
 
 
 func _notification(what: int) -> void:
@@ -72,7 +95,7 @@ func _notification(what: int) -> void:
 			_api_client = null
 
 
-func __update_car_count():
+func _update_car_count():
 	if not track: return
 	
 	var num_cars_needed = num_cars
@@ -80,13 +103,13 @@ func __update_car_count():
 		num_cars_needed -= cars.size()
 		if num_cars_needed == 0: return
 		if num_cars_needed < 0:
-			__remove_neural_cars(abs(num_cars_needed))
+			_remove_neural_cars(abs(num_cars_needed))
 			return
 	
-	__add_neural_cars(num_cars_needed)
+	_add_neural_cars(num_cars_needed)
 
 
-func __remove_neural_cars(count : int):
+func _remove_neural_cars(count : int):
 	var removed : int = 0
 	while removed < count:
 		var c : NeuralCar = cars.pop_back()
@@ -95,12 +118,12 @@ func __remove_neural_cars(count : int):
 		removed += 1
 
 
-func __add_neural_cars(count : int):
-	if not track: ignoring_deactivations = true
+func _add_neural_cars(count : int):
 	var current_car_count := cars.size()
 	cars.resize(current_car_count + count)
 	for i in range(current_car_count, cars.size()):
-		var c : NeuralCar = instanciate_neural_car(i)
+		var c : NeuralCar = _instanciate_neural_car(i)
+		c.deactivate_on_contact = deactivate_on_contact
 		c.deactivated.connect(_on_car_deactivated.bind(c), CONNECT_DEFERRED)
 		c.respawned.connect(_on_car_respawned.bind(c), CONNECT_DEFERRED)
 		car_parent.add_child(c, false, Node.INTERNAL_MODE_FRONT)
@@ -108,7 +131,7 @@ func __add_neural_cars(count : int):
 
 
 func _on_car_deactivated(car : NeuralCar):
-	if not track or ignoring_deactivations: return
+	if _should_ignore_deactivations(): return
 	set_inactive(car)
 	car_deactivated.emit(car)
 
@@ -122,8 +145,8 @@ func _on_car_respawned(car : NeuralCar):
 	car_respawned.emit(car)
 
 
-func instanciate_neural_car(index : int) -> NeuralCar:
-	var c : Car = neural_car.instantiate()
+func _instanciate_neural_car(index : int) -> NeuralCar:
+	var c : Car = _neural_car_scene.instantiate()
 	c.id = index
 	c.set_name("Neural Car " + str(index))
 	if track and track.is_node_ready():
@@ -132,24 +155,11 @@ func instanciate_neural_car(index : int) -> NeuralCar:
 	inactive_cars.append(c)
 	return c
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _physics_process(_delta: float) -> void:
-	if active_cars.is_empty(): return
-	
-	var network_inputs : Dictionary = get_network_inputs()
-	var response : Dictionary = get_network_outputs(network_inputs)
-	
-	if _api_client.error_occurred(): return
-	for id in response.keys():
-		var str_id = str(id)
-		var c : NeuralCar = active_cars[str_id]
-		var outputs : Array = response[str_id]
-		c.interpret_model_outputs(outputs)
-	
-	#var cars_to_update : Array[NeuralCar] = []
-	#cars_to_update.append_array(active_cars.values())
-	#_api_client.update_car_inputs(cars_to_update, 16)
 
+func set_deactivate_on_contact(enabled : bool) -> void:
+	deactivate_on_contact = enabled
+	for car in cars:
+		car.deactivate_on_contact = deactivate_on_contact
 
 
 func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
@@ -157,15 +167,12 @@ func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
 	return response
 
 
-func set_neural_car_inputs(data : Dictionary) -> Signal:
-	var group_task : int = WorkerThreadPool.add_group_task(set_neural_car_input.bind(data), data.size(), -1, true, "Set network inputs")
+func set_neural_car_inputs(data : Dictionary) -> void:
+	var group_task : int = WorkerThreadPool.add_group_task(set_neural_car_input.bind(data.keys(), data), data.size(), -1, true, "Set network inputs")
 	WorkerThreadPool.wait_for_group_task_completion(group_task)
-	call_thread_safe("emit_signal", "network_inputs_set")
-	return network_inputs_set
 
-
-func set_neural_car_input(network_index : int, data : Dictionary):
-	var id := str(data.keys()[network_index])
+func set_neural_car_input(network_index : int, network_ids : Array, data : Dictionary):
+	var id : String = network_ids[network_index]
 	var c : NeuralCar = active_cars[id]
 	var outputs : Array = data[id]
 	c.interpret_model_outputs(outputs)
@@ -184,6 +191,7 @@ func get_network_inputs() -> Dictionary:
 	
 	for c : NeuralCar in cars:
 		if c.active:
+			c.update_sensor_data()
 			var data := c.get_sensor_data()
 			#data[16] = track.get_track_direction(c.global_position, 500)
 			inputs[str(c.id)] = data
@@ -193,6 +201,7 @@ func get_network_inputs() -> Dictionary:
 	#WorkerThreadPool.wait_for_group_task_completion(task_id)
 	
 	return inputs
+
 
 func get_inputs(index : int, car_array : Array[NeuralCar], registry : Dictionary, registry_mutex : Mutex):
 	var car := car_array[index]
@@ -213,8 +222,6 @@ func set_track(new_track : BaseTrack):
 	if not track:
 		return
 	
-	ignoring_deactivations = false
-	
 	if track.is_node_ready():
 		_on_track_ready()
 	else:
@@ -225,11 +232,14 @@ func set_car_parent(node : Node):
 	car_parent = node if node else self as Node
 
 
+func _should_ignore_deactivations() -> bool:
+	return ignore_deactivations or not track or not track.is_node_ready()
+
 
 func _on_track_ready():
 	
 	if enabled:
-		__update_car_count()
+		_update_car_count()
 	
 	if not _api_client.simulation_network_ids or _api_client.simulation_network_ids.is_empty():
 		await _api_client.network_ids_updated
@@ -244,14 +254,12 @@ func _on_track_ready():
 	#
 	#for car in cars:
 		#car.active = true
-	
-	ignoring_deactivations = false
 
 
 func set_num_cars(n : int):
 	num_cars = n
 	if is_node_ready() and not Engine.is_editor_hint():
-		__update_car_count()
+		_update_car_count()
 
 
 func reset_neural_car(network_id : int, car : NeuralCar):

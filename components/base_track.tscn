@@ -7,6 +7,8 @@
 script = ExtResource("1_mj38o")
 
 [node name="TileMap" type="TileMap" parent="."]
+z_index = -1
+z_as_relative = false
 tile_set = ExtResource("1_jc4nj")
 format = 2
 

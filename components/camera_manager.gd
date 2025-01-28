@@ -3,6 +3,7 @@ extends Node
 
 @onready var camera: Camera2D = $Camera
 @onready var remote_transform_2d: RemoteTransform2D = $RemoteTransform2D
+@onready var car_follow_camera: Camera2D = $CarFollowCamera
 
 @export var target : Node = self : set = _set_target
 @export var keep_transform_on_free : bool = true
@@ -19,7 +20,8 @@ func start_tracking(node : Node):
 		node = self
 	
 	if node is Car:
-		target = node.camera_mount
+		car_follow_camera.target = node
+		target = node.camera_pivot
 		return
 	
 	if target != node:

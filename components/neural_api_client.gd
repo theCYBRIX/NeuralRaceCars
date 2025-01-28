@@ -190,17 +190,17 @@ func set_layout_generator(generator : NetworkLayoutGenerator):
 
 
 func set_io_handler(handler : IOHandler):
-	if io_handler:
+	if io_handler and not Engine.is_editor_hint():
 		Util.disconnect_from_signal(_on_io_handler_connected, io_handler.connected)
 		Util.disconnect_from_signal(_on_io_handler_disconnected, io_handler.disconnected)
 		Util.disconnect_from_signal(_on_io_handler_connection_error, io_handler.connection_error)
 	
 	io_handler = handler
 	
-	if io_handler:
-		io_handler.connected.connect(_on_io_handler_connected)
-		io_handler.disconnected.connect(_on_io_handler_disconnected)
-		io_handler.connection_error.connect(_on_io_handler_connection_error)
+	if io_handler and not Engine.is_editor_hint():
+		io_handler.connected.connect(_on_io_handler_connected, CONNECT_DEFERRED)
+		io_handler.disconnected.connect(_on_io_handler_disconnected, CONNECT_DEFERRED)
+		io_handler.connection_error.connect(_on_io_handler_connection_error, CONNECT_DEFERRED)
 		if io_handler.is_running():
 			_on_io_handler_connected()
 	
@@ -261,6 +261,8 @@ func request(request : String, payload : Dictionary = {}) -> Dictionary:
 
 func parse_message(server_msg : String) -> Dictionary:
 	var parser := JSON.new()
+	if server_msg.contains("NaN"):
+		server_msg = server_msg.replace("NaN", "0")
 	var parse_error := parser.parse(server_msg)
 	
 	var response : Dictionary = parser.data

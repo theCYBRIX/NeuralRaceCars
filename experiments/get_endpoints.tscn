@@ -9,13 +9,13 @@
 [node name="GetEndpoints" type="Node"]
 script = ExtResource("1_ersvm")
 
-[node name="NeuralAPIClient" type="Node" parent="."]
+[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "layout_generator")]
 script = ExtResource("1_4ott5")
-io_handler_path = NodePath("ConsoleIOHandler")
+io_handler = NodePath("ServerIOHandler")
+layout_generator = NodePath("NetworkLayoutGenerator")
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
 script = ExtResource("2_slmp5")
-autostart = true
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
 script = ExtResource("3_nrm4c")
@@ -29,3 +29,4 @@ input_normalizers = Array[int]([1, 0, 0, 0])
 script = ExtResource("5_llmoc")
 host_address = "localhost"
 host_port = 3050
+autostart = true
