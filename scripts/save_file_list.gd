@@ -15,6 +15,7 @@ var disabled := false : set = set_disabled, get = is_disabled
 var _selected_items : Array[SaveFileListItem] = [] : set = set_selected_items
 
 var _item_array : Array[SaveFileListItem] = []
+var _file_paths : Dictionary = {}
 
 var _worker_thread_tasks : Array[int] = []
 
@@ -79,11 +80,12 @@ func refresh_file_list(path : String) -> Error:
 	files = files.filter(SaveManager.can_load_file)
 	
 	_item_array.clear()
+	_file_paths.clear()
 	
 	for file in files:
 		var list_item := SAVE_FILE_LIST_ITEM.instantiate()
 		list_item.file_name = file.get_file()
-		var task_id := WorkerThreadPool.add_task(list_item.update_file_contents.bind(path + "\\" + file))
+		var task_id := WorkerThreadPool.add_task(list_item.set_file_path.bind(path + "\\" + file))
 		_worker_thread_tasks.append(task_id)
 		list_item.selected.connect(_on_item_selected.bind(list_item))
 		list_item.deselected.connect(_on_item_deselected.bind(list_item))
@@ -92,6 +94,7 @@ func refresh_file_list(path : String) -> Error:
 		list_items.call_deferred("add_child", list_item, false, Node.INTERNAL_MODE_FRONT)
 		
 		_item_array.append(list_item)
+		_file_paths[list_item] = file
 	
 	call_deferred("_item_count_changed")
 	
@@ -102,16 +105,19 @@ func refresh_file_list_asynch(path : String) -> void:
 	_worker_thread_tasks.append(WorkerThreadPool.add_task(refresh_file_list.bind(path)))
 
 
+func wait_for_worker_tasks() -> void:
+	while _worker_thread_tasks.size() > 0:
+		WorkerThreadPool.wait_for_task_completion(_worker_thread_tasks.pop_back())
+
+
+
 func _exit_tree() -> void:
 	if _worker_thread_tasks.is_empty():
 		return
 	if is_queued_for_deletion():
 		cancel_free()
 	
-	var task_index : int = 0
-	while task_index < _worker_thread_tasks.size():
-		WorkerThreadPool.wait_for_task_completion(_worker_thread_tasks[task_index])
-		task_index += 1
+	wait_for_worker_tasks()
 	
 	queue_free()
 
@@ -123,6 +129,31 @@ func set_disabled(value := true):
 	
 	for item in _item_array:
 		item.disabled = disabled
+
+
+func sort_items(sort_func : Callable) -> void:
+	_item_array.sort_custom(sort_func)
+	var new_index : int = 0
+	for item in _item_array:
+		var current_index := item.get_index(true)
+		if current_index != new_index:
+			list_items.move_child(item, new_index)
+		new_index += 1
+
+
+static func sort_by_date(a : SaveFileListItem, b : SaveFileListItem, ascending := true) -> bool:
+	var a_modified := FileAccess.get_modified_time(a.file_path)
+	var b_modified := FileAccess.get_modified_time(b.file_path)
+	if a_modified == 0:
+		push_warning("File not Found: \"%s\"" % a.file_path)
+	if b_modified == 0:
+		push_warning("File not Found: \"%s\"" % b.file_path)
+	var a_smaller := a_modified < b_modified
+	return a_smaller if ascending else not a_smaller
+
+
+static func sort_by_name(a : SaveFileListItem, b : SaveFileListItem, ascending := true) -> bool:
+	return a.file_name.filenocasecmp_to(b.file_name) if ascending else not a.file_name.filenocasecmp_to(b.file_name)
 
 
 func is_disabled() -> bool:
@@ -160,6 +191,7 @@ func _on_item_selected(list_item : SaveFileListItem):
 		deselect_all()
 	if not list_item in _selected_items:
 		_selected_items.append(list_item)
+		selection_count_changed.emit(_selected_items.size())
 
 
 func _on_item_deselected(list_item : SaveFileListItem):

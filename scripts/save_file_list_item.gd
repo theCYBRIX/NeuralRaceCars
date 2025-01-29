@@ -31,10 +31,12 @@ var disabled := false : set = set_disabled
 const NOT_AVAILABLE := "N/A"
 
 var file_name : String = NOT_AVAILABLE : set = set_file_name
+var file_path : String : set = set_file_path
 var file_contents : TrainingState : set = set_file_contents
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	child_order_changed
 	var panel_stylebox = get_theme_stylebox("panel")
 	default_stylebox = panel_stylebox.duplicate()
 	default_stylebox.bg_color = default_color
@@ -73,6 +75,11 @@ func set_file_name(string_name : String) -> void:
 	file_name = NOT_AVAILABLE if not string_name or string_name.is_empty() else string_name
 	if is_node_ready():
 		update_file_name_label()
+
+
+func set_file_path(string_name : String) -> void:
+	file_path = string_name
+	update_file_contents()
 
 
 func set_file_contents(state : TrainingState) -> void:
@@ -176,7 +183,7 @@ func update_detail_labels() -> void:
 	num_networks_label.text = "Network Count: " + network_count
 
 
-func update_file_contents(file_path : String) -> void:
+func update_file_contents() -> void:
 	file_contents = _load_training_state(file_path)
 
 

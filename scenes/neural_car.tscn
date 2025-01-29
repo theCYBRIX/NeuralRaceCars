@@ -37,4 +37,4 @@ tire_mark_start_angle = 1.75
 [node name="InputMapper" type="Node" parent="." index="10" node_paths=PackedStringArray("car")]
 script = ExtResource("6_fvj1e")
 car = NodePath("..")
-inputs = Array[int]([0, 1, 2, 3])
+input_properties = Array[int]([0, 1, 2, 3])
