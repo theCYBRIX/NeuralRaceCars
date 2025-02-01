@@ -171,9 +171,8 @@ func update_detail_labels() -> void:
 			generation = str(file_contents.generation)
 		if roundi(file_contents.time_elapsed) > 0:
 			time_elapsed = Util.format_time(roundi(file_contents.time_elapsed))
-		if is_nan(file_contents.highest_score):
+		if file_contents.highest_score == 0:
 			highest_score = NOT_AVAILABLE
-			file_contents.highest_score = 0
 		else:
 			highest_score = "%-3.2f" % [roundf(file_contents.highest_score * 100) / 100]
 		
@@ -190,7 +189,6 @@ func update_file_contents() -> void:
 static func _load_training_state(file_path : String) -> TrainingState:
 	var contents = SaveManager.load_training_state(file_path)
 	if not contents: return null
-	contents = SaveManager.convert_save_state(contents)
 	return contents
 
 

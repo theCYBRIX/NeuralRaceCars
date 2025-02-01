@@ -7,10 +7,18 @@ signal item_pressed(list_item : SaveFileListItem)
 
 const SAVE_FILE_LIST_ITEM = preload("res://scenes/ui/save_file_list_item.tscn")
 
+enum SortBy {
+	DATE,
+	NAME,
+}
 
 @export var allow_select_multiple := false
 
 var disabled := false : set = set_disabled, get = is_disabled
+
+var sorting_order : SortBy = SortBy.DATE : set = set_sorting_order
+
+var _sorting_method : Callable = sort_by_date.bind(false)
 
 var _selected_items : Array[SaveFileListItem] = [] : set = set_selected_items
 
@@ -92,9 +100,13 @@ func refresh_file_list(path : String) -> Error:
 		list_item.pressed.connect(_on_item_pressed.bind(list_item))
 		list_item.disabled = disabled
 		list_items.call_deferred("add_child", list_item, false, Node.INTERNAL_MODE_FRONT)
-		
 		_item_array.append(list_item)
 		_file_paths[list_item] = file
+	
+	await wait_for_worker_tasks()
+	
+	_sort_item_array()
+	call_deferred("_update_item_order")
 	
 	call_deferred("_item_count_changed")
 	
@@ -131,14 +143,33 @@ func set_disabled(value := true):
 		item.disabled = disabled
 
 
-func sort_items(sort_func : Callable) -> void:
-	_item_array.sort_custom(sort_func)
+func set_sorting_order(order : SortBy) -> void:
+	if sorting_order == order:
+		return
+	
+	sorting_order = order
+	
+	match sorting_order:
+		SortBy.DATE:
+			_sorting_method = sort_by_date.bind(false)
+		SortBy.NAME:
+			_sorting_method = sort_by_name.bind(true)
+	
+	_sort_item_array()
+	_update_item_order()
+
+
+func _update_item_order() -> void:
 	var new_index : int = 0
 	for item in _item_array:
 		var current_index := item.get_index(true)
 		if current_index != new_index:
 			list_items.move_child(item, new_index)
 		new_index += 1
+
+
+func _sort_item_array() -> void:
+	_item_array.sort_custom(_sorting_method)
 
 
 static func sort_by_date(a : SaveFileListItem, b : SaveFileListItem, ascending := true) -> bool:
@@ -153,7 +184,10 @@ static func sort_by_date(a : SaveFileListItem, b : SaveFileListItem, ascending :
 
 
 static func sort_by_name(a : SaveFileListItem, b : SaveFileListItem, ascending := true) -> bool:
-	return a.file_name.filenocasecmp_to(b.file_name) if ascending else not a.file_name.filenocasecmp_to(b.file_name)
+	var a_is_before : bool
+	var index : int = 0
+	
+	return a.file_name.filenocasecmp_to(b.file_name) > 0 if ascending else a.file_name.filenocasecmp_to(b.file_name) < 0
 
 
 func is_disabled() -> bool:

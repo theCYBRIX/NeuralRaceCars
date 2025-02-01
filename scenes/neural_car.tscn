@@ -1,11 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://brc0n71wqkx1f"]
+[gd_scene load_steps=7 format=3 uid="uid://brc0n71wqkx1f"]
 
 [ext_resource type="PackedScene" uid="uid://6yghlai5jgs6" path="res://scenes/car.tscn" id="1_upqku"]
 [ext_resource type="Script" path="res://scripts/neural_car.gd" id="2_62y6a"]
 [ext_resource type="Shader" path="res://shaders/dual_color_replace.gdshader" id="3_gdte8"]
 [ext_resource type="PackedScene" uid="uid://oot1uvi3gb2t" path="res://scenes/car_sensors.tscn" id="4_qba36"]
 [ext_resource type="Script" path="res://components/car_sensors.gd" id="5_a7yab"]
-[ext_resource type="Script" path="res://components/network_input_mapper.gd" id="6_fvj1e"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_4tw2h"]
 resource_local_to_scene = true
@@ -20,7 +19,6 @@ shader_parameter/color_thresh = 0.75
 contact_monitor = true
 max_contacts_reported = 1
 script = ExtResource("2_62y6a")
-num_network_inputs = 15
 
 [node name="Sprite" parent="." index="1"]
 material = SubResource("ShaderMaterial_4tw2h")
@@ -33,8 +31,3 @@ tire_mark_start_angle = 1.75
 
 [node name="TireFR" parent="." index="7"]
 tire_mark_start_angle = 1.75
-
-[node name="InputMapper" type="Node" parent="." index="10" node_paths=PackedStringArray("car")]
-script = ExtResource("6_fvj1e")
-car = NodePath("..")
-input_properties = Array[int]([0, 1, 2, 3])

@@ -2,11 +2,6 @@ extends Control
 
 signal item_pressed(list_item : SaveFileListItem)
 
-enum SortBy {
-	DATE,
-	NAME,
-}
-
 @onready var save_file_list: SaveFileList = $VBoxContainer/SaveFileList
 @onready var folder_path_edit: LineEdit = $VBoxContainer/MarginContainer/HBoxContainer/FolderPathEdit
 @onready var load_button: Button = $VBoxContainer/MarginContainer2/Control/LoadButton
@@ -19,16 +14,14 @@ enum SortBy {
 var _refresh_task_id : int = -1
 var _task_id_valid := false
 
-var _sorting_method : SortBy = SortBy.DATE : set = _set_sorting_method
-
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	folder_path_edit.text = initial_path
 	_on_refresh_button_pressed()
 	
-	for item in SortBy.values():
-		sort_options.add_item("Sort by " + SortBy.keys()[item].capitalize(), item)
+	for item in SaveFileList.SortBy.values():
+		sort_options.add_item("Sort by " + SaveFileList.SortBy.keys()[item].capitalize(), item)
 
 
 func browse_folder():
@@ -81,9 +74,9 @@ func _on_browse_button_pressed() -> void:
 
 
 func _on_load_button_pressed() -> void:
-	var selected_item = save_file_list.get_selected_item()
-	if not selected_item: return
-	switch_to_state(selected_item.file_contents)
+	var selected_items := save_file_list.get_selected_items()
+	if not selected_items or selected_items.is_empty(): return
+	switch_to_state(selected_items[0].file_contents)
 
 
 func _on_save_file_list_item_pressed(list_item: SaveFileListItem) -> void:
@@ -104,12 +97,7 @@ func _on_save_file_list_selection_count_changed(num_selected: int) -> void:
 
 
 func _on_sort_options_item_selected(index: int) -> void:
-	_sorting_method = SortBy.values()[index]
-
-
-func _set_sorting_method(method : SortBy) -> void:
-	_sorting_method = method
-	_update_list_sorting()
+	save_file_list.sorting_order = index
 
 
 func _update_list_sorting() -> void:
@@ -117,10 +105,4 @@ func _update_list_sorting() -> void:
 		return
 	
 	save_file_list.wait_for_worker_tasks()
-	
-	match _sorting_method:
-		SortBy.DATE:
-			save_file_list.sort_items(SaveFileList.sort_by_date.bind(false))
-		SortBy.NAME:
-			save_file_list.sort_items(SaveFileList.sort_by_name.bind(false))
 	

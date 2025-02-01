@@ -8,8 +8,6 @@ enum UserInput {
 	TURN_RIGHT
 }
 
-@export var track : BaseTrack
-
 @export var deactivateable : bool = false
 
 @onready var sensor_vision: Line2D = $SensorVision

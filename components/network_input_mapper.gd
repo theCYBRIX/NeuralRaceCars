@@ -1,4 +1,11 @@
+class_name NetworkInputMapper
 extends Node
+
+const DEFAULT_MAPPING : Array[InputProperty] = [
+	InputProperty.SPEED,
+	InputProperty.ANGULAR_VELOCITY,
+	InputProperty.SENSOR_DATA,
+]
 
 enum InputProperty {
 	SPEED,
@@ -8,34 +15,30 @@ enum InputProperty {
 	VEL_TO_TRACK_ALIGNMENT_ANGLE,
 }
 
-@export var car : NeuralCar : set = set_car
-@export var input_properties : Array[InputProperty] : set = set_inputs
+@export var input_properties : Array[InputProperty] : set = set_input_properties
 
-var _inputs_array := PackedFloat64Array()
+var car : NeuralCar : set = set_car
+
+var inputs := PackedFloat64Array()
 var _input_callables : Array[Callable] = []
 
-# Called when the node enters the scene tree for the first time.
+
 func _ready() -> void:
-	pass # Replace with function body.
+	car = get_parent()
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
-
-func get_inputs_array() -> PackedFloat64Array:
+func update_inputs() -> PackedFloat64Array:
 	var index : int = 0
 	for callable in _input_callables:
 		var value = callable.call()
 		if value is PackedFloat64Array or value is PackedFloat32Array or value is Array:
 			for i in value:
-				_inputs_array[index] = i
+				inputs[index] = i
 				index += 1
 		else:
-			_inputs_array[index] = value
+			inputs[index] = value
 			index += 1
-	return _inputs_array
+	return inputs
 
 
 func _update_input_callables() -> void:
@@ -82,7 +85,7 @@ func get_velocity_to_track_alignment_angle() -> float:
 
 
 func get_track_direction() -> float:
-	return car.get_node(car.track_path).get_track_direction(car.global_position, 500)
+	return car.track.get_track_direction(car.global_position, 500)
 
 
 func get_input_count() -> int:
@@ -95,14 +98,14 @@ func get_input_count() -> int:
 				num_inputs += car.sensors.get_sensor_count()
 	return num_inputs
 
-func set_inputs(array : Array[InputProperty]) -> void:
+func set_input_properties(array : Array[InputProperty]) -> void:
 	input_properties = array if array else []
 	_update_internals()
 
 
 func _update_input_count() -> void:
 	if car and car.is_node_ready():
-		_inputs_array.resize(get_input_count())
+		inputs.resize(get_input_count())
 
 
 func _update_internals() -> void:
@@ -111,7 +114,11 @@ func _update_internals() -> void:
 
 
 func set_car(c : NeuralCar) -> void:
+	if car == c:
+		return
+	
 	car = c
+	
 	if car:
 		car.ready.connect(_update_input_count, CONNECT_ONE_SHOT)
 
@@ -121,19 +128,19 @@ func set_car(c : NeuralCar) -> void:
 	#for property in input_properties:
 		#match property:
 			#InputProperty.SPEED:
-				#_inputs_array[index] = get_normalized_speed()
+				#inputs[index] = get_normalized_speed()
 				#index += 1
 			#InputProperty.SLIP_ANGLE:
-				#_inputs_array[index] = get_slip_angle()
+				#inputs[index] = get_slip_angle()
 				#index += 1
 			#InputProperty.ANGULAR_VELOCITY:
-				#_inputs_array[index] = get_angular_velocity()
+				#inputs[index] = get_angular_velocity()
 				#index += 1
 			#InputProperty.SENSOR_DATA:
 				#for reading in get_sensor_readings():
-					#_inputs_array[index] = reading
+					#inputs[index] = reading
 					#index += 1
 			#InputProperty.VEL_TO_TRACK_ALIGNMENT_ANGLE:
-				#_inputs_array[index] = get_velocity_to_track_alignment_angle()
+				#inputs[index] = get_velocity_to_track_alignment_angle()
 				#index += 1
-	#return _inputs_array
+	#return inputs

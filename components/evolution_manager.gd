@@ -16,11 +16,6 @@ signal new_generation(generation : int)
 @export_color_no_alpha var batch_colors : Array[Color] = [Color.GREEN]
 @export var parent_selection : NeuralAPIClient.ParentSelection
 
-@export_group("Autosave")
-@export var save_failed_networks := true
-@export var failed_gen_score_thresh : float = 2.1
-@export var network_save_count : int = 200
-
 
 var generation : int = 0
 var gens_without_improvement : int = 0
@@ -172,11 +167,6 @@ func populate_new_generation():
 
 func populate_random_generation():
 	randomizing_networks.emit()
-	
-	if save_failed_networks:
-		if highest_score >= failed_gen_score_thresh:
-			var networks := await get_best_networks(network_save_count)
-			SaveManager.save_networks(networks)
 	
 	var error := await _api_client.populate_random_generation()
 	network_scores.clear()

@@ -26,6 +26,7 @@ layout_generator = NodePath("NetworkLayoutGenerator")
 script = ExtResource("2_edios")
 car_parent = NodePath(".")
 track_provider = NodePath("../../TrackProvider")
+input_mapping = Array[int]([])
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
 script = ExtResource("3_k7364")

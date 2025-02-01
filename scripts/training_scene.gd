@@ -13,6 +13,12 @@ extends Node2D
 @export var use_saved_training_state := true
 @export_global_file("*.json", "*.res", "*.tres") var training_state_path := SaveManager.DEFAULT_SAVE_FILE_PATH
 
+@export_group("Autosave", "autosave")
+@export var autosave_enabled := true
+@export var autosave_score_thresh : float = 2.1
+@export var autosave_path := SaveManager.DEFAULT_SAVE_DIR_PATH + "training_state(autosave)." + SaveManager.TRAINING_STATE_FILE_EXTENSION
+@export var autosave_network_count : int = 2000
+
 var total_generations : int = 0
 var time_elapsed_int : int = 0
 
@@ -165,6 +171,10 @@ func _on_evolution_manager_networks_randomized() -> void:
 
 
 func _on_stat_screen_save_button_pressed(save_path : String, network_count : int) -> void:
+	save_networks(save_path, network_count)
+
+
+func save_networks(save_path : String, network_count : int) -> Error:
 	var error := OK
 	training_state.networks = await neural_api_client.get_best_networks(min(network_count, evolution_manager.num_networks))
 	
@@ -179,6 +189,7 @@ func _on_stat_screen_save_button_pressed(save_path : String, network_count : int
 	if error != OK:
 		push_warning("Failed to save state. Reason: ", error_string(error))
 	#await evolution_manager.save_networks(save_path, min(200, evolution_manager.num_networks), true)
+	return error
 
 
 func set_track(instance : BaseTrack):
@@ -204,6 +215,10 @@ func set_training_state(state : TrainingState):
 	
 	evolution_manager.initial_networks = training_state.networks
 	evolution_manager.generation = training_state.generation
+	if training_state.input_map and training_state.input_map.size() > 0:
+		evolution_manager.input_mapping = training_state.input_map
+	else:
+		training_state.input_map = evolution_manager.input_mapping
 	if neural_api_client.is_node_ready():
 		var io_handler := neural_api_client.io_handler
 		if io_handler and evolution_manager.api_configured:
@@ -266,6 +281,7 @@ func _on_track_provider_track_updated(new_track: BaseTrack) -> void:
 
 func _on_start_button_pressed() -> void:
 	start_button.disabled = true
+	get_tree().paused = false
 	evolution_manager.start_training()
 	start_button.disabled = false
 
@@ -289,3 +305,9 @@ func _on_evolution_manager_car_instanciated(car: NeuralCar) -> void:
 func _on_evolution_manager_training_started() -> void:
 	start_button.hide()
 	set_process(true)
+
+
+func _on_evolution_manager_randomizing_networks() -> void:
+	if autosave_enabled:
+		if evolution_manager.highest_score >= autosave_score_thresh:
+			save_networks(autosave_path, autosave_network_count)

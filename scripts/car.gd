@@ -24,7 +24,7 @@ const MAX_STEERING_ANGLE := deg_to_rad(45)
 
 @export var body_color : Color = Color.GREEN : set = set_body_color
 
-@export_node_path("BaseTrack") var track_path : NodePath = ".."
+@export var track : BaseTrack
 
 var forwards : Vector2 = Vector2.UP
 
@@ -47,7 +47,9 @@ var checkpoint_index : int = -1 : set = set_checkpoint
 func _ready() -> void:
 	set_body_color(body_color)
 	
-	var track = get_node_or_null(track_path)
+	if not track:
+		track = get_parent()
+	
 	if track and track.is_node_ready():
 		reset()
 
@@ -154,7 +156,6 @@ func set_body_color(color : Color):
 
 
 func reset(spawn_type : BaseTrack.SpawnType = BaseTrack.SpawnType.TRACK_START):
-	var track : BaseTrack = get_node(track_path)
 	if not track:
 		return
 	

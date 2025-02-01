@@ -4,7 +4,7 @@ const TRAINING_STATE_FILE_EXTENSION := FileType.TYPE_JSON
 const DEFAULT_SAVE_DIR_PATH := "user://"
 const DEFAULT_SAVE_FILE_PATH := DEFAULT_SAVE_DIR_PATH + "training_state." + TRAINING_STATE_FILE_EXTENSION
 
-var __load_error : Error = OK : get = get_load_error
+var _load_error : Error = OK : get = get_load_error
 
 
 func save_training_state(training_state : TrainingState, save_path : String, overwrite := false) -> Error:
@@ -21,7 +21,9 @@ func save_training_state(training_state : TrainingState, save_path : String, ove
 
 func load_training_state(path : String, default_value : TrainingState = null) -> TrainingState:
 	var extension := path.get_extension()
-	if extension == "": extension = TRAINING_STATE_FILE_EXTENSION
+	if extension == "":
+		extension = TRAINING_STATE_FILE_EXTENSION
+		path += "." + extension
 	match extension:
 		FileType.TYPE_RES, FileType.TYPE_TRES:
 			return load_training_state_res(path, default_value)
@@ -34,7 +36,7 @@ func load_training_state(path : String, default_value : TrainingState = null) ->
 func load_training_state_res(path : String, default_value : TrainingState = null) -> TrainingState:
 	path = ProjectSettings.globalize_path(path)
 	if not FileAccess.file_exists(path): return _load_error_occurred(path, ERR_FILE_NOT_FOUND, default_value)
-	var loaded_state = ResourceLoader.load(path)
+	var loaded_state = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP)
 	if not loaded_state: return _load_error_occurred(path, ERR_PARSE_ERROR, default_value)
 	return loaded_state
 
@@ -67,7 +69,7 @@ func save_training_state_json(training_state : TrainingState, path := DEFAULT_SA
 	if not overwrite: path = Util.make_path_unique(path)
 	var save_file = FileAccess.open(path, FileAccess.WRITE)
 	if not save_file: return FileAccess.get_open_error()
-	save_file.store_string(JSON.stringify(training_state.to_dictionary(), "", true, true))
+	save_file.store_string(JSON.stringify(training_state.to_dict(), "", true, true))
 	save_file.close()
 	return OK
 
@@ -88,32 +90,26 @@ func convert_save_state(state) -> TrainingState:
 	var data = state.data if state is JSON else state
 	
 	if data is Dictionary:
-		converted = TrainingState.new()
-		converted.highest_score = data.highest_score if data.has("highest_score") else NAN
-		if data.has("generation"): converted.generation = data.generation
-		if data.has("since_randomized"): converted.time_elapsed = data.since_randomized
-		if data.has("time_elapsed"): converted.time_elapsed = data.time_elapsed
-		converted.networks = data.networks
+		converted = TrainingState.from_dict(state)
 		
 	elif data is Array:
 		converted = TrainingState.new()
 		converted.networks = data
-		converted.highest_score = NAN
 	
 	return converted
 
 func get_load_error() -> Error:
-	return __load_error
+	return _load_error
 
 
 func _json_parse_error_occurred(file_path : String, error : Error, error_line : int, error_message : String, return_value : Variant = null) -> Variant:
-	__load_error = error
+	_load_error = error
 	push_warning("Error on line %d when parsing file %s: %s" %[error_line, file_path, error_message])
 	return return_value
 
 
 func _load_error_occurred(file_path : String, error : Error, return_value : Variant = null) -> Variant:
-	__load_error = error
+	_load_error = error
 	push_load_warning(file_path, error)
 	return return_value
 

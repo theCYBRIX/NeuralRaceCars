@@ -37,6 +37,7 @@ num_networks = 1500
 car_parent = NodePath(".")
 track_provider = NodePath("../../TrackProvider")
 num_cars = 35
+input_mapping = Array[int]([0, 1, 2, 3])
 network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
@@ -126,6 +127,7 @@ dialog_text = "Any unsaved data will be lost."
 [connection signal="instanciated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_car_instanciated"]
 [connection signal="networks_randomized" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_networks_randomized"]
 [connection signal="new_generation" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_new_generation"]
+[connection signal="randomizing_networks" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_randomizing_networks"]
 [connection signal="training_started" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_started"]
 [connection signal="track_updated" from="TrackProvider" to="." method="_on_track_provider_track_updated"]
 [connection signal="first_place_changed" from="Leaderboard" to="." method="_on_leaderboard_first_place_changed"]

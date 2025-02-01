@@ -22,6 +22,7 @@ const INPUT_THRESH : float = 0.5
 @export var enabled : bool = true
 
 @export_range(0, Util.INT_32_MAX_VALUE) var num_cars : int : set = set_num_cars
+@export var input_mapping : Array[NetworkInputMapper.InputProperty] = NetworkInputMapper.DEFAULT_MAPPING : set = set_input_mapping
 
 @export_group("Autoload")
 @export var load_saved_networks : bool = false
@@ -146,11 +147,13 @@ func _on_car_respawned(car : NeuralCar):
 
 
 func _instanciate_neural_car(index : int) -> NeuralCar:
-	var c : Car = _neural_car_scene.instantiate()
+	var c : NeuralCar = _neural_car_scene.instantiate()
 	c.id = index
 	c.set_name("Neural Car " + str(index))
 	if track and track.is_node_ready():
-		c.track_path = NodePath("../" + str(car_parent.get_path_to(track)))
+		c.track = track
+	if input_mapping:
+		c.input_mapper.input_properties = input_mapping
 	cars[index] = c
 	inactive_cars.append(c)
 	return c
@@ -175,7 +178,7 @@ func set_neural_car_input(network_index : int, network_ids : Array, data : Dicti
 	var id : String = network_ids[network_index]
 	var c : NeuralCar = active_cars[id]
 	var outputs : Array = data[id]
-	c.interpret_model_outputs(outputs)
+	c.handle_network_outputs(outputs)
 
 
 func get_input_axis(positive : float, negative : float) -> float:
@@ -191,9 +194,7 @@ func get_network_inputs() -> Dictionary:
 	
 	for c : NeuralCar in cars:
 		if c.active:
-			c.update_sensor_data()
-			var data := c.get_sensor_data()
-			#data[16] = track.get_track_direction(c.global_position, 500)
+			var data := c.get_network_inputs()
 			inputs[str(c.id)] = data
 	
 	#var mutex : Mutex = Mutex.new()
@@ -260,6 +261,13 @@ func set_num_cars(n : int):
 	num_cars = n
 	if is_node_ready() and not Engine.is_editor_hint():
 		_update_car_count()
+
+
+func set_input_mapping(mapping : Array[NetworkInputMapper.InputProperty]):
+	input_mapping = mapping
+	if cars.size() > 0:
+		for car in cars:
+			car.input_mapper.set_inputs(mapping)
 
 
 func reset_neural_car(network_id : int, car : NeuralCar):

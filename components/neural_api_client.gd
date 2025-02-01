@@ -125,8 +125,7 @@ func _get_network_inputs(cars : Array[NeuralCar]) -> Dictionary:
 	var inputs : Dictionary = {}
 	
 	for c : NeuralCar in cars:
-		var data := c.get_sensor_data()
-		#data[16] = track.get_track_direction(c.global_position, 500)
+		var data := c.get_network_inputs()
 		inputs[str(c.id)] = data
 	
 	return inputs
