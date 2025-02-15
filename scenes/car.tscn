@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://6yghlai5jgs6"]
+[gd_scene load_steps=11 format=3 uid="uid://6yghlai5jgs6"]
 
 [ext_resource type="Script" path="res://scripts/car.gd" id="1_ay7o7"]
-[ext_resource type="Shader" path="res://shaders/color_replace.gdshader" id="2_um5s1"]
+[ext_resource type="Shader" path="res://shaders/dual_color_replace.gdshader" id="2_iyur8"]
 [ext_resource type="Texture2D" uid="uid://du7gy501uoka6" path="res://assets/Model 3.png" id="3_w6567"]
 [ext_resource type="Texture2D" uid="uid://ce8ule58xnuww" path="res://assets/light_texture.svg" id="4_o5ond"]
+[ext_resource type="PackedScene" uid="uid://dxai0kbqdhp8q" path="res://scenes/tire.tscn" id="5_wt17y"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pmuwr"]
 friction = 0.6
@@ -23,19 +24,22 @@ height = 180.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_d00hp"]
 resource_local_to_scene = true
-shader = ExtResource("2_um5s1")
-shader_parameter/target_color = Color(0, 1, 0, 1)
-shader_parameter/replacement_color = Color(0.839216, 0, 0, 1)
+shader = ExtResource("2_iyur8")
+shader_parameter/target_color_1 = Color(0, 1, 0, 1)
+shader_parameter/replacement_color_1 = Color(0.839216, 0, 0, 1)
+shader_parameter/target_color_2 = Color(0, 0, 1, 1)
+shader_parameter/replacement_color_2 = Color(0.132235, 0.405147, 0.565815, 1)
 shader_parameter/color_thresh = 0.75
 
 [node name="Car" type="RigidBody2D"]
+z_index = -1
 collision_layer = 2
 mass = 2000.0
 physics_material_override = SubResource("PhysicsMaterial_pmuwr")
 linear_damp = 1.0
 angular_damp = 3.0
 script = ExtResource("1_ay7o7")
-tire_friction = 3.0
+tire_friction = 0.5
 steering_dropoff = SubResource("Curve_nlpam")
 accelecation_curve = SubResource("Curve_b72up")
 
@@ -43,11 +47,13 @@ accelecation_curve = SubResource("Curve_b72up")
 shape = SubResource("CapsuleShape2D_uvm3r")
 
 [node name="Sprite" type="Sprite2D" parent="."]
+visibility_layer = 4
+z_index = 1
 material = SubResource("ShaderMaterial_d00hp")
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("3_w6567")
 
-[node name="CameraMount" type="Node2D" parent="."]
+[node name="CameraPivot" type="Node2D" parent="."]
 
 [node name="LeftHeadlight" type="PointLight2D" parent="."]
 visible = false
@@ -68,3 +74,17 @@ color = Color(1, 0.870588, 0.27451, 1)
 texture = ExtResource("4_o5ond")
 offset = Vector2(52, 0)
 texture_scale = 0.13
+
+[node name="TireFL" parent="." instance=ExtResource("5_wt17y")]
+position = Vector2(-28, -60)
+tire_mark_start_angle = 0.75
+
+[node name="TireFR" parent="." instance=ExtResource("5_wt17y")]
+position = Vector2(28, -60)
+tire_mark_start_angle = 0.75
+
+[node name="TireRL" parent="." instance=ExtResource("5_wt17y")]
+position = Vector2(-30, 55)
+
+[node name="TireRR" parent="." instance=ExtResource("5_wt17y")]
+position = Vector2(30, 55)

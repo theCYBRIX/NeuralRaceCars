@@ -6,19 +6,17 @@
 [node name="BaseTrack" type="Node2D"]
 script = ExtResource("1_mj38o")
 
-[node name="TileMap" type="TileMap" parent="."]
+[node name="TileMap" type="TileMapLayer" parent="."]
+z_index = -2
+z_as_relative = false
+use_parent_material = true
 tile_set = ExtResource("1_jc4nj")
-format = 2
 
 [node name="Checkpoints" type="Area2D" parent="."]
 collision_layer = 3
 collision_mask = 3
 
-[node name="Trajectory" type="Path2D" parent="."]
-
 [node name="SpawnPoint" type="Marker2D" parent="."]
-
-[node name="Line2D" type="Line2D" parent="."]
-visible = false
+rotation = -1.5708
 
 [connection signal="body_shape_entered" from="Checkpoints" to="." method="_on_checkpoints_body_shape_entered"]

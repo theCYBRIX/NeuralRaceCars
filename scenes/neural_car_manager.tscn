@@ -2,7 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/neural_car_manager.gd" id="1_lrblp"]
 
-[node name="NeuralCarManager" type="Node"]
+[node name="NeuralCarManager" type="Node" node_paths=PackedStringArray("car_parent")]
+process_physics_priority = -1
 script = ExtResource("1_lrblp")
+car_parent = NodePath(".")
 
 [node name="NeuralCars" type="Node" parent="."]

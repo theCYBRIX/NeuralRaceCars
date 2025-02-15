@@ -14,18 +14,29 @@ config/name="CarGame"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 run/max_fps=60
+run/frame_delay_msec=17
 config/icon="res://icon.svg"
 
 [autoload]
 
 SceneManager="*res://singletons/scene_manager.gd"
-CommonTools="*res://singletons/common_tools.gd"
+Util="*res://singletons/util.gd"
 SaveManager="*res://singletons/save_manager.gd"
 GameSettings="*res://singletons/game_settings.gd"
 
 [display]
 
 window/subwindows/embed_subwindows=false
+
+[editor]
+
+movie_writer/mjpeg_quality=0.9
+movie_writer/movie_file="//Homeless-nas/hdd 2/Media/NeuralNetworkProject/Captures/GodotMovieMaker/training.avi"
+movie_writer/disable_vsync=true
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/script-ide/plugin.cfg")
 
 [file_customization]
 
@@ -39,6 +50,14 @@ folder_colors={
 "res://shaders/": "red",
 "res://singletons/": "pink"
 }
+
+[global_group]
+
+Cars=""
+
+[gui]
+
+theme/default_theme_scale=2.0
 
 [input]
 
@@ -117,11 +136,14 @@ toggle_free_cam={
 
 [layer_names]
 
+2d_render/layer_1="Map"
+2d_render/layer_2="Tire Marks"
+2d_render/layer_3="Cars"
 2d_physics/layer_1="track"
 2d_physics/layer_2="cars"
 2d_physics/layer_3="progress sensor"
 
 [physics]
 
-3d/run_on_separate_thread=true
+2d/run_on_separate_thread=true
 2d/default_gravity_vector=Vector2(0, 0)

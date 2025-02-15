@@ -1,0 +1,144 @@
+[gd_scene load_steps=12 format=3 uid="uid://ccrhr53h8iyim"]
+
+[ext_resource type="Script" path="res://scripts/training_scene.gd" id="1_c0enb"]
+[ext_resource type="PackedScene" uid="uid://bo3ui0wlk1dqt" path="res://components/camera_manager.tscn" id="2_gjkxr"]
+[ext_resource type="Script" path="res://components/neural_api_client.gd" id="3_ok8vb"]
+[ext_resource type="Script" path="res://components/evolution_manager.gd" id="4_1idkt"]
+[ext_resource type="Script" path="res://components/training_recording_manager.gd" id="5_63c7x"]
+[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="5_vlj7q"]
+[ext_resource type="Script" path="res://components/console_io_handler.gd" id="6_ok5a7"]
+[ext_resource type="Script" path="res://components/server_io_handler.gd" id="7_vp7hw"]
+[ext_resource type="Script" path="res://components/track_provider.gd" id="8_045po"]
+[ext_resource type="Script" path="res://classes/leaderboard.gd" id="9_8l2pi"]
+[ext_resource type="PackedScene" uid="uid://b0jd27uwnldue" path="res://scenes/statistics_screen.tscn" id="10_vf8yr"]
+
+[node name="TrainingScene" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_c0enb")
+
+[node name="CameraManager" parent="." instance=ExtResource("2_gjkxr")]
+process_mode = 3
+
+[node name="CameraReparentCooldown" type="Timer" parent="."]
+wait_time = 1.5
+one_shot = true
+
+[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "layout_generator")]
+process_mode = 1
+script = ExtResource("3_ok8vb")
+io_handler = NodePath("ConsoleIOHandler")
+layout_generator = NodePath("NetworkLayoutGenerator")
+print_error_stack_trace = false
+
+[node name="EvolutionManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("recording_manager", "car_parent", "track_provider")]
+script = ExtResource("4_1idkt")
+recording_manager = NodePath("TrainingRecordingManager")
+num_networks = 1500
+batch_colors = Array[Color]([Color(0, 1, 0, 1)])
+car_parent = NodePath(".")
+track_provider = NodePath("../../TrackProvider")
+num_cars = 50
+input_mapping = Array[int]([0, 1, 2, 3])
+network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
+
+[node name="TrainingRecordingManager" type="Node" parent="NeuralAPIClient/EvolutionManager" node_paths=PackedStringArray("evolution_manager")]
+script = ExtResource("5_63c7x")
+evolution_manager = NodePath("..")
+enabled = false
+
+[node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("5_vlj7q")
+num_inputs = 15
+num_outputs = 4
+hidden_layer_sizes = Array[int]([24, 16])
+activation_functions = Array[int]([0, 1, 1, 2])
+input_normalizers = Array[int]([1, 0, 0, 0])
+
+[node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+script = ExtResource("6_ok5a7")
+
+[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+script = ExtResource("7_vp7hw")
+host_address = "localhost"
+host_port = 3050
+
+[node name="TrackProvider" type="Node" parent="."]
+script = ExtResource("8_045po")
+track_internal_mode = 1
+
+[node name="Leaderboard" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("9_8l2pi")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="StartButton" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Start"
+
+[node name="ExitButton" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
+
+[node name="StatScreen" parent="CanvasLayer" instance=ExtResource("10_vf8yr")]
+visible = false
+minimum_graph_size = Vector2(400, 500)
+
+[node name="ExitDialog" type="ConfirmationDialog" parent="."]
+auto_translate_mode = 1
+disable_3d = true
+title = "Are you sure?"
+size = Vector2i(245, 190)
+unresizable = true
+popup_window = true
+keep_title_visible = false
+dialog_text = "Any unsaved data will be lost."
+
+[connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
+[connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
+[connection signal="car_instanciated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_car_instanciated"]
+[connection signal="networks_randomized" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_networks_randomized"]
+[connection signal="new_generation" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_new_generation"]
+[connection signal="training_started" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_started"]
+[connection signal="training_state_refreshed" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_state_refreshed"]
+[connection signal="track_updated" from="TrackProvider" to="." method="_on_track_provider_track_updated"]
+[connection signal="first_place_changed" from="Leaderboard" to="." method="_on_leaderboard_first_place_changed"]
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="exit_button_pressed" from="CanvasLayer/StatScreen" to="." method="_on_stat_screen_exit_button_pressed"]
+[connection signal="save_button_pressed" from="CanvasLayer/StatScreen" to="." method="_on_stat_screen_save_button_pressed"]
+[connection signal="confirmed" from="ExitDialog" to="." method="_on_exit_dialog_confirmed"]

@@ -10,6 +10,7 @@ signal deselected
 @onready var training_time_label: Label = $MarginContainer/VBoxContainer/MarginContainer/Details/Column1/TrainingTimeLabel
 @onready var highest_score_label: Label = $MarginContainer/VBoxContainer/MarginContainer/Details/Column2/HighestScoreLabel
 @onready var num_networks_label: Label = $MarginContainer/VBoxContainer/MarginContainer/Details/Column2/NumNetworksLabel
+@onready var network_visualizer: NetworkVisualizer = $MarginContainer/VBoxContainer/MarginContainer/Details/MarginContainer/NetworkVisualizer
 
 @export_color_no_alpha var default_color : Color = 0x3A3A3AFF : set = set_default_color
 @export_color_no_alpha var hovered_color : Color = 0x494949FF : set = set_hovered_color
@@ -21,17 +22,21 @@ var hovered_stylebox : StyleBoxFlat
 var selected_stylebox : StyleBoxFlat
 var disabled_stylebox : StyleBoxFlat
 
+var parent_list : SaveFileList
+
 var _hovered := false : set = _set_hovered
 var _selected := false : set = set_selected
-var _disabled := false : set = set_disabled
+var disabled := false : set = set_disabled
 
 const NOT_AVAILABLE := "N/A"
 
 var file_name : String = NOT_AVAILABLE : set = set_file_name
-var file_contents : TrainingState
+var file_path : String : set = set_file_path
+var file_contents : TrainingState : set = set_file_contents
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	child_order_changed
 	var panel_stylebox = get_theme_stylebox("panel")
 	default_stylebox = panel_stylebox.duplicate()
 	default_stylebox.bg_color = default_color
@@ -44,18 +49,21 @@ func _ready() -> void:
 	
 	disabled_stylebox = panel_stylebox.duplicate()
 	disabled_stylebox.bg_color = disabled_color
+	disabled_stylebox.border_color = Color.DARK_GRAY
 	
-	add_theme_stylebox_override("panel", default_stylebox)
+	_update_style_overrides()
 	
 	update_file_name_label()
 	update_detail_labels()
+	update_network_visualizer()
 
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			get_viewport().set_input_as_handled()
-			if _disabled: return
+			accept_event()
+			if disabled: return
 			if event.is_double_click():
 				_selected = true
 				pressed.emit()
@@ -65,11 +73,34 @@ func _gui_input(event: InputEvent) -> void:
 
 func set_file_name(string_name : String) -> void:
 	file_name = NOT_AVAILABLE if not string_name or string_name.is_empty() else string_name
-	if is_node_ready(): update_file_name_label()
+	if is_node_ready():
+		update_file_name_label()
+
+
+func set_file_path(string_name : String) -> void:
+	file_path = string_name
+	update_file_contents()
+
 
 func set_file_contents(state : TrainingState) -> void:
 	file_contents = state
-	if is_node_ready(): update_detail_labels()
+	if is_node_ready() and not is_queued_for_deletion():
+		call_thread_safe("update_detail_labels")
+		call_thread_safe("update_network_visualizer")
+
+
+func update_network_visualizer() -> void:
+	if not file_contents:
+		return
+	if not file_contents.networks or file_contents.networks.is_empty():
+		return
+	var first_network = file_contents.networks.front()
+	if not first_network or not first_network.has("layout"):
+		return
+	if not first_network.layout:
+		return
+	var layout := NetworkLayout.from_dict(first_network.layout)
+	network_visualizer.network_layout = layout
 
 
 func _set_hovered(enabled : bool) -> void:
@@ -78,9 +109,9 @@ func _set_hovered(enabled : bool) -> void:
 		_update_style_overrides()
 
 
-func set_disabled(disabled : bool) -> void:
-	_disabled = disabled
-	if _disabled:
+func set_disabled(value : bool) -> void:
+	disabled = value
+	if disabled:
 		_selected = false
 	if is_node_ready():
 		_update_style_overrides()
@@ -139,10 +170,9 @@ func update_detail_labels() -> void:
 		if file_contents.generation > 0:
 			generation = str(file_contents.generation)
 		if roundi(file_contents.time_elapsed) > 0:
-			time_elapsed = CommonTools.format_time(roundi(file_contents.time_elapsed))
-		if is_nan(file_contents.highest_score):
+			time_elapsed = Util.format_time(roundi(file_contents.time_elapsed))
+		if file_contents.highest_score == 0:
 			highest_score = NOT_AVAILABLE
-			file_contents.highest_score = 0
 		else:
 			highest_score = "%-3.2f" % [roundf(file_contents.highest_score * 100) / 100]
 		
@@ -152,6 +182,16 @@ func update_detail_labels() -> void:
 	num_networks_label.text = "Network Count: " + network_count
 
 
+func update_file_contents() -> void:
+	file_contents = _load_training_state(file_path)
+
+
+static func _load_training_state(file_path : String) -> TrainingState:
+	var contents = SaveManager.load_training_state(file_path)
+	if not contents: return null
+	return contents
+
+
 func _update_style_overrides() -> void:
 	_update_panel_stylebox()
 	_update_font_color()
@@ -159,7 +199,7 @@ func _update_style_overrides() -> void:
 
 func _update_panel_stylebox() -> void:
 	var stylebox : StyleBoxFlat
-	if _disabled:
+	if disabled:
 		stylebox = disabled_stylebox
 	elif _selected:
 		stylebox = selected_stylebox
@@ -175,7 +215,7 @@ func _update_font_color() -> void:
 	const theme_parent := "Button"
 	
 	var color : Color
-	if _disabled:
+	if disabled:
 		color = get_theme_color("font_disabled_color", theme_parent)
 	elif _selected:
 		color = get_theme_color("font_focus_color", theme_parent)

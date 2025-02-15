@@ -26,3 +26,7 @@ func start() -> bool:
 
 func stop() -> bool:
 	return false
+
+func _exit_tree() -> void:
+	if is_running():
+		stop()

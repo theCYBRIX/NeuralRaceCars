@@ -1,0 +1,32 @@
+[gd_scene load_steps=6 format=3 uid="uid://c4axxbrnhvsjr"]
+
+[ext_resource type="Script" path="res://components/neural_api_client.gd" id="1_4ott5"]
+[ext_resource type="Script" path="res://experiments/get_endpoints.gd" id="1_ersvm"]
+[ext_resource type="Script" path="res://components/console_io_handler.gd" id="2_slmp5"]
+[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="3_nrm4c"]
+[ext_resource type="Script" path="res://components/server_io_handler.gd" id="5_llmoc"]
+
+[node name="GetEndpoints" type="Node"]
+script = ExtResource("1_ersvm")
+
+[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "layout_generator")]
+script = ExtResource("1_4ott5")
+io_handler = NodePath("ServerIOHandler")
+layout_generator = NodePath("NetworkLayoutGenerator")
+
+[node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("2_slmp5")
+
+[node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("3_nrm4c")
+num_inputs = 15
+num_outputs = 4
+hidden_layer_sizes = Array[int]([24, 20])
+activation_functions = Array[int]([0, 1, 1, 2])
+input_normalizers = Array[int]([1, 0, 0, 0])
+
+[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+script = ExtResource("5_llmoc")
+host_address = "localhost"
+host_port = 3050
+autostart = true

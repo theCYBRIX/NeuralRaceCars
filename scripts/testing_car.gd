@@ -8,8 +8,6 @@ enum UserInput {
 	TURN_RIGHT
 }
 
-@export var track : BaseTrack
-
 @export var deactivateable : bool = false
 
 @onready var sensor_vision: Line2D = $SensorVision
@@ -30,7 +28,7 @@ func _ready() -> void:
 	print(sequential_sensors.size())
 
 func _process(delta: float) -> void:
-	super._process(delta)
+	#super._process(delta)
 	
 	#print("Lap progress: %4.3f" % get_lap_progress())
 	
@@ -41,22 +39,34 @@ func _process(delta: float) -> void:
 		else:
 			sensor_vision.add_point(s.get_parent().position + s.target_position)
 	
+	#closest_point_on_track.clear_points()
+	#closest_point_on_track.add_point(Vector2.ZERO)
+	#closest_point_on_track.add_point(to_local(track.trajectory.to_global(track.trajectory.curve.sample_baked(track.get_closest_trajectory_offset(global_position)))))
+
+
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	
 	if not track: return
 	
-	arrow.global_rotation = track.get_track_direction(global_position, 500) + PI
+	if arrow.visible:
+		arrow.global_rotation = track.get_target_direction(self, 500) + PI
+		#print(angle_difference(track.get_target_direction(self, 500) + PI / 2, global_rotation))
 	
-	closest_point_on_track.clear_points()
-	closest_point_on_track.add_point(Vector2.ZERO)
-	closest_point_on_track.add_point(to_local(track.trajectory.to_global(track.trajectory.curve.sample_baked(track.get_closest_trajectory_offset(global_position)))))
+	#if arrow.visible and navigaton_enabled:
+		#navigation_agent_2d.velocity = linear_velocity
+		#arrow.global_rotation = global_position.angle_to(navigation_agent_2d.get_next_path_position())
 
 
-func deactivate() -> void:
+func deactivate(cancel_signal := false) -> void:
 	if deactivateable:
-		super.deactivate()
+		super.deactivate(cancel_signal)
+
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset"):
-		reset(track.spawn_point)
+		reset()
+
 
 func get_user_inputs() -> Array[float]:
 	var inputs : Array[float] = []
