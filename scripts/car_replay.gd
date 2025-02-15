@@ -1,12 +1,17 @@
 extends Node2D
 
+
 const ANIMATION_NAME := "replay"
 const POSITION_PATH := ".:position"
 const ROTATION_PATH := ".:rotation"
 const ANIMATION_LIBRARY_NAME := "CarReplay"
 
+
 @export var replay_data : ReplayData : set = set_replay_data
+
+
 @onready var animation_player: AnimationPlayer = $AnimationPlayer : get = get_animation_player
+@onready var checkpoint_tracker: CheckpointTracker = $CheckpointTracker
 
 
 func start(custom_blend: float = -1, custom_speed: float = 1.0, from_end: bool = false) -> void:

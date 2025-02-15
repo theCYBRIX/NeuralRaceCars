@@ -20,9 +20,9 @@ func _ready() -> void:
 
 func get_progress(car : Car) -> float:
 	if (not car is NeuralCar) or car.active:
-		return get_absolute_progress(car.global_position, car.checkpoint_index)
+		return get_absolute_progress(car.global_position, car.checkpoint_tracker.checkpoint_index)
 	else:
-		return get_absolute_progress(car.final_pos, car.checkpoint_index)
+		return get_absolute_progress(car.final_pos, car.checkpoint_tracker.checkpoint_index)
 
 
 func get_closest_spawn_point(for_whom : Car = null) -> SpawnPoint:
@@ -31,8 +31,8 @@ func get_closest_spawn_point(for_whom : Car = null) -> SpawnPoint:
 	return SpawnPoint.new(trajectory.to_global(local_transform.get_origin()), (trajectory.global_rotation + local_transform.get_rotation()) + CAR_FORWARDS_ANGLE)
 
 
-func get_target_direction(car : Car, look_ahead_px : float) -> float:
-	return get_track_direction(car.global_position, look_ahead_px)
+func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px : float) -> float:
+	return get_track_direction(node.global_position, checkpoint_index, look_ahead_px)
 
 
 func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:

@@ -2,7 +2,6 @@ class_name Car
 extends RigidBody2D
 
 signal respawned
-signal checkpoint_updated(idx : int)
 
 const HALF_PI := PI / 2
 const STEERING_THRESH : int = 300
@@ -33,10 +32,9 @@ var moving : bool
 var moving_forwards : bool
 var breaking : bool
 
-var checkpoint_index : int = -1 : set = set_checkpoint
-
 @onready var camera_pivot: Node2D = $CameraPivot
 @onready var sprite: Sprite2D = $Sprite
+@onready var checkpoint_tracker: CheckpointTracker = $CheckpointTracker
 
 @onready var tire_fl: Node2D = $TireFL
 @onready var tire_fr: Node2D = $TireFR
@@ -107,19 +105,6 @@ func get_velocity_angle_difference(angle : float):
 	return angle_difference(angle, linear_velocity.angle() + HALF_PI)
 
 
-func checkpoint(idx : int) -> bool:
-	if (checkpoint_index + 1) != idx:
-		return false
-	checkpoint_index += 1
-	return true
-
-
-func set_checkpoint(idx : int):
-	if idx == checkpoint_index: return
-	checkpoint_index = idx
-	checkpoint_updated.emit(checkpoint_index)
-
-
 func respawn(pos : Vector2, angle : float):
 	await _set_position_and_rotation(pos, angle)
 	respawned.emit()
@@ -172,7 +157,7 @@ func reset(spawn_type : BaseTrack.SpawnType = BaseTrack.SpawnType.TRACK_START):
 		return
 	
 	if spawn_type == BaseTrack.SpawnType.TRACK_START:
-		checkpoint_index = -1
+		checkpoint_tracker.reset()
 	
 	await respawn(spawn_point.position, spawn_point.rotation)
 

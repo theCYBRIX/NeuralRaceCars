@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://ew42tl5xnngx"]
+
+[ext_resource type="Script" path="res://components/track_provider.gd" id="1_vakav"]
+[ext_resource type="Script" path="res://classes/leaderboard.gd" id="2_kgcjq"]
+
+[node name="ReplayScene" type="Node2D"]
+
+[node name="TrackProvider" type="Node" parent="."]
+script = ExtResource("1_vakav")
+
+[node name="Leaderboard" type="Node" parent="."]
+script = ExtResource("2_kgcjq")

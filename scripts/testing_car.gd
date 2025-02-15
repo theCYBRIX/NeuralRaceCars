@@ -50,7 +50,7 @@ func _physics_process(delta: float) -> void:
 	if not track: return
 	
 	if arrow.visible:
-		arrow.global_rotation = track.get_target_direction(self, 500) + PI
+		arrow.global_rotation = track.get_target_direction(self, checkpoint_tracker.checkpoint_index, 500) + PI
 		#print(angle_difference(track.get_target_direction(self, 500) + PI / 2, global_rotation))
 	
 	#if arrow.visible and navigaton_enabled:

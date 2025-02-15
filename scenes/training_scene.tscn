@@ -44,7 +44,6 @@ network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/s
 [node name="TrainingRecordingManager" type="Node" parent="NeuralAPIClient/EvolutionManager" node_paths=PackedStringArray("evolution_manager")]
 script = ExtResource("5_63c7x")
 evolution_manager = NodePath("..")
-enabled = false
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
 script = ExtResource("5_vlj7q")

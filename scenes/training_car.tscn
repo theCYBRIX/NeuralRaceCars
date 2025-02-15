@@ -34,6 +34,6 @@ one_shot = true
 debug_enabled = true
 debug_path_custom_color = Color(0.83, 0.1245, 0.1245, 1)
 
-[connection signal="checkpoint_updated" from="." to="." method="_on_checkpoint_updated"]
 [connection signal="timeout" from="CheckpointTimer" to="." method="_on_checkpoint_timer_timeout"]
 [connection signal="timeout" from="LifetimeTimer" to="." method="_on_lifetime_timer_timeout"]
+[connection signal="checkpoint_updated" from="CheckpointTracker" to="." method="_on_checkpoint_tracker_checkpoint_updated" unbinds=2]

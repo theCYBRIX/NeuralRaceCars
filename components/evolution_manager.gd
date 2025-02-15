@@ -45,6 +45,9 @@ var api_configured : bool = false
 
 
 func _init() -> void:
+	if Engine.is_editor_hint():
+		return
+	
 	_neural_car_scene = preload("res://scenes/training_car.tscn")
 	ignore_deactivations = true
 	
@@ -69,11 +72,11 @@ func _ready() -> void:
 	
 	if not Engine.is_editor_hint():
 		_api_client.call_deferred("start")
+		assert(training_state != null)
 	
 	if training_state:
 		refresh_training_state_properties()
 	
-	assert(training_state != null)
 
 
 func _process(delta: float) -> void:

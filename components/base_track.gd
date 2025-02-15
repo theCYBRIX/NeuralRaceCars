@@ -1,7 +1,7 @@
 class_name BaseTrack
 extends Node2D
 
-signal car_entered_checkpoint(car: Car, checkpoint_index: int, num_checkpoints : int, checkpoints_area : Area2D)
+signal body_entered_checkpoint(body : PhysicsBody2D, checkpoint_index : int, num_checkpoints : int, checkpoints_area : Area2D)
 
 enum SpawnType {
 	TRACK_START,
@@ -24,19 +24,23 @@ func _init() -> void:
 	raycast_query_param.collide_with_bodies = true
 
 
-func get_target_direction(car : Car, look_ahead_px : float) -> float:
-	return car.global_position.angle_to_point(get_checkpoint(car.checkpoint_index + 1).global_position)
+func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px : float) -> float:
+	return node.global_position.angle_to_point(get_checkpoint(checkpoint_index + 1).global_position)
 
 
 func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shape_index: int, local_shape_index: int) -> void:
 	if body is Car:
-		car_entered_checkpoint.emit(body, local_shape_index, checkpoints_area.get_child_count(), checkpoints_area)
-		var car : Car = body
-		#print(car.checkpoint_index)
-		if not car.moving_forwards or (car is NeuralCar and not car.active):
-			return
-		#print("%d == %d" %[car.checkpoint_index, local_shape_index - 1])
-		car.checkpoint(((car.checkpoint_index + 1) / checkpoints_area.get_child_count()) * checkpoints_area.get_child_count() + local_shape_index)
+		body_entered_checkpoint.emit(body, local_shape_index, checkpoints_area.get_child_count(), checkpoints_area)
+		
+		if body is Car:
+			#print(car.checkpoint_index)
+			if not body.moving_forwards or (body is NeuralCar and not body.active):
+				return
+			#print("%d == %d" %[car.checkpoint_index, local_shape_index - 1])
+		
+		if body.has_node("CheckpointTracker"):
+			var tracker : CheckpointTracker = body.get_node("CheckpointTracker")
+			tracker.checkpoint(((tracker.checkpoint_index + 1) / checkpoints_area.get_child_count()) * checkpoints_area.get_child_count() + local_shape_index)
 
 
 

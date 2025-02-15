@@ -85,7 +85,7 @@ func get_velocity_to_track_alignment_angle() -> float:
 
 
 func get_track_direction() -> float:
-	return car.track.get_target_direction(car, 500)
+	return car.track.get_target_direction(car, car.checkpoint_tracker.checkpoint_index, 500)
 
 
 func get_input_count() -> int:
