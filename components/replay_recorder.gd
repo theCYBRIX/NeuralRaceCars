@@ -15,7 +15,7 @@ signal stopped
 var replay_data := ReplayData.new()
 var active := false
 
-var _recording_timer := AbsoluteTimer.new()
+var _elapsed_time : float = 0
 var _timer : Timer
 
 func _init() -> void:
@@ -34,6 +34,10 @@ func _ready() -> void:
 	_update_wait_time()
 
 
+func _physics_process(delta: float) -> void:
+	_elapsed_time += delta
+
+
 func start() -> void:
 	if active:
 		return
@@ -41,9 +45,10 @@ func start() -> void:
 		push_error("Unable to start recording: Target is null.")
 		return
 	active = true
+	_elapsed_time = 0
 	_snapshot()
 	_timer.start()
-	_recording_timer.start()
+	set_physics_process(true)
 	started.emit()
 
 
@@ -51,9 +56,9 @@ func stop() -> void:
 	if not active:
 		return
 	active = false
-	_recording_timer.stop()
 	_timer.stop()
 	_snapshot()
+	set_physics_process(false)
 	stopped.emit()
 
 
@@ -83,7 +88,7 @@ func set_target(node : Node2D) -> void:
 
 
 func _snapshot() -> void:
-	replay_data.record(_recording_timer.get_elapsed_time_sec(), target.position, target.rotation)
+	replay_data.record(_elapsed_time, target.position, target.rotation)
 
 
 func _on_timer_timeout() -> void:
