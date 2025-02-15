@@ -1,38 +1,90 @@
+class_name ReplayRecorder
 extends Node
 
-@onready var timer: Timer = $Timer
+const DEFAULT_FRAME_RATE : int = 24
+
+
+signal started
+signal stopped
+
+
+@export var frame_rate : int = DEFAULT_FRAME_RATE : set = set_frame_rate
+
+@export var target : Node2D : set = set_target
 
 var replay_data := ReplayData.new()
+var active := false
+
+var _recording_timer := AbsoluteTimer.new()
+var _timer : Timer
+
+func _init() -> void:
+	name = "ReplayRecorder"
+	_timer = Timer.new()
+	_timer.timeout.connect(_on_timer_timeout)
+	_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+	add_child(_timer, false, Node.INTERNAL_MODE_FRONT)
+
 
 func _ready() -> void:
-	_update_timer()
+	if not target:
+		var parent := get_parent()
+		if parent is Node2D:
+			target = parent
+	_update_wait_time()
 
 
 func start() -> void:
-	timer.start()
+	if active:
+		return
+	if not target:
+		push_error("Unable to start recording: Target is null.")
+		return
+	active = true
+	_snapshot()
+	_timer.start()
+	_recording_timer.start()
+	started.emit()
 
 
 func stop() -> void:
-	timer.stop()
+	if not active:
+		return
+	active = false
+	_recording_timer.stop()
+	_timer.stop()
+	_snapshot()
+	stopped.emit()
 
 
 func reset() -> void:
-	replay_data.clear()
+	replay_data = ReplayData.new()
 
 
 func set_replay_data(data : ReplayData):
 	replay_data = data
-	if replay_data and is_node_ready():
-		_update_timer()
 
-func _update_timer():
-	timer.wait_time = 1.0 / replay_data.frame_rate
+
+func set_frame_rate(rate : float) -> void:
+	if rate <= 0:
+		push_error("Frame rate cannot be <= 0")
+		return
+	frame_rate = rate
+	if _timer:
+		_update_wait_time()
+
+
+func _update_wait_time() -> void:
+	_timer.wait_time = 1.0 / frame_rate
+
+
+func set_target(node : Node2D) -> void:
+	target = node
+
+
+func _snapshot() -> void:
+	replay_data.record(_recording_timer.get_elapsed_time_sec(), target.position, target.rotation)
 
 
 func _on_timer_timeout() -> void:
-	var parent := get_parent()
-	if parent and parent is Node2D:
-		replay_data.record(parent.position, parent.rotation)
-	else:
-		push_error("Parent is not a Node2D")
-		timer.stop()
+	_snapshot()

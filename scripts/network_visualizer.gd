@@ -94,6 +94,8 @@ func set_layout_generator(generator : NetworkLayoutGenerator):
 func set_network_layout(layout : NetworkLayout) -> void:
 	network_layout = layout
 	queue_redraw()
+	if layout:
+		tooltip_text = "inputs: %d\nhidden layers: %s\noutputs: %d" % [layout.input_layer.node_count, str(layout.hidden_layers.map(func(x): return x.node_count)), layout.output_layer.node_count]
 
 
 func refresh_layout_generator_layout():

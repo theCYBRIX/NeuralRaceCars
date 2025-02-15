@@ -100,3 +100,10 @@ func disconnect_from_signal(callable : Callable, from : Signal) -> bool:
 		from.disconnect(callable)
 		return true
 	return false
+
+
+func invert_dictionary(dict : Dictionary) -> Dictionary:
+	var inverted := {}
+	for key in dict.keys():
+		inverted[dict[key]] = key
+	return inverted

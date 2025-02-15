@@ -1,4 +1,4 @@
-extends BaseTrack
+extends LinearTrack
 
 signal car_entered_slow_zone(car : NeuralCar)
 signal car_exited_slow_zone(car : NeuralCar)

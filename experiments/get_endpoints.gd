@@ -161,25 +161,3 @@ func format_elapsed_time(elapsed_time_micro : float) -> String:
 	
 	# Print or return the elapsed time
 	return "%fms (%f seconds)" % [elapsed_time_millis, elapsed_time_sec]
-
-
-class AbsoluteTimer:
-	var start_time : int
-	var end_time : int
-	var elapsed_time : int
-	
-	func start() -> void:
-		start_time = Time.get_ticks_usec()
-	
-	func stop() -> void:
-		end_time = Time.get_ticks_usec()
-		elapsed_time = end_time - start_time
-	
-	func get_elapsed_time_micro() -> int:
-		return elapsed_time
-	
-	func get_elapsed_time_millis() -> int:
-		return elapsed_time / 1_000.0
-	
-	func get_elapsed_time_sec() -> int:
-		return elapsed_time / 1_000_000.0

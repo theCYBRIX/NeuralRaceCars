@@ -97,7 +97,7 @@ func _on_save_file_list_selection_count_changed(num_selected: int) -> void:
 
 
 func _on_sort_options_item_selected(index: int) -> void:
-	save_file_list.sorting_order = index
+	save_file_list.sorting_order = save_file_list.SortBy.values()[index]
 
 
 func _update_list_sorting() -> void:

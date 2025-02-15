@@ -38,6 +38,7 @@ func load_training_state_res(path : String, default_value : TrainingState = null
 	if not FileAccess.file_exists(path): return _load_error_occurred(path, ERR_FILE_NOT_FOUND, default_value)
 	var loaded_state = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP)
 	if not loaded_state: return _load_error_occurred(path, ERR_PARSE_ERROR, default_value)
+	if not (loaded_state is TrainingState): return _load_error_occurred(path, ERR_INVALID_DATA, default_value)
 	return loaded_state
 
 

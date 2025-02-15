@@ -1,9 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://ccrhr53h8iyim"]
+[gd_scene load_steps=12 format=3 uid="uid://ccrhr53h8iyim"]
 
 [ext_resource type="Script" path="res://scripts/training_scene.gd" id="1_c0enb"]
 [ext_resource type="PackedScene" uid="uid://bo3ui0wlk1dqt" path="res://components/camera_manager.tscn" id="2_gjkxr"]
 [ext_resource type="Script" path="res://components/neural_api_client.gd" id="3_ok8vb"]
 [ext_resource type="Script" path="res://components/evolution_manager.gd" id="4_1idkt"]
+[ext_resource type="Script" path="res://components/training_recording_manager.gd" id="5_63c7x"]
 [ext_resource type="Script" path="res://components/network_layout_generator.gd" id="5_vlj7q"]
 [ext_resource type="Script" path="res://components/console_io_handler.gd" id="6_ok5a7"]
 [ext_resource type="Script" path="res://components/server_io_handler.gd" id="7_vp7hw"]
@@ -14,8 +15,6 @@
 [node name="TrainingScene" type="Node2D"]
 process_mode = 3
 script = ExtResource("1_c0enb")
-use_saved_training_state = false
-training_state_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_state(funny wallride).res"
 
 [node name="CameraManager" parent="." instance=ExtResource("2_gjkxr")]
 process_mode = 3
@@ -31,14 +30,21 @@ io_handler = NodePath("ConsoleIOHandler")
 layout_generator = NodePath("NetworkLayoutGenerator")
 print_error_stack_trace = false
 
-[node name="EvolutionManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("car_parent", "track_provider")]
+[node name="EvolutionManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("recording_manager", "car_parent", "track_provider")]
 script = ExtResource("4_1idkt")
+recording_manager = NodePath("TrainingRecordingManager")
 num_networks = 1500
+batch_colors = Array[Color]([Color(0, 1, 0, 1)])
 car_parent = NodePath(".")
 track_provider = NodePath("../../TrackProvider")
-num_cars = 35
+num_cars = 50
 input_mapping = Array[int]([0, 1, 2, 3])
 network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
+
+[node name="TrainingRecordingManager" type="Node" parent="NeuralAPIClient/EvolutionManager" node_paths=PackedStringArray("evolution_manager")]
+script = ExtResource("5_63c7x")
+evolution_manager = NodePath("..")
+enabled = false
 
 [node name="NetworkLayoutGenerator" type="Node" parent="NeuralAPIClient"]
 script = ExtResource("5_vlj7q")
@@ -124,11 +130,11 @@ dialog_text = "Any unsaved data will be lost."
 
 [connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
 [connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
-[connection signal="instanciated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_car_instanciated"]
+[connection signal="car_instanciated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_car_instanciated"]
 [connection signal="networks_randomized" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_networks_randomized"]
 [connection signal="new_generation" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_new_generation"]
-[connection signal="randomizing_networks" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_randomizing_networks"]
 [connection signal="training_started" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_started"]
+[connection signal="training_state_refreshed" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_state_refreshed"]
 [connection signal="track_updated" from="TrackProvider" to="." method="_on_track_provider_track_updated"]
 [connection signal="first_place_changed" from="Leaderboard" to="." method="_on_leaderboard_first_place_changed"]
 [connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]

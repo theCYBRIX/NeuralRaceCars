@@ -1,8 +1,7 @@
 extends Node2D
 
-const PLAYER_CAR = preload("res://scenes/car.tscn")
-
 @export var include_player := true
+@export var player_car : PackedScene = preload("res://scenes/car.tscn")
 
 @onready var pause_menu: Control = $CanvasLayer/PauseMenu
 @onready var track_provider: TrackProvider = $TrackProvider
@@ -39,6 +38,27 @@ func _ready() -> void:
 	#neural_car_manager.set_deactivate_on_contact(false)
 
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		if event.keycode == KEY_SPACE:
+			if event.is_pressed():
+				var replay_recorder = _player.get_node_or_null("ReplayRecorder")
+				if replay_recorder:
+					if replay_recorder.active:
+						replay_recorder.stop()
+						
+						var replay_car : Node2D = load("res://scenes/car_replay.tscn").instantiate()
+						track_provider.track.add_child(replay_car)
+						replay_recorder.replay_data.flush_buffer()
+						replay_car.replay_data = replay_recorder.replay_data
+						replay_recorder.replay_data = ReplayData.new()
+						replay_car.start()
+						await replay_car.get_node("AnimationPlayer").animation_finished
+						replay_car.queue_free()
+					else:
+						replay_recorder.start()
+
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	match event.keycode:
 		KEY_ESCAPE:
@@ -58,9 +78,13 @@ func spawn_player() -> void:
 		push_error("Unable to spawn player: TrackProvider is null.")
 		return
 	
-	_player = PLAYER_CAR.instantiate()
-	_player.track_path = ".."
+	var replay_recorder := ReplayRecorder.new()
+	replay_recorder.set_frame_rate(60)
+	
+	_player = player_car.instantiate()
+	_player.track = track_provider.track
 	_player.set_body_color(Color.DARK_RED)
+	_player.add_child(replay_recorder)
 	track_provider.track.add_child(_player)
 	#camera_manager.start_tracking(_player)
 	$Camera2D.target = _player

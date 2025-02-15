@@ -90,11 +90,12 @@ func refresh_file_list(path : String) -> Error:
 	_item_array.clear()
 	_file_paths.clear()
 	
+	var load_file_tasks : Array[Callable] = []
+	
 	for file in files:
 		var list_item := SAVE_FILE_LIST_ITEM.instantiate()
 		list_item.file_name = file.get_file()
-		var task_id := WorkerThreadPool.add_task(list_item.set_file_path.bind(path + "\\" + file))
-		_worker_thread_tasks.append(task_id)
+		load_file_tasks.append(list_item.set_file_path.bind(path + "\\" + file))
 		list_item.selected.connect(_on_item_selected.bind(list_item))
 		list_item.deselected.connect(_on_item_deselected.bind(list_item))
 		list_item.pressed.connect(_on_item_pressed.bind(list_item))
@@ -103,6 +104,12 @@ func refresh_file_list(path : String) -> Error:
 		_item_array.append(list_item)
 		_file_paths[list_item] = file
 	
+	var task_id := WorkerThreadPool.add_task(
+		func():
+			for task in load_file_tasks:
+				task.call()
+	)
+	_worker_thread_tasks.append(task_id)
 	await wait_for_worker_tasks()
 	
 	_sort_item_array()
@@ -184,9 +191,6 @@ static func sort_by_date(a : SaveFileListItem, b : SaveFileListItem, ascending :
 
 
 static func sort_by_name(a : SaveFileListItem, b : SaveFileListItem, ascending := true) -> bool:
-	var a_is_before : bool
-	var index : int = 0
-	
 	return a.file_name.filenocasecmp_to(b.file_name) > 0 if ascending else a.file_name.filenocasecmp_to(b.file_name) < 0
 
 

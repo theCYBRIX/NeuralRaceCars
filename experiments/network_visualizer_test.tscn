@@ -97,6 +97,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(576, 324)
+tooltip_text = "inputs: 15
+hidden layers: []
+outputs: 4"
 mouse_filter = 1
 script = ExtResource("1_lfskc")
 layout_generator = NodePath("NetworkLayoutGenerator")

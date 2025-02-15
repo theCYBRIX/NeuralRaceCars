@@ -30,6 +30,10 @@ autostart = true
 wait_time = 120.0
 one_shot = true
 
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." index="12"]
+debug_enabled = true
+debug_path_custom_color = Color(0.83, 0.1245, 0.1245, 1)
+
 [connection signal="checkpoint_updated" from="." to="." method="_on_checkpoint_updated"]
 [connection signal="timeout" from="CheckpointTimer" to="." method="_on_checkpoint_timer_timeout"]
 [connection signal="timeout" from="LifetimeTimer" to="." method="_on_lifetime_timer_timeout"]

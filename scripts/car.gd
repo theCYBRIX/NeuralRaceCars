@@ -24,7 +24,7 @@ const MAX_STEERING_ANGLE := deg_to_rad(45)
 
 @export var body_color : Color = Color.GREEN : set = set_body_color
 
-@export var track : BaseTrack
+@export var track : BaseTrack : set = set_track
 
 var forwards : Vector2 = Vector2.UP
 
@@ -52,10 +52,6 @@ func _ready() -> void:
 	
 	if track and track.is_node_ready():
 		reset()
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
 
 func get_throttle_input() -> float:
 	return Input.get_axis("decelerate", "accelerate")
@@ -152,7 +148,13 @@ func _set_position_and_rotation(pos : Vector2, angle : float):
 func set_body_color(color : Color):
 	body_color = color
 	if is_node_ready():
-		sprite.material.set_shader_parameter("replacement_color", body_color)
+		sprite.material.set_shader_parameter("replacement_color_1", body_color)
+		if color == Color.GREEN:
+			pass
+
+
+func set_track(node : BaseTrack) -> void:
+	track = node
 
 
 func reset(spawn_type : BaseTrack.SpawnType = BaseTrack.SpawnType.TRACK_START):

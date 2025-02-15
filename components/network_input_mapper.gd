@@ -81,11 +81,11 @@ func get_slip_angle() -> float:
 
 
 func get_velocity_to_track_alignment_angle() -> float:
-	return angle_difference(get_track_direction(), car.global_rotation)
+	return angle_difference(get_track_direction() + PI / 2, car.global_rotation)
 
 
 func get_track_direction() -> float:
-	return car.track.get_track_direction(car.global_position, 500)
+	return car.track.get_target_direction(car, 500)
 
 
 func get_input_count() -> int:

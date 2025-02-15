@@ -9,16 +9,6 @@ extends Node2D
 @onready var leaderboard: Leaderboard = $Leaderboard
 @onready var start_button: Button = $CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton
 
-@export var training_state : TrainingState : set = set_training_state
-@export var use_saved_training_state := true
-@export_global_file("*.json", "*.res", "*.tres") var training_state_path := SaveManager.DEFAULT_SAVE_FILE_PATH
-
-@export_group("Autosave", "autosave")
-@export var autosave_enabled := true
-@export var autosave_score_thresh : float = 2.1
-@export var autosave_path := SaveManager.DEFAULT_SAVE_DIR_PATH + "training_state(autosave)." + SaveManager.TRAINING_STATE_FILE_EXTENSION
-@export var autosave_network_count : int = 2000
-
 var total_generations : int = 0
 var time_elapsed_int : int = 0
 
@@ -38,48 +28,29 @@ var next_camera_target_set_flag := false
 
 var track : BaseTrack : set = set_track
 
-func _init() -> void:
-	if GameSettings.training_state:
-		training_state = GameSettings.training_state
-		
-	elif use_saved_training_state:
-		training_state = SaveManager.load_training_state(training_state_path)
-		if training_state:
-			var error : Error = SaveManager.get_load_error()
-			push_warning("Unable to load training state: ", training_state_path, "\nReason: ", error_string(error))
-			training_state = TrainingState.new()
-		
-	elif not training_state:
-		training_state = TrainingState.new()
-
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	set_process(false)
 	get_tree().paused = true
 	
-	assert(training_state != null)
-	
 	var car_childred := find_children("*", "Car", false)
 	if not car_childred.is_empty():
 		set_camera_target(car_childred.front())
 	
-	evolution_manager.initial_networks = training_state.networks
-	evolution_manager.generation = training_state.generation
 	evolution_manager.car_respawned.connect(set_first_place_car, CONNECT_ONE_SHOT)
 	
 	evolution_manager.ready.connect(_on_evolution_manager_reset, CONNECT_ONE_SHOT)
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
 	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
-	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func(): return evolution_manager.highest_score)
+	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func(): return evolution_manager.training_state.highest_score)
 	stat_screen.graph_2.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
 
 
 func _process(delta: float) -> void:
 	if get_tree().paused: return
 	
-	training_state.time_elapsed += delta
-	var floored := floori(training_state.time_elapsed)
+	var floored := floori(evolution_manager.training_state.time_elapsed + delta)
 	if floored > time_elapsed_int:
 		time_elapsed_int = floored
 		stat_screen.time_elapsed_label.set_text("Time elapsed: " + Util.format_time(time_elapsed_int))
@@ -133,8 +104,8 @@ func update_first_place_score() -> float:
 			evolution_manager.on_network_score_changed(first_place_score)
 	elif has_node("Car"):
 		leader = $Car
-		first_place_score = track.get_absolute_progress(leader.global_position, leader.checkpoint_index)
-			
+		first_place_score = track.get_progress(leader)
+	
 	return first_place_score
 
 
@@ -160,9 +131,12 @@ func _on_evolution_manager_new_generation(generation : int) -> void:
 	total_generations += 1
 	stat_screen.total_gens_label.set_text("Total Generations: " + str(total_generations))
 	
-	training_state.generation = generation
 	stat_screen.gen_label.set_text("Generation: " + str(generation))
 	stat_screen.improvement_label.set_text("Gens without improvement: " + str(evolution_manager.gens_without_improvement))
+	
+	#TODO: Do properly
+	if track and track.has_method("randomize_checkpoints"):
+		track.randomize_checkpoints()
 
 
 func _on_evolution_manager_networks_randomized() -> void:
@@ -171,25 +145,7 @@ func _on_evolution_manager_networks_randomized() -> void:
 
 
 func _on_stat_screen_save_button_pressed(save_path : String, network_count : int) -> void:
-	save_networks(save_path, network_count)
-
-
-func save_networks(save_path : String, network_count : int) -> Error:
-	var error := OK
-	training_state.networks = await neural_api_client.get_best_networks(min(network_count, evolution_manager.num_networks))
-	
-	if neural_api_client.error_occurred():
-		error = FAILED
-	
-	training_state.highest_score = evolution_manager.highest_score
-	
-	if error == OK:
-		error = SaveManager.save_training_state(training_state, save_path)
-	
-	if error != OK:
-		push_warning("Failed to save state. Reason: ", error_string(error))
-	#await evolution_manager.save_networks(save_path, min(200, evolution_manager.num_networks), true)
-	return error
+	evolution_manager.save_networks(save_path, network_count)
 
 
 func set_track(instance : BaseTrack):
@@ -200,31 +156,7 @@ func set_track(instance : BaseTrack):
 	
 	for car : Car in find_children("*", "Car", false):
 		car.track_path = car.get_path_to(track)
-
-
-func set_training_state(state : TrainingState):
-	if not state: state = TrainingState.new()
-	training_state = state
 	
-	time_elapsed_int = floori(training_state.time_elapsed)
-	since_randomized = training_state.time_elapsed
-	since_randomized_int = time_elapsed_int
-	total_generations = training_state.generation
-	
-	if not is_node_ready(): return
-	
-	evolution_manager.initial_networks = training_state.networks
-	evolution_manager.generation = training_state.generation
-	if training_state.input_map and training_state.input_map.size() > 0:
-		evolution_manager.input_mapping = training_state.input_map
-	else:
-		training_state.input_map = evolution_manager.input_mapping
-	if neural_api_client.is_node_ready():
-		var io_handler := neural_api_client.io_handler
-		if io_handler and evolution_manager.api_configured:
-			io_handler.stop()
-			evolution_manager.api_configured = false
-			io_handler.start()
 
 
 func set_first_place_car(car : NeuralCar):
@@ -307,7 +239,8 @@ func _on_evolution_manager_training_started() -> void:
 	set_process(true)
 
 
-func _on_evolution_manager_randomizing_networks() -> void:
-	if autosave_enabled:
-		if evolution_manager.highest_score >= autosave_score_thresh:
-			save_networks(autosave_path, autosave_network_count)
+func _on_evolution_manager_training_state_refreshed(training_state: TrainingState) -> void:
+	time_elapsed_int = floori(training_state.time_elapsed)
+	since_randomized = training_state.time_elapsed
+	since_randomized_int = time_elapsed_int
+	total_generations = training_state.generation

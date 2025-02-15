@@ -2,8 +2,8 @@
 class_name NeuralCarManager
 extends Node
 
-signal instanciated(car : NeuralCar)
-signal freed(car : NeuralCar)
+signal car_instanciated(car : NeuralCar)
+signal car_freed(car : NeuralCar)
 
 signal car_respawned(car : NeuralCar)
 signal car_deactivated(car : NeuralCar)
@@ -33,6 +33,8 @@ var track : BaseTrack : set = set_track
 var cars : Array[NeuralCar] = []
 var active_cars : Dictionary = {}
 var inactive_cars : Array[NeuralCar] = []
+
+var replays : Dictionary = {}
 
 var network_outputs : Array[Array]
 
@@ -115,7 +117,7 @@ func _remove_neural_cars(count : int):
 	while removed < count:
 		var c : NeuralCar = cars.pop_back()
 		c.queue_free()
-		freed.emit(c)
+		car_freed.emit(c)
 		removed += 1
 
 
@@ -128,7 +130,7 @@ func _add_neural_cars(count : int):
 		c.deactivated.connect(_on_car_deactivated.bind(c), CONNECT_DEFERRED)
 		c.respawned.connect(_on_car_respawned.bind(c), CONNECT_DEFERRED)
 		car_parent.add_child(c, false, Node.INTERNAL_MODE_FRONT)
-		instanciated.emit(c)
+		car_instanciated.emit(c)
 
 
 func _on_car_deactivated(car : NeuralCar):
@@ -148,6 +150,7 @@ func _on_car_respawned(car : NeuralCar):
 
 func _instanciate_neural_car(index : int) -> NeuralCar:
 	var c : NeuralCar = _neural_car_scene.instantiate()
+	
 	c.id = index
 	c.set_name("Neural Car " + str(index))
 	if track and track.is_node_ready():

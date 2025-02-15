@@ -57,7 +57,6 @@ func set_hidden_layer_sizes(sizes : Array[int]) -> void:
 			return
 		hidden_layer_sizes = sizes 
 	if use_default_behaviour:
-		print("yup")
 		populate_defaults()
 	update_configuration_warnings()
 	layout_changed.emit()

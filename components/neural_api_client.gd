@@ -226,6 +226,13 @@ func get_best_networks(num_networks : int) -> Array:
 	return networks
 
 
+func get_networks(ids : Array[int]) -> Dictionary:
+	var response := await request("getNetworks", { "networkIds" : ids})
+	if error_flag: return {}
+	var networks : Dictionary = response["payload"]["networks"]
+	return networks
+
+
 func train_on_dataset(dataset : DrivingData):
 	request("trainOnDataset", { "dataset" : { "inputs" : dataset.inputs, "outputs" : dataset.outputs }})
 

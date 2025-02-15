@@ -10,7 +10,7 @@ const ANIMATION_LIBRARY_NAME := "CarReplay"
 
 
 func start(custom_blend: float = -1, custom_speed: float = 1.0, from_end: bool = false) -> void:
-	animation_player.start(ANIMATION_NAME, custom_blend, custom_speed, from_end)
+	animation_player.play(ANIMATION_LIBRARY_NAME + "/" + ANIMATION_NAME, custom_blend, custom_speed, from_end)
 
 
 func get_animation_player() -> AnimationPlayer:
@@ -24,6 +24,7 @@ func update_animation() -> void:
 		remove_animation(animation_library)
 	else:
 		animation_library = AnimationLibrary.new()
+		animation_player.add_animation_library(ANIMATION_LIBRARY_NAME, animation_library)
 	
 	animation_library.add_animation(ANIMATION_NAME, replay_data.generate_animation(POSITION_PATH, ROTATION_PATH))
 

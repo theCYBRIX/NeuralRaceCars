@@ -24,6 +24,9 @@ alignment = 1
 layout_mode = 2
 alignment = 1
 
+[node name="OptionButton" type="OptionButton" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
 [node name="PlayButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "Play"
@@ -40,6 +43,7 @@ text = "Load previous"
 layout_mode = 2
 text = "Exit"
 
+[connection signal="item_selected" from="HBoxContainer/VBoxContainer/OptionButton" to="." method="_on_option_button_item_selected"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
