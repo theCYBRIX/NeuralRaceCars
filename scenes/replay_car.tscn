@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://sms0ekth2ii7"]
 
 [ext_resource type="Texture2D" uid="uid://du7gy501uoka6" path="res://assets/Model 3.png" id="1_6exio"]
-[ext_resource type="Script" path="res://scripts/car_replay.gd" id="1_8r8fy"]
+[ext_resource type="Script" path="res://scripts/replay_car.gd" id="1_8r8fy"]
 [ext_resource type="Shape2D" uid="uid://upfsaqpqyytx" path="res://resources/car_shape.tres" id="2_gxeqx"]
 [ext_resource type="Script" path="res://components/checkpoint_tracker.gd" id="4_df3qu"]
 

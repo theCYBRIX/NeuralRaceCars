@@ -30,10 +30,13 @@ func set_enabled(value := true) -> void:
 func set_neural_car(car : NeuralCar) -> void:
 	if neural_car:
 		Util.disconnect_from_signal(stop, neural_car.deactivated)
-		Util.disconnect_from_signal(reset, neural_car.respawned)
-		Util.disconnect_from_signal(start, neural_car.respawned)
+		Util.disconnect_from_signal(_on_car_respawned, neural_car.respawned)
 	neural_car = car
 	if car:
 		car.deactivated.connect(stop)
-		car.respawned.connect(reset)
-		car.respawned.connect(start)
+		car.respawned.connect(_on_car_respawned)
+
+
+func _on_car_respawned() -> void:
+	reset()
+	start()

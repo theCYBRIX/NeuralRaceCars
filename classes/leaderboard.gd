@@ -22,11 +22,6 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if leaderboard.is_empty():
-		_should_update = false
-		set_physics_process(false)
-		return
-	
 	refresh()
 
 
@@ -67,14 +62,15 @@ func remove(node : Node2D) -> void:
 
 
 func refresh():
-	leaderboard.sort_custom(_sort_ascending)
+	if not leaderboard.is_empty():
+		leaderboard.sort_custom(_sort_ascending)
+		
+		var current_first = leaderboard.back()
+		if current_first != first_place:
+			first_place_changed.emit(current_first, first_place)
+			first_place = current_first
 	
-	var current_first = leaderboard.back()
-	if current_first != first_place:
-		first_place_changed.emit(current_first, first_place)
-		first_place = current_first
-	
-	set_process(true)
+		set_process(true)
 	_updated()
 
 

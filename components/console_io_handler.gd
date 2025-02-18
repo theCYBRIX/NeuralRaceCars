@@ -37,6 +37,7 @@ func start() -> bool:
 	
 	app_properties = OS.execute_with_pipe("java", ["-jar", app_path])
 	std_io = app_properties.stdio
+	std_io.big_endian = true
 	if is_running():
 		print("SimpleNNConsole started successfully.")
 		connected.emit()
