@@ -16,6 +16,7 @@ func _ready() -> void:
 	set_process(false)
 	
 	socket = StreamPeerTCP.new()
+	socket.big_endian = true
 	
 	if not Engine.is_editor_hint() and autostart:
 		connect_to_host()

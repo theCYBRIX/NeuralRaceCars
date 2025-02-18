@@ -11,6 +11,8 @@ signal network_ids_updated(Array)
 @export var io_handler : IOHandler : set = set_io_handler
 @export var layout_generator : NetworkLayoutGenerator : set = set_layout_generator
 @export var print_error_stack_trace := true
+@export var track_response_times := true : set = set_track_response_times
+@export var response_time_samples : int = 5
 
 enum ParentSelection {
 	ROULETTE_WHEEL_PREFER_LARGE,
@@ -27,7 +29,9 @@ var simulation_network_ids : Array : set = set_simulation_network_ids
 var training_network_ids : Array : set = set_training_network_ids
 
 var _api_connected : bool = false : get = is_api_connected
-
+var _response_timer : AbsoluteTimer = AbsoluteTimer.new()
+var _response_times : Array[float] = []
+var _request_callable : Callable = _request_timed
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -261,23 +265,57 @@ func _read_response() -> Dictionary:
 
 
 func request(request : String, payload : Dictionary = {}) -> Dictionary:
+	return _request_callable.call(request, payload)
+
+
+func _request_direct(request : String, payload : Dictionary = {}) -> Dictionary:
 	_send_request(request, payload)
 	return _read_response()
 
 
+func _request_timed(request : String, payload : Dictionary = {}) -> Dictionary:
+	_response_timer.start()
+	_send_request(request, payload)
+	var response := _read_response()
+	_response_timer.stop()
+	if _response_times.size() == response_time_samples:
+		_response_times.pop_front()
+	_response_times.append(_response_timer.get_elapsed_time_millis())
+	return response
+
+
+
+func get_last_response_time() -> float:
+	if _response_times.is_empty():
+		return 0
+	else:
+		return _response_times.back()
+
+
+func get_average_response_time() -> float:
+	if _response_times.is_empty():
+		return 0
+	
+	var cumulative_time := 0.0
+	for time in _response_times:
+		cumulative_time += time
+	
+	return cumulative_time / _response_times.size()
+
+
 func parse_message(server_msg : String) -> Dictionary:
 	var parser := JSON.new()
-	if server_msg.contains("NaN"):
-		server_msg = server_msg.replace("NaN", "0")
 	var parse_error := parser.parse(server_msg)
+	var response : Dictionary
 	
-	var response : Dictionary = parser.data
+	if parser.data:
+		response = parser.data
 
 	if parse_error != OK or (not response) or (response["status"] == "error"):
 		var error : String
 	
 		if parse_error != OK:
-			error = "Error on line %d when parcing server response. Error: %s" % [parser.get_error_line(), parser.get_error_message()]
+			error = "Error on line %d when parsing server response. Error: %s" % [parser.get_error_line(), parser.get_error_message()]
 		
 		elif not response:
 			error = "Parser returned null.\n Response was:\"%s\"" % server_msg
@@ -311,6 +349,14 @@ func set_simulation_network_ids(ids : Array):
 func set_training_network_ids(ids : Array):
 	training_network_ids = ids
 	network_ids_updated.emit()
+
+
+func set_track_response_times(enabled : bool) -> void:
+	if track_response_times == enabled:
+		return
+	track_response_times = enabled
+	_response_times.clear()
+	_request_callable = _request_timed if track_response_times else _request_direct
 
 
 func is_api_connected() -> bool:

@@ -54,12 +54,14 @@ activation_functions = Array[int]([0, 1, 1, 2])
 input_normalizers = Array[int]([1, 0, 0, 0])
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+process_mode = 3
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 script = ExtResource("6_ok5a7")
 
 [node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+process_mode = 3
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0

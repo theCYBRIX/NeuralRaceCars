@@ -43,6 +43,8 @@ func _ready() -> void:
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
 	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
+	stat_screen.graph.add_series("API Average Response Time", Color.ORANGE, neural_api_client.get_average_response_time)
+	#stat_screen.graph.add_series("API Last Response Time", Color.YELLOW, neural_api_client.get_last_response_time)
 	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func(): return evolution_manager.training_state.highest_score)
 	stat_screen.graph_2.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
 

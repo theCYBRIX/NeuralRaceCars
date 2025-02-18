@@ -23,6 +23,8 @@ target = NodePath(".")
 script = ExtResource("1_2vvgq")
 io_handler = NodePath("ConsoleIOHandler")
 layout_generator = NodePath("NetworkLayoutGenerator")
+track_response_times = null
+response_time_samples = null
 
 [node name="NeuralCarManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("car_parent", "track_provider")]
 script = ExtResource("2_edios")
