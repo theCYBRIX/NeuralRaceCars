@@ -29,9 +29,13 @@ func start_tracking(node : Node):
 		return
 	
 	if is_node_ready():
-		remote_transform_2d.reparent(target, false)
-		remote_transform_2d.remote_path = remote_transform_2d.get_path_to(camera)
-		_set_remote_transform_enabled(not free_floating)
+		reparent_camera.call_deferred()
+
+
+func reparent_camera() -> void:
+	remote_transform_2d.reparent(target, false)
+	remote_transform_2d.remote_path = remote_transform_2d.get_path_to(camera)
+	_set_remote_transform_enabled(not free_floating)
 
 
 func stop_tracking(reset_camera := false):

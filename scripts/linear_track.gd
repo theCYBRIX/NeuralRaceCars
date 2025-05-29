@@ -2,13 +2,12 @@ class_name LinearTrack
 extends BaseTrack
 
 @onready var trajectory: Path2D = $Trajectory
-var num_checkpoints : int
 
 var checkpoint_offsets : Array[float]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	num_checkpoints = checkpoints_area.get_child_count(true)
+	super._ready()
 	checkpoint_offsets = []
 	checkpoint_offsets.resize(num_checkpoints)
 	

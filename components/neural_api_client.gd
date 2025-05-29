@@ -9,6 +9,7 @@ signal connection_error(error : Error)
 signal network_ids_updated(Array)
 
 @export var io_handler : IOHandler : set = set_io_handler
+@export var binary_io_handler : Node
 @export var layout_generator : NetworkLayoutGenerator : set = set_layout_generator
 @export var print_error_stack_trace := true
 @export var track_response_times := true : set = set_track_response_times
@@ -212,6 +213,10 @@ func set_io_handler(handler : IOHandler):
 
 
 func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
+	if binary_io_handler and binary_io_handler.Enabled and binary_io_handler.IsConnected():
+		#binary_io_handler.Test()
+		return binary_io_handler.ProcessInputs(network_inputs)
+	
 	var response := request("processInputs", { "networkInputs" : network_inputs })
 	var outputs : Dictionary
 	
@@ -386,6 +391,13 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _on_io_handler_connected() -> void:
 	_api_connected = true
 	connected.emit()
+	
+	if binary_io_handler and binary_io_handler.Enabled:
+		request("openBinaryChannel")
+		if not error_flag:
+			binary_io_handler.Start()
+		else:
+			push_error("Failed to open binary channel.")
 
 
 func _on_io_handler_disconnected() -> void:

@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://wdrm2ynsu72b"]
 
-[ext_resource type="Script" path="res://scripts/driving_data_trainer.gd" id="1_m31n8"]
+[ext_resource type="Script" uid="uid://civrmg5cic2bn" path="res://scripts/driving_data_trainer.gd" id="1_m31n8"]
 [ext_resource type="PackedScene" uid="uid://t1n2bft1qmp3" path="res://components/neural_api_client.tscn" id="2_jhw3p"]
-[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="3_hgr2t"]
-[ext_resource type="Script" path="res://components/console_io_handler.gd" id="4_nt8qs"]
-[ext_resource type="Script" path="res://components/server_io_handler.gd" id="5_4j38f"]
+[ext_resource type="Script" uid="uid://csppnnlo4buwi" path="res://components/network_layout_generator.gd" id="3_hgr2t"]
+[ext_resource type="Script" uid="uid://d3xb0b5ctqaq8" path="res://components/console_io_handler.gd" id="4_nt8qs"]
+[ext_resource type="Script" uid="uid://c4qnlvon8m02q" path="res://components/server_io_handler.gd" id="5_4j38f"]
 
 [node name="DrivingDataTrainer" type="Control"]
 layout_mode = 3

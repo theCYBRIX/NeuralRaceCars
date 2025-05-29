@@ -3,6 +3,7 @@ extends Node
 
 signal first_place_changed(new_first : Car, prev_first : Car)
 
+@export var track : BaseTrack
 @export var free_labels_when_hidden := false
 @export var show_labels := true : set = set_show_labels
 
@@ -15,8 +16,37 @@ var _should_update := false
 
 var _position_labels : Dictionary = {}
 
+var _progress_dict : Dictionary[Node2D, float] = {}
+var _progress_update_task : int = -1
+var _leaderboard_update_task : int = -1
+#TODO: remake 
+func update_progress(index : int):
+	var node : Node2D = leaderboard[index]
+	var check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index).global_position
+	var next_check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index + 1).global_position
+	var check_to_check_dist := check_pos.distance_squared_to(next_check_pos)
+	_progress_dict[node] = node.checkpoint_tracker.checkpoint_index - node.global_position.distance_squared_to(next_check_pos) / check_to_check_dist
+
+func update_leaderboard() -> void:
+	if _progress_update_task != -1:
+		WorkerThreadPool.wait_for_group_task_completion(_progress_update_task)
+		_progress_update_task = -1
+	
+	leaderboard.sort_custom(sort_new)
+	var current_first = leaderboard.back()
+	if current_first != first_place:
+		emit_signal.call_deferred("first_place_changed", current_first, first_place)
+		first_place = current_first
+
+func sort_new(a : Node2D, b : Node2D) -> bool:
+	return _progress_dict[a] < _progress_dict[b]
 
 func _process(delta: float) -> void:
+	if _leaderboard_update_task != -1:
+		if not WorkerThreadPool.is_task_completed(_leaderboard_update_task):
+			return
+		WorkerThreadPool.wait_for_task_completion(_leaderboard_update_task)
+		_leaderboard_update_task = -1
 	_update_labels()
 	set_process(false)
 
@@ -62,14 +92,25 @@ func remove(node : Node2D) -> void:
 
 
 func refresh():
-	if not leaderboard.is_empty():
-		leaderboard.sort_custom(_sort_ascending)
-		
-		var current_first = leaderboard.back()
-		if current_first != first_place:
-			first_place_changed.emit(current_first, first_place)
-			first_place = current_first
+	if not track or not track.is_node_ready():
+		return
 	
+	if not leaderboard.is_empty():
+		if _progress_update_task != -1 or _leaderboard_update_task != -1:
+			return
+		
+		#_progress_update_task = WorkerThreadPool.add_group_task(update_progress, leaderboard.size(), -1, false, "Update Progress")
+		for i in range(leaderboard.size()):
+			update_progress(i)
+		_leaderboard_update_task = WorkerThreadPool.add_task(update_leaderboard, false, "Update Leaderboard")
+			
+		#leaderboard.sort_custom(_sort_ascending)
+		#
+		#var current_first = leaderboard.back()
+		#if current_first != first_place:
+			#emit_signal.call_deferred("first_place_changed", current_first, first_place)
+			#first_place = current_first
+	#
 		set_process(true)
 	_updated()
 
@@ -137,8 +178,8 @@ func _checkpoint_entered(checkpoint_idx : int, node : Node2D) -> void:
 
 
 func _sort_ascending(a : Node2D, b : Node2D) -> bool:
-	var index_a : int = a.get_node("CheckpointTracker").checkpoint_index
-	var index_b : int = b.get_node("CheckpointTracker").checkpoint_index
+	var index_a : int = a.checkpoint_tracker.checkpoint_index
+	var index_b : int = b.checkpoint_tracker.checkpoint_index
 	if index_a == index_b:
 		return _checkpoint_reached_order[index_a].find(a) > _checkpoint_reached_order[index_b].find(b)
 	else:
@@ -150,9 +191,9 @@ func _update_labels():
 		var index := get_current_leaderboard_idx(node)
 		var label : UprightLabel = _position_labels[node]
 		if index >= 0:
-			label.set_text(str(leaderboard.size() - index))
+			label.set_text.call_deferred(str(leaderboard.size() - index))
 		else:
-			label.set_text("N/A")
+			label.set_text.call_deferred("N/A")
 
 
 func _attach_label(node : Node2D) -> UprightLabel:

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://t1n2bft1qmp3"]
 
-[ext_resource type="Script" path="res://components/neural_api_client.gd" id="1_invil"]
+[ext_resource type="Script" uid="uid://c1mn02b2rh0k5" path="res://components/neural_api_client.gd" id="1_invil"]
 
 [node name="NeuralAPIClient" type="Node"]
 script = ExtResource("1_invil")

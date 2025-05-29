@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://ew42tl5xnngx"]
 
-[ext_resource type="Script" path="res://scripts/replay_scene.gd" id="1_n7noj"]
-[ext_resource type="Script" path="res://components/track_provider.gd" id="1_vakav"]
-[ext_resource type="Script" path="res://classes/leaderboard.gd" id="2_kgcjq"]
-[ext_resource type="Script" path="res://components/camera_manager.gd" id="4_od2ug"]
+[ext_resource type="Script" uid="uid://ddiu4l4wge8g1" path="res://scripts/replay_scene.gd" id="1_n7noj"]
+[ext_resource type="Script" uid="uid://db3lfkg4qoqab" path="res://components/track_provider.gd" id="1_vakav"]
+[ext_resource type="Script" uid="uid://dn7x5yj7mao5d" path="res://classes/leaderboard.gd" id="2_kgcjq"]
+[ext_resource type="Script" uid="uid://twncl88g6ami" path="res://components/camera_manager.gd" id="4_od2ug"]
 
 [node name="ReplayScene" type="Node2D"]
 script = ExtResource("1_n7noj")

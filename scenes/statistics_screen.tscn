@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://b0jd27uwnldue"]
 
-[ext_resource type="Script" path="res://scripts/statistics_screen.gd" id="1_3hfig"]
+[ext_resource type="Script" uid="uid://cscugoee7oqkk" path="res://scripts/statistics_screen.gd" id="1_3hfig"]
 [ext_resource type="PackedScene" uid="uid://bji248xsn4q3q" path="res://scenes/ui/graph.tscn" id="1_yu65y"]
 [ext_resource type="Texture2D" uid="uid://c8ybn1ts1xxbf" path="res://assets/popout_white.png" id="2_qdj24"]
-[ext_resource type="Script" path="res://components/popout_component.gd" id="3_pweg3"]
+[ext_resource type="Script" uid="uid://c2e3gnvqefwfg" path="res://components/popout_component.gd" id="3_pweg3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xt7i1"]
 bg_color = Color(0.15967, 0.15967, 0.15967, 1)

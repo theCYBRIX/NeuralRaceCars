@@ -15,13 +15,18 @@ const CAR_FORWARDS_ANGLE := PI / 2.0
 @onready var checkpoints_area: Area2D = $Checkpoints
 
 var raycast_query_param : PhysicsRayQueryParameters2D
-
+var checkpoints : Array
+var num_checkpoints : int
 
 func _init() -> void:
 	raycast_query_param = PhysicsRayQueryParameters2D.new()
 	raycast_query_param.collision_mask = 0b00000000_00000000_00000000_000001
 	raycast_query_param.collide_with_areas = false
 	raycast_query_param.collide_with_bodies = true
+
+func _ready() -> void:
+	checkpoints = checkpoints_area.get_children();
+	num_checkpoints = checkpoints_area.get_child_count()
 
 
 func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px : float) -> float:
@@ -30,7 +35,7 @@ func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px :
 
 func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shape_index: int, local_shape_index: int) -> void:
 	if body is Car:
-		body_entered_checkpoint.emit(body, local_shape_index, checkpoints_area.get_child_count(), checkpoints_area)
+		body_entered_checkpoint.emit(body, local_shape_index, num_checkpoints, checkpoints_area)
 		
 		if body is Car:
 			#print(car.checkpoint_index)
@@ -40,7 +45,7 @@ func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shap
 		
 		if body.has_node("CheckpointTracker"):
 			var tracker : CheckpointTracker = body.get_node("CheckpointTracker")
-			tracker.checkpoint(((tracker.checkpoint_index + 1) / checkpoints_area.get_child_count()) * checkpoints_area.get_child_count() + local_shape_index)
+			tracker.checkpoint(((tracker.checkpoint_index + 1) / num_checkpoints) * num_checkpoints + local_shape_index)
 
 
 
@@ -58,7 +63,7 @@ func raycast(from : Vector2, to : Vector2) -> Dictionary:
 
 
 func get_checkpoint(index : int) -> CollisionShape2D:
-	return checkpoints_area.get_child(index % checkpoints_area.get_child_count(true), true)
+	return checkpoints[index % num_checkpoints]
 
 
 func get_progress(car : Car) -> float:
@@ -84,7 +89,7 @@ func get_track_start_spawn_point(for_whom : Car = null) -> SpawnPoint:
 
 
 func get_last_checkpoint_spawn_point(for_whom : Car = null) -> SpawnPoint:
-	return SpawnPoint.from(spawn_point if for_whom.checkpoint_index < 0 else checkpoints_area.get_children(true)[for_whom.checkpoint_index % checkpoints_area.get_child_count()])
+	return SpawnPoint.from(spawn_point if for_whom.checkpoint_index < 0 else checkpoints_area.get_children(true)[for_whom.checkpoint_index % num_checkpoints])
 
 
 func get_closest_spawn_point(for_whom : Car = null) -> SpawnPoint:

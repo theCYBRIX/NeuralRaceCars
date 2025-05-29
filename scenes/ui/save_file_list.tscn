@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dbfw2qma5day0"]
 
-[ext_resource type="Script" path="res://scripts/save_file_list.gd" id="1_2yniv"]
+[ext_resource type="Script" uid="uid://d24q0bpc2caus" path="res://scripts/save_file_list.gd" id="1_2yniv"]
 
 [node name="SaveFileList" type="PanelContainer"]
 size_flags_horizontal = 3

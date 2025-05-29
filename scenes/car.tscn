@@ -1,12 +1,12 @@
 [gd_scene load_steps=12 format=3 uid="uid://6yghlai5jgs6"]
 
-[ext_resource type="Script" path="res://scripts/car.gd" id="1_ay7o7"]
+[ext_resource type="Script" uid="uid://mgiqtlfuvmk7" path="res://scripts/car.gd" id="1_ay7o7"]
 [ext_resource type="Shape2D" uid="uid://upfsaqpqyytx" path="res://resources/car_shape.tres" id="2_ck8tw"]
-[ext_resource type="Shader" path="res://shaders/dual_color_replace.gdshader" id="2_iyur8"]
+[ext_resource type="Shader" uid="uid://8uln0jli3fsu" path="res://shaders/dual_color_replace.gdshader" id="2_iyur8"]
 [ext_resource type="Texture2D" uid="uid://du7gy501uoka6" path="res://assets/Model 3.png" id="3_w6567"]
 [ext_resource type="Texture2D" uid="uid://ce8ule58xnuww" path="res://assets/light_texture.svg" id="4_o5ond"]
 [ext_resource type="PackedScene" uid="uid://dxai0kbqdhp8q" path="res://scenes/tire.tscn" id="5_wt17y"]
-[ext_resource type="Script" path="res://components/checkpoint_tracker.gd" id="7_ikkgv"]
+[ext_resource type="Script" uid="uid://bc2bm6erx4nv" path="res://components/checkpoint_tracker.gd" id="7_ikkgv"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pmuwr"]
 friction = 0.6

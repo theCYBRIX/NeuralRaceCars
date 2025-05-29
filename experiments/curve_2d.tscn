@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cudsbvwu3t5vy"]
 
-[ext_resource type="Script" path="res://experiments/Curve2D.gd" id="1_867p8"]
+[ext_resource type="Script" uid="uid://ca13hlegrg2tu" path="res://experiments/Curve2D.gd" id="1_867p8"]
 
 [node name="Curve2D" type="Node2D"]
 script = ExtResource("1_867p8")
