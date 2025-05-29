@@ -1,15 +1,16 @@
-[gd_scene load_steps=12 format=3 uid="uid://ccrhr53h8iyim"]
+[gd_scene load_steps=13 format=3 uid="uid://ccrhr53h8iyim"]
 
-[ext_resource type="Script" path="res://scripts/training_scene.gd" id="1_c0enb"]
+[ext_resource type="Script" uid="uid://bkgqrmxc18700" path="res://scripts/training_scene.gd" id="1_c0enb"]
 [ext_resource type="PackedScene" uid="uid://bo3ui0wlk1dqt" path="res://components/camera_manager.tscn" id="2_gjkxr"]
-[ext_resource type="Script" path="res://components/neural_api_client.gd" id="3_ok8vb"]
-[ext_resource type="Script" path="res://components/evolution_manager.gd" id="4_1idkt"]
-[ext_resource type="Script" path="res://components/training_recording_manager.gd" id="5_63c7x"]
-[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="5_vlj7q"]
-[ext_resource type="Script" path="res://components/console_io_handler.gd" id="6_ok5a7"]
-[ext_resource type="Script" path="res://components/server_io_handler.gd" id="7_vp7hw"]
-[ext_resource type="Script" path="res://components/track_provider.gd" id="8_045po"]
-[ext_resource type="Script" path="res://classes/leaderboard.gd" id="9_8l2pi"]
+[ext_resource type="Script" uid="uid://c1mn02b2rh0k5" path="res://components/neural_api_client.gd" id="3_ok8vb"]
+[ext_resource type="Script" uid="uid://c12067xcvsjyo" path="res://components/evolution_manager.gd" id="4_1idkt"]
+[ext_resource type="Script" uid="uid://dvp5wmgxquq1m" path="res://components/training_recording_manager.gd" id="5_63c7x"]
+[ext_resource type="Script" uid="uid://csppnnlo4buwi" path="res://components/network_layout_generator.gd" id="5_vlj7q"]
+[ext_resource type="Script" uid="uid://d3xb0b5ctqaq8" path="res://components/console_io_handler.gd" id="6_ok5a7"]
+[ext_resource type="Script" uid="uid://c4qnlvon8m02q" path="res://components/server_io_handler.gd" id="7_vp7hw"]
+[ext_resource type="Script" uid="uid://db3lfkg4qoqab" path="res://components/track_provider.gd" id="8_045po"]
+[ext_resource type="Script" uid="uid://dn7x5yj7mao5d" path="res://classes/leaderboard.gd" id="9_8l2pi"]
+[ext_resource type="Script" uid="uid://c7kcli4njunl0" path="res://components/BinaryIoHandler.cs" id="9_t75ya"]
 [ext_resource type="PackedScene" uid="uid://b0jd27uwnldue" path="res://scenes/statistics_screen.tscn" id="10_vf8yr"]
 
 [node name="TrainingScene" type="Node2D"]
@@ -23,10 +24,11 @@ process_mode = 3
 wait_time = 1.5
 one_shot = true
 
-[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "layout_generator")]
+[node name="NeuralAPIClient" type="Node" parent="." node_paths=PackedStringArray("io_handler", "binary_io_handler", "layout_generator")]
 process_mode = 1
 script = ExtResource("3_ok8vb")
-io_handler = NodePath("ConsoleIOHandler")
+io_handler = NodePath("ServerIOHandler")
+binary_io_handler = NodePath("BinaryIOHandler")
 layout_generator = NodePath("NetworkLayoutGenerator")
 print_error_stack_trace = false
 
@@ -55,18 +57,30 @@ activation_functions = Array[int]([0, 1, 1, 2])
 input_normalizers = Array[int]([1, 0, 0, 0])
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
+process_mode = 3
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 script = ExtResource("6_ok5a7")
 
-[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient"]
+[node name="ServerIOHandler" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("bound_handlers")]
+process_mode = 3
 process_thread_group = 2
 process_thread_group_order = 0
 process_thread_messages = 0
 script = ExtResource("7_vp7hw")
 host_address = "localhost"
 host_port = 3050
+bound_handlers = [null]
+
+[node name="BinaryIOHandler" type="Node" parent="NeuralAPIClient"]
+process_mode = 3
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+script = ExtResource("9_t75ya")
+HostAddress = "localhost"
+HostPort = 3075
 
 [node name="TrackProvider" type="Node" parent="."]
 script = ExtResource("8_045po")
@@ -74,7 +88,11 @@ track_internal_mode = 1
 
 [node name="Leaderboard" type="Node" parent="."]
 process_mode = 1
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
 script = ExtResource("9_8l2pi")
+show_labels = false
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

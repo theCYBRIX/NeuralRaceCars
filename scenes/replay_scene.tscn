@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3 uid="uid://ew42tl5xnngx"]
+
+[ext_resource type="Script" uid="uid://ddiu4l4wge8g1" path="res://scripts/replay_scene.gd" id="1_n7noj"]
+[ext_resource type="Script" uid="uid://db3lfkg4qoqab" path="res://components/track_provider.gd" id="1_vakav"]
+[ext_resource type="Script" uid="uid://dn7x5yj7mao5d" path="res://classes/leaderboard.gd" id="2_kgcjq"]
+[ext_resource type="Script" uid="uid://twncl88g6ami" path="res://components/camera_manager.gd" id="4_od2ug"]
+
+[node name="ReplayScene" type="Node2D"]
+script = ExtResource("1_n7noj")
+
+[node name="TrackProvider" type="Node" parent="."]
+script = ExtResource("1_vakav")
+
+[node name="Leaderboard" type="Node" parent="."]
+script = ExtResource("2_kgcjq")
+
+[node name="CameraManager" type="Node" parent="."]
+script = ExtResource("4_od2ug")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Menu" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Menu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Menu/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="PlayButton" type="Button" parent="CanvasLayer/Menu/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Play"
+
+[node name="QuitButton" type="Button" parent="CanvasLayer/Menu/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[connection signal="car_freed" from="." to="." method="_on_car_freed"]
+[connection signal="car_instantiated" from="." to="." method="_on_car_instantiated"]
+[connection signal="pressed" from="CanvasLayer/Menu/HBoxContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Menu/HBoxContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

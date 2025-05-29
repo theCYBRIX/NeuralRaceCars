@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://wwxjsmtitoor"]
 
-[ext_resource type="Script" path="res://scripts/popout_window.gd" id="1_y24l8"]
+[ext_resource type="Script" uid="uid://c0xo0030eugyf" path="res://scripts/popout_window.gd" id="1_y24l8"]
 
 [node name="PopoutWindow" type="Window"]
 disable_3d = true

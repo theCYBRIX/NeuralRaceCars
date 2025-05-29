@@ -1,5 +1,7 @@
 extends Node2D
 
+@onready var binary_io_handler: Node = $NeuralAPIClient/BinaryIOHandler
+
 @onready var evolution_manager: EvolutionManager = $NeuralAPIClient/EvolutionManager
 @onready var neural_api_client: NeuralAPIClient = $NeuralAPIClient
 @onready var camera_manager: CameraManager = $CameraManager
@@ -43,6 +45,14 @@ func _ready() -> void:
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
 	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
+	
+	if binary_io_handler and binary_io_handler.Enabled:
+		stat_screen.graph.add_series("API Average Response Time (ms)", Color.ORANGE, func() -> float: return binary_io_handler.GetAverageResponseTime())
+		Performance.add_custom_monitor("time/api_response_time", func() -> float: return binary_io_handler.GetAverageResponseTime())
+	else:
+		stat_screen.graph.add_series("API Average Response Time (ms)", Color.ORANGE, neural_api_client.get_average_response_time)
+		Performance.add_custom_monitor("time/api_response_time", neural_api_client.get_average_response_time)
+	#stat_screen.graph.add_series("API Last Response Time", Color.YELLOW, neural_api_client.get_last_response_time)
 	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func(): return evolution_manager.training_state.highest_score)
 	stat_screen.graph_2.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
 
@@ -171,7 +181,7 @@ func set_first_place_car(car : NeuralCar):
 
 func update_first_place_car():
 	best_network_id = -1
-	set_first_place_car($Leaderboard.leaderboard.back())
+	set_first_place_car.call_deferred($Leaderboard.leaderboard.back())
 	return
 
 
@@ -209,6 +219,7 @@ func _on_leaderboard_first_place_changed(new_first: Car, prev_first: Car) -> voi
 
 func _on_track_provider_track_updated(new_track: BaseTrack) -> void:
 	track = new_track
+	$Leaderboard.track = track
 
 
 func _on_start_button_pressed() -> void:

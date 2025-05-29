@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://chxejmnpfsj1l"]
 
-[ext_resource type="Script" path="res://scripts/save_file_list_item.gd" id="1_gkpno"]
-[ext_resource type="Script" path="res://scripts/network_visualizer.gd" id="2_0e7bo"]
+[ext_resource type="Script" uid="uid://knnb4fq5f0am" path="res://scripts/save_file_list_item.gd" id="1_gkpno"]
+[ext_resource type="Script" uid="uid://by5viny2mwso7" path="res://scripts/network_visualizer.gd" id="2_0e7bo"]
 
 [node name="SaveFileListItem" type="PanelContainer"]
 clip_contents = true

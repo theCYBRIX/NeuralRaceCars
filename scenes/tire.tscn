@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dxai0kbqdhp8q"]
 
-[ext_resource type="Script" path="res://scripts/tire.gd" id="1_xp21e"]
+[ext_resource type="Script" uid="uid://cu6636tpnyo2d" path="res://scripts/tire.gd" id="1_xp21e"]
 
 [sub_resource type="Gradient" id="Gradient_wjspw"]
 offsets = PackedFloat32Array(0, 0.885496, 1)

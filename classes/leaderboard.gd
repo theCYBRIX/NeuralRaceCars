@@ -3,163 +3,133 @@ extends Node
 
 signal first_place_changed(new_first : Car, prev_first : Car)
 
+@export var track : BaseTrack
 @export var free_labels_when_hidden := false
 @export var show_labels := true : set = set_show_labels
 
-var leaderboard : Array[Car] = []
-var first_place_car : Car
+var leaderboard : Array[Node2D] = []
+var first_place : Node2D
 
-var _index_update_queue : Array[Car] = []
+var _checkpoint_reached_order : Dictionary = {}
 
-var _position_labels : Array[UprightLabel] = []
+var _should_update := false
 
+var _position_labels : Dictionary = {}
+
+var _progress_dict : Dictionary[Node2D, float] = {}
+var _progress_update_task : int = -1
+var _leaderboard_update_task : int = -1
+#TODO: remake 
+func update_progress(index : int):
+	var node : Node2D = leaderboard[index]
+	var check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index).global_position
+	var next_check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index + 1).global_position
+	var check_to_check_dist := check_pos.distance_squared_to(next_check_pos)
+	_progress_dict[node] = node.checkpoint_tracker.checkpoint_index - node.global_position.distance_squared_to(next_check_pos) / check_to_check_dist
+
+func update_leaderboard() -> void:
+	if _progress_update_task != -1:
+		WorkerThreadPool.wait_for_group_task_completion(_progress_update_task)
+		_progress_update_task = -1
+	
+	leaderboard.sort_custom(sort_new)
+	var current_first = leaderboard.back()
+	if current_first != first_place:
+		emit_signal.call_deferred("first_place_changed", current_first, first_place)
+		first_place = current_first
+
+func sort_new(a : Node2D, b : Node2D) -> bool:
+	return _progress_dict[a] < _progress_dict[b]
 
 func _process(delta: float) -> void:
+	if _leaderboard_update_task != -1:
+		if not WorkerThreadPool.is_task_completed(_leaderboard_update_task):
+			return
+		WorkerThreadPool.wait_for_task_completion(_leaderboard_update_task)
+		_leaderboard_update_task = -1
 	_update_labels()
 	set_process(false)
 
 
 func _physics_process(delta: float) -> void:
-	if leaderboard.is_empty():
-		return
-	
-	for car in _index_update_queue:
-		checkpoint_updated(car)
-	_index_update_queue.clear()
-	
-	#leaderboard.sort_custom(_sort_ascending)
-	#for i in range(leaderboard.size()):
-		#if leaderboard[i] is NeuralCar:
-			#leaderboard[i].label.set_text(str(leaderboard.size() - i))
-	
-	var current_first = leaderboard.back()
-	if current_first != first_place_car:
-		first_place_changed.emit(current_first, first_place_car)
-		first_place_car = current_first
-	
-	set_process(true)
-	set_physics_process(false)
+	refresh()
 
 
-func checkpoint_updated(car : Car):
-	var prev_idx := leaderboard.find(car)
-	if prev_idx == -1:
-		push_warning("Attempted to update checkpoint for car not on the leaderboard.")
-		return
+func add_array(nodes : Array[Node2D]):
+	for node : Node2D in nodes:
+		add(node)
+
+
+func add(node : Node2D) -> bool:
+	if not node.is_node_ready():
+		await node.ready
 	
+	var checkpoint_tracker : CheckpointTracker = node.get_node_or_null("CheckpointTracker")
 	
-	var new_idx := _get_new_index(prev_idx, car.checkpoint_index)
-	if new_idx < 0:
-		new_idx = 0
+	if not checkpoint_tracker:
+		return false
 	
-	new_idx = _move_entry(prev_idx, new_idx)
-
-
-func _on_car_checkpoint_changed(car : Car):
-	if not _index_update_queue.has(car):
-		_index_update_queue.append(car)
-	if not is_physics_processing(): set_physics_process(true)
-
-
-func _get_new_index(list_idx : int, checkpoint_idx) -> int:
-	var search_idx := list_idx
-	if leaderboard[search_idx].checkpoint_index >= checkpoint_idx:
-		search_idx = 0
-	while leaderboard[search_idx].checkpoint_index < checkpoint_idx:
-		search_idx += 1
-		if search_idx == leaderboard.size():
-			break
-	if search_idx > list_idx:
-		search_idx -= 1
-	#assert(search_idx == 0 or checkpoint_idx > checkpoint_idxs[search_idx])
-	return search_idx
-
-
-func _move_entry(index : int, new_index : int) -> int:
-	if index < 0 or index >= leaderboard.size():
-		push_error("Index out of bounds: index %d is out of bounds for leaderboard of size %d." %[index, leaderboard.size()])
-		return -1
-	if  new_index < 0 or new_index >= leaderboard.size():
-		push_error("Index out of bounds: new_index %d is out of bounds for leaderboard of size %d." %[new_index, leaderboard.size()])
-		return -1
+	_checkpoint_entered(checkpoint_tracker.checkpoint_index, node)
+	checkpoint_tracker.checkpoint_updated.connect(_on_checkpoint_changed.bind(node))
 	
-	var direction : int = 1 if index < new_index else -1
-	
-	var temp_car := leaderboard[index]
-	
-	while(index != new_index):
-		leaderboard[index] = leaderboard[index + direction]
-		index += direction
-	
-	leaderboard[new_index] = temp_car
-	
-	#var first_place_index := leaderboard.size() - 1
-	#
-	#if new_index == first_place_index or index == first_place_index:
-		#set_process(true)
-	
-	return new_index
-
-
-func add_array(cars : Array[Car]):
-	for car : Car in cars:
-		add(car)
-
-
-func add(car : Car):
-	var insert_index := leaderboard.bsearch_custom(car, func(x, y): return x.checkpoint_index < y.checkpoint_index, true)
-	leaderboard.insert(insert_index, car)
-	car.respawned.connect(_on_car_respawned.bind(car), CONNECT_DEFERRED)
-	car.checkpoint_updated.connect(_on_car_checkpoint_changed.bind(car).unbind(1), CONNECT_DEFERRED)
+	leaderboard.append(node)
+	_queue_update()
 	
 	if show_labels:
 		set_process(true)
 	elif free_labels_when_hidden:
-		return
+		return true
 	
-	var label := _instanciate_label()
-	label.set_text(str(insert_index))
-	_attach_label(car, label)
-
-
-func remove(car : NeuralCar) -> bool:
-	var index := get_current_leaderboard_idx(car)
-	if index < 0:
-		return false
-	leaderboard.remove_at(index)
-	if not free_labels_when_hidden:
-		_free_label(car)
+	_attach_label(node)
+	
 	return true
 
 
+func remove(node : Node2D) -> void:
+	leaderboard.erase(node)
+	_free_label(node)
+	Util.disconnect_from_signal(_on_checkpoint_changed, node.get_node("CheckpointTracker").checkpoint_updated)
+
+
 func refresh():
-	leaderboard.sort_custom(sort_cars_ascending)
-	set_process(true)
-
-
-func get_current_leaderboard_idx(car : Car, checkpoint_index := car.checkpoint_index) -> int:
-	var search_idx := leaderboard.bsearch_custom(car, sort_cars_ascending, true)
-	var index = leaderboard.find(car, search_idx)
+	if not track or not track.is_node_ready():
+		return
 	
-	if index >= 0:
-		return index
-	else:
-		return leaderboard.rfind(car, search_idx)
+	if not leaderboard.is_empty():
+		if _progress_update_task != -1 or _leaderboard_update_task != -1:
+			return
+		
+		#_progress_update_task = WorkerThreadPool.add_group_task(update_progress, leaderboard.size(), -1, false, "Update Progress")
+		for i in range(leaderboard.size()):
+			update_progress(i)
+		_leaderboard_update_task = WorkerThreadPool.add_task(update_leaderboard, false, "Update Leaderboard")
+			
+		#leaderboard.sort_custom(_sort_ascending)
+		#
+		#var current_first = leaderboard.back()
+		#if current_first != first_place:
+			#emit_signal.call_deferred("first_place_changed", current_first, first_place)
+			#first_place = current_first
+	#
+		set_process(true)
+	_updated()
+
+
+func get_current_leaderboard_idx(node : Node) -> int:
+	return leaderboard.find(node)
 
 
 func set_show_labels(enabled := true) -> void:
 	show_labels = enabled
 	
-	if show_labels: 
-		if _position_labels.size() != leaderboard.size():
+	if free_labels_when_hidden:
+		if show_labels:
+			_instanciate_labels()
+		else:
 			_free_labels()
-			for car in leaderboard:
-				_attach_label(car)
-	if not show_labels and free_labels_when_hidden:
-		_free_labels()
-		return
+			return
 	
-	for label in _position_labels:
+	for label in _position_labels.values():
 		label.visible = enabled
 
 
@@ -169,56 +139,86 @@ func set_free_labels_when_hidden(enabled := true):
 	
 	free_labels_when_hidden = enabled
 	
-	if free_labels_when_hidden:
+	if free_labels_when_hidden and not show_labels:
 		_free_labels()
 
 
-func sort_cars_ascending(a : Car, b : Car) -> bool:
-	return a.checkpoint_index < b.checkpoint_index
+func _queue_update() -> void:
+	if _should_update:
+		return
+	
+	_should_update = true
+	set_physics_process(true)
 
 
-func _update_labels(labels := _position_labels):
-	for label in labels:
-		var parent := label.get_parent()
-		if parent is Car:
-			var index := get_current_leaderboard_idx(parent)
-			label.set_text(str(leaderboard.size() - index))
+func _updated() -> void:
+	set_physics_process(false)
+	_should_update = false
+
+
+func _on_checkpoint_changed(prev_idx : int, new_idx : int, node : Node2D) -> void:
+	_checkpoint_exited(prev_idx, node)
+	_checkpoint_entered(new_idx, node)
+	_queue_update()
+
+
+func _checkpoint_exited(checkpoint_idx : int, node : Node2D) -> void:
+	if checkpoint_idx in _checkpoint_reached_order:
+		var array : Array =  _checkpoint_reached_order[checkpoint_idx]
+		array.erase(node)
+		if array.is_empty():
+			_checkpoint_reached_order.erase(checkpoint_idx)
+
+
+func _checkpoint_entered(checkpoint_idx : int, node : Node2D) -> void:
+	if checkpoint_idx in _checkpoint_reached_order:
+		_checkpoint_reached_order[checkpoint_idx].append(node)
+	else:
+		_checkpoint_reached_order[checkpoint_idx] = [node]
+
+
+func _sort_ascending(a : Node2D, b : Node2D) -> bool:
+	var index_a : int = a.checkpoint_tracker.checkpoint_index
+	var index_b : int = b.checkpoint_tracker.checkpoint_index
+	if index_a == index_b:
+		return _checkpoint_reached_order[index_a].find(a) > _checkpoint_reached_order[index_b].find(b)
+	else:
+		return index_a < index_b
+
+
+func _update_labels():
+	for node in _position_labels.keys():
+		var index := get_current_leaderboard_idx(node)
+		var label : UprightLabel = _position_labels[node]
+		if index >= 0:
+			label.set_text.call_deferred(str(leaderboard.size() - index))
 		else:
-			label.set_text("N/A")
+			label.set_text.call_deferred("N/A")
 
 
-func _on_car_respawned(car : Car):
-	_on_car_checkpoint_changed(car)
-
-
-func _attach_label(car : Car, label : UprightLabel = _instanciate_label()):
-	car.add_child(label)
-
-
-func _instanciate_label() -> UprightLabel:
+func _attach_label(node : Node2D) -> UprightLabel:
 	var label := UprightLabel.new()
-	_position_labels.append(label)
+	_position_labels[node] = label
+	label.set_text(str(leaderboard.size()))
+	node.add_child(label)
 	return label
 
 
-func _free_label(car : Car) -> bool:
-	var labels := _position_labels.filter(func(x): x.get_parent() == car)
-	if labels.is_empty():
+func _free_label(node : Node2D) -> bool:
+	var label : UprightLabel = _position_labels[node]
+	if not label:
 		return false
-	for label in labels:
-		label.queue_free()
+	label.queue_free()
+	_position_labels.erase(node)
 	return true
 
 
-func _instanciate_labels(n : int = leaderboard.size()) -> Array[UprightLabel]:
-	var labels : Array[UprightLabel] = []
-	labels.resize(n)
-	for i in range(n):
-		labels[i] = UprightLabel.new()
-	return labels
+func _instanciate_labels() -> void:
+	for node in leaderboard:
+		_attach_label(node)
 
 
-func _free_labels(n : int = _position_labels.size()) -> void:
-	for i in range(_position_labels.size() - n, _position_labels.size(), -1):
-		_position_labels[i].queue_free()
-	_position_labels.resize(_position_labels.size() - n)
+func _free_labels() -> void:
+	for label in _position_labels.values():
+		label.queue_free()
+	_position_labels.clear()

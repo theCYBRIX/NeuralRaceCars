@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://cgk37yafien3"]
 
-[ext_resource type="Script" path="res://scripts/network_visualizer.gd" id="1_lfskc"]
-[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="2_fck8j"]
-[ext_resource type="Script" path="res://components/draggable.gd" id="3_20vra"]
+[ext_resource type="Script" uid="uid://by5viny2mwso7" path="res://scripts/network_visualizer.gd" id="1_lfskc"]
+[ext_resource type="Script" uid="uid://csppnnlo4buwi" path="res://components/network_layout_generator.gd" id="2_fck8j"]
+[ext_resource type="Script" uid="uid://beo3it44hb68w" path="res://components/draggable.gd" id="3_20vra"]
 
 [sub_resource type="Animation" id="Animation_hqdsp"]
 length = 0.001
@@ -85,8 +85,8 @@ tracks/2/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_3t74j"]
 _data = {
-"RESET": SubResource("Animation_hqdsp"),
-"network_growth": SubResource("Animation_id3ha")
+&"RESET": SubResource("Animation_hqdsp"),
+&"network_growth": SubResource("Animation_id3ha")
 }
 
 [node name="NetworkVisualizer" type="Control" node_paths=PackedStringArray("layout_generator")]
@@ -117,7 +117,7 @@ use_default_behaviour = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
-"": SubResource("AnimationLibrary_3t74j")
+&"": SubResource("AnimationLibrary_3t74j")
 }
 
 [node name="Node" type="Node" parent="."]

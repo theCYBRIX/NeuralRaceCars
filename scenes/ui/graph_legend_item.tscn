@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bhbdv3gcphf30"]
 
-[ext_resource type="Script" path="res://scenes/ui/graph_legend_item.gd" id="1_yt1ss"]
+[ext_resource type="Script" uid="uid://hgqq3clyujee" path="res://scenes/ui/graph_legend_item.gd" id="1_yt1ss"]
 
 [node name="GraphLegendItem" type="HBoxContainer"]
 custom_minimum_size = Vector2(60, 25)

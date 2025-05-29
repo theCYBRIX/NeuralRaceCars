@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c6afl8m87cwgr"]
 
-[ext_resource type="Script" path="res://scripts/free_camera.gd" id="1_c5r13"]
+[ext_resource type="Script" uid="uid://ddnnd04lba8ci" path="res://scripts/free_camera.gd" id="1_c5r13"]
 
 [node name="FreeCamera" type="Camera2D"]
 position_smoothing_speed = 8.0

@@ -5,6 +5,7 @@ extends IOHandler
 @export var host_address : String
 @export_range(0, 65535) var host_port : int
 @export var autostart : bool = false
+@export var bound_handlers : Array[IOHandler] = []
 
 var socket : StreamPeerTCP
 var status : StreamPeerTCP.Status = StreamPeerTCP.STATUS_NONE
@@ -16,6 +17,7 @@ func _ready() -> void:
 	set_process(false)
 	
 	socket = StreamPeerTCP.new()
+	socket.big_endian = true
 	
 	if not Engine.is_editor_hint() and autostart:
 		connect_to_host()
@@ -51,6 +53,8 @@ func connect_to_host() -> Error:
 	var error = socket.connect_to_host(host_address, host_port)
 	if error == OK:
 		set_process(true)
+		for handler in bound_handlers:
+			if handler: handler.start()
 	return error 
 
 

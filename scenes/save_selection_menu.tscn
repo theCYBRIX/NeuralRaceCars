@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://vmbxcw7j1qu8"]
 
-[ext_resource type="Script" path="res://scenes/save_selection_menu.gd" id="1_7e6it"]
+[ext_resource type="Script" uid="uid://c6rbewq3af642" path="res://scenes/save_selection_menu.gd" id="1_7e6it"]
 [ext_resource type="PackedScene" uid="uid://dbfw2qma5day0" path="res://scenes/ui/save_file_list.tscn" id="2_safoo"]
 
 [node name="SaveSelectionMenu" type="Control"]

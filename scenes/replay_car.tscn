@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://sms0ekth2ii7"]
+[gd_scene load_steps=8 format=3 uid="uid://sms0ekth2ii7"]
 
 [ext_resource type="Texture2D" uid="uid://du7gy501uoka6" path="res://assets/Model 3.png" id="1_6exio"]
-[ext_resource type="Script" path="res://scripts/car_replay.gd" id="1_8r8fy"]
+[ext_resource type="Script" uid="uid://drg4pc4ejh124" path="res://scripts/replay_car.gd" id="1_8r8fy"]
+[ext_resource type="Shape2D" uid="uid://upfsaqpqyytx" path="res://resources/car_shape.tres" id="2_gxeqx"]
+[ext_resource type="Script" uid="uid://bc2bm6erx4nv" path="res://components/checkpoint_tracker.gd" id="4_df3qu"]
 
 [sub_resource type="Animation" id="Animation_pbvtu"]
 length = 0.001
@@ -59,12 +61,19 @@ tracks/1/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_o0pi1"]
 _data = {
-"RESET": SubResource("Animation_pbvtu"),
-"new_animation": SubResource("Animation_0tqyx")
+&"RESET": SubResource("Animation_pbvtu"),
+&"new_animation": SubResource("Animation_0tqyx")
 }
 
-[node name="CarReplay" type="Node2D"]
+[node name="CarReplay" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+motion_mode = 1
+platform_floor_layers = 0
 script = ExtResource("1_8r8fy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = ExtResource("2_gxeqx")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.25, 0.25)
@@ -72,5 +81,8 @@ texture = ExtResource("1_6exio")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
-"": SubResource("AnimationLibrary_o0pi1")
+&"": SubResource("AnimationLibrary_o0pi1")
 }
+
+[node name="CheckpointTracker" type="Node" parent="."]
+script = ExtResource("4_df3qu")

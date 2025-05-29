@@ -148,5 +148,5 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _on_network_layout_generator_layout_changed() -> void:
-	if layout_generator.is_valid_layer_sizes_array(layout_generator.hidden_layer_sizes):
+	if not layout_generator.hidden_layer_sizes.any(func(x): return x <= 0):
 		refresh_layout_generator_layout()

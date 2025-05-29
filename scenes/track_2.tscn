@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=4 uid="uid://51yasc5hk4v6"]
 
 [ext_resource type="PackedScene" uid="uid://ctxy7ivmkmnnu" path="res://scenes/linear_track.tscn" id="1_ph6ck"]
-[ext_resource type="Script" path="res://scripts/track_2.gd" id="2_ipm4g"]
+[ext_resource type="Script" uid="uid://cjieh5ose33ui" path="res://scripts/track_2.gd" id="2_ipm4g"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hubm8"]
 size = Vector2(331.949, 110.58)

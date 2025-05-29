@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=4 uid="uid://cp4s8j4q2fqy2"]
 
 [ext_resource type="PackedScene" uid="uid://dcuw63i6fo7at" path="res://components/base_track.tscn" id="1_1yueu"]
-[ext_resource type="Script" path="res://scripts/point_to_point.gd" id="2_fc6nn"]
+[ext_resource type="Script" uid="uid://bt4n5q8vk5rmw" path="res://scripts/point_to_point.gd" id="2_fc6nn"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fvwp3"]
 radius = 500.0

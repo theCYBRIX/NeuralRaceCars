@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://ctxy7ivmkmnnu"]
 
 [ext_resource type="PackedScene" uid="uid://dcuw63i6fo7at" path="res://components/base_track.tscn" id="1_6ef0d"]
-[ext_resource type="Script" path="res://scripts/linear_track.gd" id="2_i6y41"]
+[ext_resource type="Script" uid="uid://d1sg407qofh2g" path="res://scripts/linear_track.gd" id="2_i6y41"]
 
 [node name="LinearTrack" instance=ExtResource("1_6ef0d")]
 script = ExtResource("2_i6y41")

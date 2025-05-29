@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://c4axxbrnhvsjr"]
 
-[ext_resource type="Script" path="res://components/neural_api_client.gd" id="1_4ott5"]
-[ext_resource type="Script" path="res://experiments/get_endpoints.gd" id="1_ersvm"]
-[ext_resource type="Script" path="res://components/console_io_handler.gd" id="2_slmp5"]
-[ext_resource type="Script" path="res://components/network_layout_generator.gd" id="3_nrm4c"]
-[ext_resource type="Script" path="res://components/server_io_handler.gd" id="5_llmoc"]
+[ext_resource type="Script" uid="uid://c1mn02b2rh0k5" path="res://components/neural_api_client.gd" id="1_4ott5"]
+[ext_resource type="Script" uid="uid://ba7ovhe8e7vre" path="res://experiments/get_endpoints.gd" id="1_ersvm"]
+[ext_resource type="Script" uid="uid://d3xb0b5ctqaq8" path="res://components/console_io_handler.gd" id="2_slmp5"]
+[ext_resource type="Script" uid="uid://csppnnlo4buwi" path="res://components/network_layout_generator.gd" id="3_nrm4c"]
+[ext_resource type="Script" uid="uid://c4qnlvon8m02q" path="res://components/server_io_handler.gd" id="5_llmoc"]
 
 [node name="GetEndpoints" type="Node"]
 script = ExtResource("1_ersvm")

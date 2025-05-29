@@ -101,9 +101,9 @@ func _on_evolution_manager_generation_finished(generation : int) -> void:
 		_current_recordings = []
 
 
-class ScoredReplay extends Resource:
-	@export var score : float
-	@export var replay : ReplayData
+class ScoredReplay:
+	var score : float
+	var replay : ReplayData
 	
 	@warning_ignore("shadowed_variable")
 	func _init(replay : ReplayData, score : float) -> void:

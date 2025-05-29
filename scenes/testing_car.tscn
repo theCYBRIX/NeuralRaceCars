@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://siv7ao18lchw"]
 
 [ext_resource type="PackedScene" uid="uid://brc0n71wqkx1f" path="res://scenes/neural_car.tscn" id="1_pk5s5"]
-[ext_resource type="Shader" path="res://shaders/color_replace.gdshader" id="2_8jadd"]
-[ext_resource type="Script" path="res://scripts/testing_car.gd" id="2_q5nj0"]
-[ext_resource type="Script" path="res://components/driving_data_recorder.gd" id="4_uj6nw"]
+[ext_resource type="Shader" uid="uid://blegx17e041yy" path="res://shaders/color_replace.gdshader" id="2_8jadd"]
+[ext_resource type="Script" uid="uid://jc8mhh2vwlpu" path="res://scripts/testing_car.gd" id="2_q5nj0"]
+[ext_resource type="Script" uid="uid://cu2fi2ttpkncs" path="res://components/driving_data_recorder.gd" id="4_uj6nw"]
 [ext_resource type="Texture2D" uid="uid://ce8ule58xnuww" path="res://assets/light_texture.svg" id="5_kj3km"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_5qdpt"]
