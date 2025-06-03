@@ -44,17 +44,27 @@ func _ready() -> void:
 	evolution_manager.ready.connect(_on_evolution_manager_reset, CONNECT_ONE_SHOT)
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
-	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func(): return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
+	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func() -> float: return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))
+	Performance.add_custom_monitor("game/networks_alive", func() -> int: return evolution_manager.active_cars.size())
 	
 	if binary_io_handler and binary_io_handler.Enabled:
 		stat_screen.graph.add_series("API Average Response Time (ms)", Color.ORANGE, func() -> float: return binary_io_handler.GetAverageResponseTime())
-		Performance.add_custom_monitor("time/api_response_time", func() -> float: return binary_io_handler.GetAverageResponseTime())
+		Performance.add_custom_monitor("time/api_response_time (ms)", func() -> float: return binary_io_handler.GetAverageResponseTime())
 	else:
 		stat_screen.graph.add_series("API Average Response Time (ms)", Color.ORANGE, neural_api_client.get_average_response_time)
-		Performance.add_custom_monitor("time/api_response_time", neural_api_client.get_average_response_time)
+		Performance.add_custom_monitor("time/api_response_time (ms)", neural_api_client.get_average_response_time)
 	#stat_screen.graph.add_series("API Last Response Time", Color.YELLOW, neural_api_client.get_last_response_time)
-	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func(): return evolution_manager.training_state.highest_score)
+	stat_screen.graph_2.add_series("Best Score", Color.SKY_BLUE, func() -> float: return evolution_manager.training_state.highest_score)
+	Performance.add_custom_monitor("game/best_score", func() -> float: return evolution_manager.training_state.highest_score)
 	stat_screen.graph_2.add_series("First Place Score", Color.DODGER_BLUE, update_first_place_score)
+	Performance.add_custom_monitor("game/first_place_score", func() -> float: return first_place_score)
+
+
+func _exit_tree() -> void:
+	Performance.remove_custom_monitor("game/networks_alive")
+	Performance.remove_custom_monitor("time/api_response_time (ms)")
+	Performance.remove_custom_monitor("game/best_score")
+	Performance.remove_custom_monitor("game/first_place_score")
 
 
 func _process(delta: float) -> void:
@@ -255,3 +265,35 @@ func _on_evolution_manager_training_state_refreshed(training_state: TrainingStat
 	since_randomized = training_state.time_elapsed
 	since_randomized_int = time_elapsed_int
 	total_generations = training_state.generation
+
+
+func _on_evolution_manager_metadata_updated(metadata_tracker: MetadataTracker) -> void:
+	for type_name : String in metadata_tracker.types.keys():
+		if not stat_screen.manual_graph.has_series(type_name) :
+			stat_screen.manual_graph.add_series(type_name, get_series_color(stat_screen.manual_graph.get_series_count()), metadata_tracker.types[type_name].get_average)
+		if not stat_screen.manual_graph_2.has_series(type_name) :
+			stat_screen.manual_graph_2.add_series(type_name, get_series_color(stat_screen.manual_graph_2.get_series_count()), metadata_tracker.types[type_name].get_top_average.bind(0.05))
+	
+	stat_screen.manual_graph.update_all()
+	stat_screen.manual_graph_2.update_all()
+
+
+func get_series_color(index: int) -> Color:
+	var predefined_colors := [
+		Color(0.22, 0.49, 0.72), # Blue
+		Color(0.89, 0.29, 0.20), # Red
+		Color(0.30, 0.68, 0.29), # Green
+		Color(0.60, 0.40, 0.80), # Purple
+		Color(1.00, 0.60, 0.00), # Orange
+		Color(0.20, 0.70, 0.75), # Teal
+		Color(0.95, 0.77, 0.06)  # Yellow
+	]
+	
+	if index < predefined_colors.size():
+		return predefined_colors[index]
+	else:
+		# Generate appealing random color using HSV
+		var hue := randf() # 0 to 1
+		var saturation := 0.6 + randf() * 0.4 # 0.6 to 1
+		var value := 0.7 + randf() * 0.3 # 0.7 to 1
+		return Color.from_hsv(hue, saturation, value)

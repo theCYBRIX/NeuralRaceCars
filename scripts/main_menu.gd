@@ -3,6 +3,7 @@ extends Control
 
 const TRACKS := {
 	"Track 2" : "res://scenes/track_2.tscn",
+	"Track 3" : "res://scenes/track_3.tscn",
 	"Point to Point" : "res://scenes/point_to_point.tscn",
 }
 

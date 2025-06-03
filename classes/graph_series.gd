@@ -14,6 +14,7 @@ var legend_item : Control
 var data_supplier : Callable
 var max_data_points : int
 var enabled : bool = true : set = set_enabled
+var fill_volume : bool = true : set = set_fill_volume
 
 @warning_ignore("shadowed_variable", "narrowing_conversion")
 func _init(title : String, color : Color, data_supplier : Callable, max_points : float) -> void:
@@ -82,11 +83,20 @@ func set_enabled(state : bool):
 	if state == enabled: return
 	enabled = state
 	line2d.visible = enabled
-	polygon2d.visible = enabled
+	polygon2d.visible = enabled if fill_volume else false
 	if enabled:
 		legend_item.modulate = Color(1, 1, 1, 1)
 	else:
 		legend_item.modulate = Color(0.5, 0.5, 0.5, 0.5)
+
+
+func set_fill_volume(enabled : bool) -> void:
+	if fill_volume == enabled:
+		return
+	
+	fill_volume = enabled
+	
+	polygon2d.visible = fill_volume
 
 
 func free_resources():

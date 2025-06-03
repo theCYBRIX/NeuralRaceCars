@@ -7,6 +7,7 @@ signal training_started
 signal randomizing_networks
 signal networks_randomized
 signal training_state_refreshed(training_state : TrainingState)
+signal metadata_updated(metadata_tracker : MetadataTracker)
 
 signal generation_finished(generation : int)
 signal new_generation(generation : int)
@@ -27,6 +28,8 @@ signal new_generation(generation : int)
 @export var autosave_score_thresh : float = 2.1
 @export var autosave_path := SaveManager.DEFAULT_SAVE_DIR_PATH + "training_state(autosave)." + SaveManager.TRAINING_STATE_FILE_EXTENSION
 @export var autosave_network_count : int = 2000
+
+var metadata_tracker : MetadataTracker = MetadataTracker.new()
 
 var gens_without_improvement : int = 0
 
@@ -191,6 +194,10 @@ func start_next_batch():
 	generation_finished.emit(training_state.generation)
 	
 	improvement_flag = false
+	
+	var metadata = await _api_client.get_network_metadata()
+	metadata_tracker.analyze(network_scores, metadata)
+	metadata_updated.emit(metadata_tracker)
 	
 	if gens_without_improvement >= gens_without_improvement_limit:
 		await populate_random_generation()

@@ -9,8 +9,8 @@ func set_active(enabled := true) -> void:
 	
 	if is_node_ready():
 		if active:
-			checkpoint_timer.start()
-			lifetime_timer.start()
+			checkpoint_timer.start(0)
+			lifetime_timer.start(0)
 		else:
 			checkpoint_timer.stop()
 			lifetime_timer.stop()

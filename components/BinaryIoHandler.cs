@@ -24,7 +24,7 @@ public partial class BinaryIoHandler : Node
 	private BinaryWriter _writer;
 	private BinaryReader _reader;
 
-	private BoundedQueue<float> _responseTimes = new BoundedQueue<float>(100);
+	private BoundedQueue<float> _responseTimes = new BoundedQueue<float>(30);
 	private StopWatch _timer = new StopWatch();
 
 	private const int PROCESS_INPUTS_ENDPOINT = 2;

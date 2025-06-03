@@ -5,8 +5,12 @@ signal exit_button_pressed
 
 @onready var gen_label: Label = $MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/GenLabel
 @onready var batch_label: Label = $MarginContainer/Columns/Items/PanelContainer/MarginContainer/VBoxContainer/BatchLabel
+
 @onready var graph: Control = $MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items/Graph
 @onready var graph_2: DataGraph = $MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items/Graph2
+@onready var manual_graph: DataGraph = $MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items/ManualGraph
+@onready var manual_graph_2: DataGraph = $MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items/ManualGraph2
+
 @onready var popout_component: Node = $PopoutComponent
 @onready var popout_button: Button = $MarginContainer/Columns/VBoxContainer/HBoxContainer/VFlowContainer/PopoutButton
 @onready var pause_button: Button = $MarginContainer/Columns/Items/VBoxContainer/ButtonRow/PauseButton

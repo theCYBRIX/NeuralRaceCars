@@ -1,0 +1,118 @@
+[gd_scene load_steps=4 format=4 uid="uid://d3l3e1pvk6fh2"]
+
+[ext_resource type="PackedScene" uid="uid://ctxy7ivmkmnnu" path="res://scenes/linear_track.tscn" id="1_n382w"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h8n76"]
+size = Vector2(268.4, 70)
+
+[sub_resource type="Curve2D" id="Curve2D_i55oq"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 314, 167, 0, 0, 0, 0, 342, -561, 455.7, 379.75, -455.7, -379.75, -16, -1285, 0, 0, 0, 0, -338, -2227, -382.282, 364.56, 382.282, -364.56, 56, -3244, 0, 513.928, 0, -513.928, 316, -4174, -316.458, -55.6967, 316.458, 55.6967, 1043, -4788, -286.078, 32.9117, 286.078, -32.9117, 1704, -4763, 5.06333, 635.448, -5.06333, -635.448, 2217, -5384, -68.355, 448.105, 68.355, -448.105, 2244, -6402, -91.14, -351.902, 91.14, 351.902, 2914, -6427, 131.647, -336.712, -131.647, 336.712, 2898, -4448, 0, 0, 0, 0, 2293, -4121, 572.157, -5.06333, -572.157, 5.06333, 1540, -4172, 0, 0, 0, 0, 960, -3520, -2.53167, -334.18, 2.53167, 334.18, 951, 639, 26.8733, 419.6, -26.8733, -419.6, 336, 625, 0, 0, 0, 0, 314, 167)
+}
+point_count = 18
+
+[node name="Track3" instance=ExtResource("1_n382w")]
+
+[node name="TileMap" parent="." index="0"]
+scale = Vector2(2.5, 2.5)
+tile_map_data = PackedByteArray("AAAAAAAAAQAAAAAAAAAAAP//AQAAAAAAAAAAAP7/AQAAAAMAABD///3/AQAAAAMAACD///z/AQAAAAAAAAD///v/AQAAAAMAAAAAAPr/AQAAAAMAADAAAPn/AQAAAAAAAAAAAPj/AQABAAAAAAABAPj/AQAAAAAAAFACAPj/AQAAAAAAAFADAPj/AQABAAAAADADAPf/AQAAAAAAAAADAPb/AQAAAAAAAAADAPX/AQABAAAAAAAEAPX/AQABAAAAAFAEAPb/AQAAAAAAAAAEAPf/AQAAAAAAAAAEAPj/AQAAAAAAAAAEAPn/AQABAAAAADADAPn/AQAAAAAAAFACAPn/AQAAAAAAAFABAPn/AQABAAAAAAABAPr/AQAAAAAAAAABAPv/AQAAAAAAAAABAPz/AQAAAAAAAAABAP3/AQAAAAAAAAABAP7/AQAAAAAAAAABAP//AQAAAAAAAAABAAAAAQAAAAAAAAABAAEAAQABAAAAADAAAAEAAQABAAAAAGD///7/AQAAAAIAAGAAAP3/AQAAAAIAAFAAAPv/AQAAAAIAADD///r/AQAAAAIAAAA=")
+
+[node name="Checkpoints" parent="." index="1"]
+scale = Vector2(2.5, 2.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints" index="0"]
+position = Vector2(130.4, -276.8)
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Checkpoints" index="1"]
+position = Vector2(-2.40002, -516)
+rotation = -0.799361
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Checkpoints" index="2"]
+position = Vector2(-128, -892.8)
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Checkpoints" index="3"]
+position = Vector2(20, -1302)
+rotation = 0.801106
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="Checkpoints" index="4"]
+position = Vector2(126, -1648.4)
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="Checkpoints" index="5"]
+position = Vector2(231.6, -1934)
+rotation = 1.1205
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D7" type="CollisionShape2D" parent="Checkpoints" index="6"]
+position = Vector2(599.2, -1927.6)
+rotation = 1.5708
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D8" type="CollisionShape2D" parent="Checkpoints" index="7"]
+position = Vector2(900, -2019.6)
+rotation = 0.450295
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D9" type="CollisionShape2D" parent="Checkpoints" index="8"]
+position = Vector2(884.8, -2481.2)
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D10" type="CollisionShape2D" parent="Checkpoints" index="9"]
+position = Vector2(1062, -2690.8)
+rotation = 1.5708
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D11" type="CollisionShape2D" parent="Checkpoints" index="10"]
+position = Vector2(1167.2, -2480.4)
+rotation = 3.14159
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D12" type="CollisionShape2D" parent="Checkpoints" index="11"]
+position = Vector2(1150.8, -1836.4)
+rotation = 3.14159
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D13" type="CollisionShape2D" parent="Checkpoints" index="12"]
+position = Vector2(975.6, -1662.4)
+rotation = 4.71239
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D14" type="CollisionShape2D" parent="Checkpoints" index="13"]
+position = Vector2(550.4, -1650.4)
+rotation = 4.71239
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D15" type="CollisionShape2D" parent="Checkpoints" index="14"]
+position = Vector2(382, -1462)
+rotation = 3.14159
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D16" type="CollisionShape2D" parent="Checkpoints" index="15"]
+position = Vector2(385.2, -707.6)
+rotation = 3.14159
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D17" type="CollisionShape2D" parent="Checkpoints" index="16"]
+position = Vector2(390.4, 212.8)
+rotation = 3.14159
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D18" type="CollisionShape2D" parent="Checkpoints" index="17"]
+position = Vector2(209.2, 391.2)
+rotation = 4.71239
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="CollisionShape2D19" type="CollisionShape2D" parent="Checkpoints" index="18"]
+position = Vector2(112.8, 214.8)
+shape = SubResource("RectangleShape2D_h8n76")
+
+[node name="SpawnPoint" parent="." index="2"]
+position = Vector2(318, 38)
+rotation = 0.0
+
+[node name="Trajectory" parent="." index="3"]
+curve = SubResource("Curve2D_i55oq")

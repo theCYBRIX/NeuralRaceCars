@@ -15,6 +15,14 @@ var _player : Car
 func _ready() -> void:
 	if include_player and not _player and track_provider and track_provider.has_track():
 		spawn_player()
+		graph.add_series("Progress old", Color.DEEP_PINK, func(): return track_provider.track.get_progress(_player))
+		graph.add_series("Progress new", Color.MEDIUM_PURPLE,
+		func(): 
+			var check_pos := track_provider.track.get_checkpoint(_player.checkpoint_tracker.checkpoint_index).global_position
+			var next_check_pos := track_provider.track.get_checkpoint(_player.checkpoint_tracker.checkpoint_index + 1).global_position
+			var check_to_check_dist := check_pos.distance_squared_to(next_check_pos)
+			return _player.checkpoint_tracker.checkpoint_index + (1 - (_player.global_position.distance_squared_to(next_check_pos) / check_to_check_dist))
+		)
 	
 	var state : TrainingState = SaveManager.load_training_state("C:\\Users\\math_\\AppData\\Roaming\\Godot\\app_userdata\\CarGame\\saved_networks(18 - 3.89).json")
 	
@@ -22,6 +30,7 @@ func _ready() -> void:
 		await neural_api_client.ready
 	if not neural_api_client.io_handler.is_node_ready():
 		await neural_api_client.io_handler.ready
+		
 	
 	#neural_api_client.start()
 	#await get_tree().create_timer(2).timeout

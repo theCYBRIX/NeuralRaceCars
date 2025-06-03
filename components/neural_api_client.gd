@@ -175,6 +175,7 @@ func setup_session(num_networks : int, parent_selector : ParentSelection, initia
 	payload["layout"] = network_layout
 	payload["numNetworks"] = network_count
 	payload["parentSelector"] = ParentSelection.keys()[parent_selector]
+	payload["createMetadata"] = true
 	
 	var response : Dictionary = await request("setup", payload)
 	
@@ -182,6 +183,12 @@ func setup_session(num_networks : int, parent_selector : ParentSelection, initia
 		training_network_ids = _get_network_ids(response)
 	
 	return FAILED if error_flag else OK
+
+
+func get_network_metadata(network_ids : Array[int] = []) -> Dictionary:
+	var response := request("getMetadata") if network_ids.is_empty() else request("getMetadata", { "networkIds" : network_ids})
+	if error_flag or not response.has("payload") or not response.payload.has("metadata"): return {}
+	return response.payload.metadata
 
 
 func setup_training_session():

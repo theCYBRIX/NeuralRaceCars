@@ -2,13 +2,15 @@ class_name DataGraph
 extends Control
 
 const POPUP_ALWAYS_SHOW_LEGEND : int = 0
-const POPUP_LIMIT_MAX_VALUE : int = 1
-const POPUP_LIMIT_MIN_VALUE : int = 2
+const POPUP_FILL_VOLUME : int = 1
+const POPUP_LIMIT_MAX_VALUE : int = 2
+const POPUP_LIMIT_MIN_VALUE : int = 3
 
 @onready var graphing_area: Control = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea
 @onready var legend: MarginContainer = $Panel/VBoxContainer/Legend
 @onready var legend_container: HFlowContainer = $Panel/VBoxContainer/Legend/HFlowContainer
 @onready var max_label : Label = $Panel/VBoxContainer/Control/MarginContainer/MaxLabel
+@onready var current_label: Label = $Panel/VBoxContainer/Control/MarginContainer/CurrentLabel
 @onready var min_label : Label = $Panel/VBoxContainer/Control/MarginContainer2/MinLabel
 @onready var top_border: Line2D = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/TopBorder
 @onready var bottom_border: Line2D = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/BottomBorder
@@ -16,9 +18,11 @@ const POPUP_LIMIT_MIN_VALUE : int = 2
 
 @export var resolution : int = 100 : set = set_resolution
 @export var update_period : float = 0.2 : set = set_update_period
-@export var realtime : bool = false
+@export var realtime : bool = false : set = set_realtime
+@export var auto_update : bool = true : set = set_auto_update
 @export var always_show_legend : bool = true : set = set_always_show_legend
 @export var show_legend_on_hover : bool = true : set = set_show_legend_on_hover
+@export var fill_volume : bool = true : set = set_fill_volume
 
 @export_group("Limits")
 @export_subgroup("Maximum", "max_value")
@@ -59,24 +63,18 @@ func _ready() -> void:
 	graphing_area_size = graphing_area.get_size()
 	legend.visible = always_show_legend
 	set_update_period(update_period)
-	if not realtime: update_timer.start()
+	if not realtime and auto_update: update_timer.start()
 	popup_menu.add_check_item("Always Show Legend", POPUP_ALWAYS_SHOW_LEGEND)
-	popup_menu.id_pressed.connect(_on_popup_menu_id_pressed)
-	popup_menu.visibility_changed.connect(__unparent_popup, CONNECT_DEFERRED)
+	popup_menu.add_check_item("Fill Volume", POPUP_FILL_VOLUME)
 	popup_menu.add_check_item("Limit Max Value", POPUP_LIMIT_MAX_VALUE)
 	popup_menu.add_check_item("Limit Min Value", POPUP_LIMIT_MIN_VALUE)
+	popup_menu.id_pressed.connect(_on_popup_menu_id_pressed)
+	popup_menu.visibility_changed.connect(__unparent_popup, CONNECT_DEFERRED)
 	__update_popup_state()
 
 
 func _process(_delta: float) -> void:
-	update_series()
-	if range_updated:
-		redraw_graph()
-		min_label.set_text("%-3.2f" % minimum)
-		max_label.set_text("%-3.2f" % maximum)
-		range_updated = false
-	else:
-		update_graph()
+	update_all()
 	if not realtime: set_process(false)
 
 func _gui_input(event: InputEvent) -> void:
@@ -92,12 +90,57 @@ func _gui_input(event: InputEvent) -> void:
 			popup_menu.hide()
 
 
+func update_all() -> void:
+	update_series()
+	if range_updated:
+		redraw_graph()
+		min_label.set_text("%-3.2f" % minimum)
+		max_label.set_text("%-3.2f" % maximum)
+		range_updated = false
+	else:
+		update_graph()
+	
+	var active_count : int = 0
+	var active_series : GraphSeries
+	for s : GraphSeries in series.values():
+		if s.enabled:
+			active_count += 1
+			active_series = s
+	
+	if active_count == 1:
+		current_label.visible = true
+		current_label.text = "%-3.2f" % active_series.points.get_item(active_series.points.size() - 1)
+	elif current_label.visible:
+		current_label.visible = false
+
+
 func clear_data_points():
 	for s : GraphSeries in series.values():
 		s.clear()
 
 
-func extract_series(series_name) -> DataGraph:
+func has_series(series_name : String) -> bool:
+	return series.has(series_name)
+
+
+func get_series_count() -> int:
+	return series.size()
+
+
+func set_fill_volume(enabled : bool) -> void:
+	if enabled == fill_volume:
+		return
+	
+	fill_volume = enabled
+	
+	for s : GraphSeries in series.values():
+		s.set_fill_volume(enabled)
+	
+	if is_node_ready():
+		__update_popup_state()
+
+
+func extract_series(series_name : String) -> DataGraph:
 	if not series.has(series_name): return self
 	var graph_scene : PackedScene = load("res://scenes/ui/graph.tscn")
 	var graph : DataGraph = graph_scene.instantiate()
@@ -121,6 +164,7 @@ func add_series(series_name : String, color : Color, data_supplier : Callable, d
 
 func add(s : GraphSeries):
 	s.set_parent(self)
+	s.fill_volume = fill_volume
 	series[s.title] = s
 	if s.polygon2d.get_parent():
 		s.polygon2d.get_parent().remove_child(s.polygon2d)
@@ -129,6 +173,7 @@ func add(s : GraphSeries):
 	graphing_area.add_child(s.polygon2d, false, Node.INTERNAL_MODE_BACK)
 	graphing_area.add_child(s.line2d, false, Node.INTERNAL_MODE_BACK)
 	legend_container.add_child(s.legend_item, false, Node.INTERNAL_MODE_BACK)
+
 
 func release_series(s : GraphSeries):
 	if not series.has(s.title): return
@@ -162,7 +207,8 @@ func redraw_graph():
 		line_points.resize(s.points.size())
 		
 		var polygon_points : PackedVector2Array = []
-		polygon_points.resize(s.points.size() + 2)
+		if s.fill_volume:
+			polygon_points.resize(s.points.size() + 2)
 		
 		for i in range(resolution, -1, -1):
 			index -= 1
@@ -170,10 +216,11 @@ func redraw_graph():
 			point_index += 1
 			var point := Vector2(i / float(resolution), 1 - ((s.points.get_item(index) - minimum) / value_range)) * graphing_area_size
 			line_points[point_index] = point
-			polygon_points[point_index] = point
+			if s.fill_volume:
+				polygon_points[point_index] = point
 			left_most = point
 		
-		if left_most:
+		if left_most and s.fill_volume:
 			polygon_points[polygon_points.size() - 2] = Vector2(left_most.x, graphing_area_size.y) #Bottom left
 			polygon_points[polygon_points.size() - 1] = graphing_area_size #Bottom right
 		
@@ -327,11 +374,32 @@ func set_update_period(seconds : float):
 		update_timer.set_wait_time(update_period)
 
 
-func set_realtime(enabled : bool):
-	if realtime == enabled: return
+func set_realtime(enabled : bool) -> void:
+	if realtime == enabled:
+		return
+	
 	realtime = enabled
-	if is_node_ready():
+	
+	if realtime:
+		auto_update = true
 		update_timer.stop()
+		set_process(true)
+	elif auto_update:
+		if is_node_ready() and update_timer.is_stopped():
+			set_process(true)
+
+
+func set_auto_update(enabled : bool) -> void:
+	if auto_update == enabled:
+		return
+	
+	auto_update = enabled
+	
+	if not auto_update:
+		realtime = false
+		if is_node_ready() and update_timer.is_stopped():
+			update_timer.stop()
+	elif update_timer.is_stopped():
 		set_process(true)
 
 
@@ -365,6 +433,8 @@ func _on_popup_menu_id_pressed(id: int) -> void:
 	match id:
 		POPUP_ALWAYS_SHOW_LEGEND:
 			always_show_legend = !always_show_legend
+		POPUP_FILL_VOLUME:
+			fill_volume = !fill_volume
 		POPUP_LIMIT_MAX_VALUE:
 			max_value_restrict_floor = !max_value_restrict_floor
 		POPUP_LIMIT_MIN_VALUE:
@@ -372,6 +442,7 @@ func _on_popup_menu_id_pressed(id: int) -> void:
 
 func __update_popup_state():
 	popup_menu.set_item_checked(POPUP_ALWAYS_SHOW_LEGEND, always_show_legend)
+	popup_menu.set_item_checked(POPUP_FILL_VOLUME, fill_volume)
 	popup_menu.set_item_checked(POPUP_LIMIT_MAX_VALUE, max_value_restrict_floor)
 	popup_menu.set_item_checked(POPUP_LIMIT_MIN_VALUE, min_value_restrict_ceiling)
 

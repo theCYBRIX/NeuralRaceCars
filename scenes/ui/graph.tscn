@@ -59,6 +59,12 @@ layout_mode = 2
 text = "1"
 vertical_alignment = 2
 
+[node name="CurrentLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer"]
+layout_mode = 2
+text = "1"
+horizontal_alignment = 2
+vertical_alignment = 2
+
 [node name="MarginContainer3" type="MarginContainer" parent="Panel/VBoxContainer/Control"]
 layout_mode = 2
 size_flags_vertical = 3

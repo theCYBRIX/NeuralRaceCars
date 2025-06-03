@@ -39,6 +39,8 @@ func browse_folder():
 
 func switch_to_state(state : TrainingState):
 	save_file_list.disabled = true
+	#TODO: Allow selection
+	GameSettings.track_scene = preload("res://scenes/track_3.tscn")
 	GameSettings.training_state = state
 	var prev_scene := SceneManager.set_scene(SceneManager.Scene.TRAINING)
 	await _release_refresh_thread()

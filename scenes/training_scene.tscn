@@ -37,9 +37,10 @@ script = ExtResource("4_1idkt")
 recording_manager = NodePath("TrainingRecordingManager")
 num_networks = 1500
 batch_colors = Array[Color]([Color(0, 1, 0, 1)])
+parent_selection = 4
 car_parent = NodePath(".")
 track_provider = NodePath("../../TrackProvider")
-num_cars = 50
+num_cars = 40
 input_mapping = Array[int]([0, 1, 2, 3])
 network_load_path = "C:/Users/math_/AppData/Roaming/Godot/app_userdata/CarGame/saved_networks(18 - 3.89).json"
 
@@ -52,9 +53,9 @@ enabled = false
 script = ExtResource("5_vlj7q")
 num_inputs = 15
 num_outputs = 4
-hidden_layer_sizes = Array[int]([24, 16])
-activation_functions = Array[int]([0, 1, 1, 2])
-input_normalizers = Array[int]([1, 0, 0, 0])
+hidden_layer_sizes = Array[int]([26])
+activation_functions = Array[int]([0, 1, 2])
+input_normalizers = Array[int]([1, 0, 0])
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
 process_mode = 3
@@ -149,6 +150,7 @@ dialog_text = "Any unsaved data will be lost."
 [connection signal="timeout" from="CameraReparentCooldown" to="." method="_on_camera_reparent_cooldown_timeout"]
 [connection signal="child_entered_tree" from="NeuralAPIClient" to="NeuralAPIClient" method="_on_child_entered_tree"]
 [connection signal="car_instanciated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_car_instanciated"]
+[connection signal="metadata_updated" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_metadata_updated"]
 [connection signal="networks_randomized" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_networks_randomized"]
 [connection signal="new_generation" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_new_generation"]
 [connection signal="training_started" from="NeuralAPIClient/EvolutionManager" to="." method="_on_evolution_manager_training_started"]

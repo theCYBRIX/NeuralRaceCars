@@ -215,6 +215,32 @@ min_value_padding = 0.05
 min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
+[node name="ManualGraph" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 2
+auto_update = false
+always_show_legend = false
+fill_volume = false
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
+metadata/_edit_use_anchors_ = true
+
+[node name="ManualGraph2" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 2
+auto_update = false
+always_show_legend = false
+fill_volume = false
+max_value_use_padding = true
+max_value_padding = 0.025
+min_value_use_padding = true
+min_value_padding = 0.05
+min_value_restrict_ceiling = true
+metadata/_edit_use_anchors_ = true
+
 [node name="VFlowContainer" type="VFlowContainer" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
