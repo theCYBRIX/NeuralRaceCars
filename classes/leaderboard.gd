@@ -38,7 +38,13 @@ func update_progress(index : int):
 	var check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index).global_position
 	var next_check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index + 1).global_position
 	var check_to_check_dist := check_pos.distance_squared_to(next_check_pos)
-	_progress_dict[node] = node.checkpoint_tracker.checkpoint_index + (1 - (node.global_position.distance_squared_to(next_check_pos) / check_to_check_dist))
+	var node_pos = node.global_position
+	if node is Car:
+		var sprite : Sprite2D = node.get_node("Sprite")
+		if sprite:
+			var texture_size := sprite.texture.get_size() * sprite.scale
+			node_pos += node.linear_velocity.normalized() * max(texture_size.x, texture_size.y)
+	_progress_dict[node] = node.checkpoint_tracker.checkpoint_index + (1 - (node_pos.distance_squared_to(next_check_pos) / check_to_check_dist))
 
 func update_leaderboard() -> void:
 	if _progress_update_task != -1:
