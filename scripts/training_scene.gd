@@ -10,6 +10,7 @@ extends Node2D
 @onready var exit_dialog: ConfirmationDialog = $ExitDialog
 @onready var leaderboard: Leaderboard = $Leaderboard
 @onready var start_button: Button = $CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton
+@onready var network_layout_generator: NetworkLayoutGenerator = $NeuralAPIClient/NetworkLayoutGenerator
 
 var total_generations : int = 0
 var time_elapsed_int : int = 0
@@ -42,6 +43,12 @@ func _ready() -> void:
 	evolution_manager.car_respawned.connect(set_first_place_car, CONNECT_ONE_SHOT)
 	
 	evolution_manager.ready.connect(_on_evolution_manager_reset, CONNECT_ONE_SHOT)
+	
+	
+	if GameSettings.network_layout:
+		network_layout_generator.set_layout(GameSettings.network_layout)
+		#print(JSON.stringify(network_layout_generator.create_network_layout().to_dict()))
+	
 	
 	stat_screen.graph.add_series("Framerate (FPS)", Color.LIME_GREEN, Engine.get_frames_per_second)
 	stat_screen.graph.add_series("Networks Alive (%)", Color.YELLOW_GREEN, func() -> float: return evolution_manager.active_cars.size() / float(evolution_manager.cars.size()))

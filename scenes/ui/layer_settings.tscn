@@ -1,0 +1,56 @@
+[gd_scene load_steps=2 format=3 uid="uid://dedqkaau51t7w"]
+
+[ext_resource type="Script" uid="uid://dtn4aty5t1x3s" path="res://scripts/layer_settings.gd" id="1_qu6kh"]
+
+[node name="LayerSettings" type="PanelContainer"]
+script = ExtResource("1_qu6kh")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Nodes:"
+
+[node name="NodeCount" type="SpinBox" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 64.0
+value = 1.0
+rounded = true
+allow_greater = true
+select_all_on_focus = true
+
+[node name="ActivationSelector" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ActivationSelector"]
+layout_mode = 2
+text = "Activation Func.:"
+
+[node name="ActivationOption" type="OptionButton" parent="MarginContainer/VBoxContainer/ActivationSelector"]
+layout_mode = 2
+
+[node name="NormalizerSelector" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/NormalizerSelector"]
+layout_mode = 2
+text = "Input Normalizer:"
+
+[node name="NormalizerOption" type="OptionButton" parent="MarginContainer/VBoxContainer/NormalizerSelector"]
+layout_mode = 2
+
+[connection signal="value_changed" from="MarginContainer/VBoxContainer/HBoxContainer/NodeCount" to="." method="_on_node_count_value_changed"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/ActivationSelector/ActivationOption" to="." method="_on_activation_option_item_selected"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/NormalizerSelector/NormalizerOption" to="." method="_on_normalizer_option_item_selected"]

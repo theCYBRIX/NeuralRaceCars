@@ -35,6 +35,7 @@ print_error_stack_trace = false
 [node name="EvolutionManager" type="Node" parent="NeuralAPIClient" node_paths=PackedStringArray("recording_manager", "car_parent", "track_provider")]
 script = ExtResource("4_1idkt")
 recording_manager = NodePath("TrainingRecordingManager")
+use_saved_training_state = false
 num_networks = 1500
 batch_colors = Array[Color]([Color(0, 1, 0, 1)])
 parent_selection = 4

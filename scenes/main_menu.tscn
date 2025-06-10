@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://bjdf47qbor0rh"]
+[gd_scene load_steps=3 format=3 uid="uid://bjdf47qbor0rh"]
 
 [ext_resource type="Script" uid="uid://ddghwtx2uh7nl" path="res://scripts/main_menu.gd" id="1_luxh3"]
+[ext_resource type="Script" uid="uid://b8wtl1g6jp5g" path="res://scripts/track_selector.gd" id="2_ekxnf"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -26,6 +27,7 @@ alignment = 1
 
 [node name="OptionButton" type="OptionButton" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
+script = ExtResource("2_ekxnf")
 
 [node name="PlayButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
@@ -43,7 +45,7 @@ text = "Load previous"
 layout_mode = 2
 text = "Exit"
 
-[connection signal="item_selected" from="HBoxContainer/VBoxContainer/OptionButton" to="." method="_on_option_button_item_selected"]
+[connection signal="item_selected" from="HBoxContainer/VBoxContainer/OptionButton" to="HBoxContainer/VBoxContainer/OptionButton" method="_on_item_selected"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]

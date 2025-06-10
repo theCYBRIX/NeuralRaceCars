@@ -1,0 +1,171 @@
+[gd_scene load_steps=7 format=3 uid="uid://b6md8chi0dh86"]
+
+[ext_resource type="PackedScene" uid="uid://dedqkaau51t7w" path="res://scenes/ui/layer_settings.tscn" id="1_kgssf"]
+[ext_resource type="Script" uid="uid://ds8dvoktlcbiw" path="res://scripts/layout_creator.gd" id="1_yafnn"]
+[ext_resource type="Script" uid="uid://by5viny2mwso7" path="res://scripts/network_visualizer.gd" id="2_a34ga"]
+[ext_resource type="PackedScene" uid="uid://bcgklb617ylqx" path="res://scenes/ui/layer_settings_item.tscn" id="2_yafnn"]
+[ext_resource type="Script" uid="uid://csppnnlo4buwi" path="res://components/network_layout_generator.gd" id="3_yafnn"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yafnn"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.366595, 0.366595, 0.366594, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="LayoutCreator" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_yafnn")
+
+[node name="RootContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="RootContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 200
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 200
+theme_override_constants/margin_bottom = 20
+
+[node name="NetworkVisualizer" type="Control" parent="RootContainer/MarginContainer" node_paths=PackedStringArray("layout_generator")]
+custom_minimum_size = Vector2(266.69, 218.87)
+layout_mode = 2
+tooltip_text = "inputs: 1
+hidden layers: [10]
+outputs: 1"
+script = ExtResource("2_a34ga")
+layout_generator = NodePath("../../../NetworkLayoutGenerator")
+node_separation = Vector2(10, 20)
+node_size_multiplier = 0.711
+line_stroke_width = -1.0
+metadata/_custom_type_script = "uid://by5viny2mwso7"
+
+[node name="MarginContainer2" type="MarginContainer" parent="RootContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RootContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="RootContainer/MarginContainer2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Input Layer"
+horizontal_alignment = 1
+
+[node name="InputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer" instance=ExtResource("1_kgssf")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="PanelContainer2" type="PanelContainer" parent="RootContainer/MarginContainer2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Hidden Layers"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_yafnn")
+
+[node name="HiddenLayers" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="LayerSettingsItem" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers" instance=ExtResource("2_yafnn")]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AddLayerButton" type="Button" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Add"
+
+[node name="PanelContainer3" type="PanelContainer" parent="RootContainer/MarginContainer2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer"]
+layout_mode = 2
+text = "Output Layer"
+horizontal_alignment = 1
+
+[node name="OutputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer" instance=ExtResource("1_kgssf")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="NetworkLayoutGenerator" type="Node" parent="."]
+script = ExtResource("3_yafnn")
+hidden_layer_sizes = Array[int]([10])
+activation_functions = Array[int]([0, 0, 0])
+input_normalizers = Array[int]([1, 0, 0])
+metadata/_custom_type_script = "uid://csppnnlo4buwi"
+
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_node_count_changed"]
+[connection signal="trash_button_pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem" to="." method="_on_layer_item_trash_button_pressed"]
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_node_count_changed"]
+[connection signal="pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/HBoxContainer/AddLayerButton" to="." method="_on_add_layer_button_pressed"]
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_node_count_changed"]
+
+[editable path="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem"]

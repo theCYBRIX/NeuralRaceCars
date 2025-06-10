@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcgklb617ylqx"]
+
+[ext_resource type="Script" uid="uid://dt1vsssexvxku" path="res://scripts/layer_settings_item.gd" id="1_cwm6r"]
+[ext_resource type="PackedScene" uid="uid://dedqkaau51t7w" path="res://scenes/ui/layer_settings.tscn" id="1_qypkq"]
+
+[node name="LayerSettingsItem" type="HBoxContainer"]
+alignment = 1
+script = ExtResource("1_cwm6r")
+
+[node name="LayerSettings" parent="." instance=ExtResource("1_qypkq")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="TrashButton" type="Button" parent="."]
+layout_mode = 2
+text = "🗑"
+icon_alignment = 1
+expand_icon = true
+
+[connection signal="pressed" from="TrashButton" to="." method="_on_trash_button_pressed"]

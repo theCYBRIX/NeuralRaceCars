@@ -6,6 +6,7 @@ extends Control
 
 @export var layout_generator : NetworkLayoutGenerator = null : set = set_layout_generator
 @export var node_separation : Vector2 = Vector2.ZERO : set = set_node_separation
+@export var margin : Vector2 = Vector2.ZERO : set = set_margin
 @export_range(0, 1) var node_size_multiplier : float = 1 : set = set_node_size_multiplier
 
 @export_group("Colors")
@@ -21,10 +22,13 @@ var network_layout : NetworkLayout : set = set_network_layout
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), background_color, true)
-	if not network_layout: return
+	if not network_layout:
+		push_warning("Attempted to redraw network layout that is null.")
+		return
 	var max_nodes_x := get_max_layer_node_count(network_layout)
 	var max_nodes_y := get_layer_count(network_layout)
-	var node_offset := size / Vector2(max_nodes_x, max_nodes_y)
+	var total_spacing := margin + (node_separation * Vector2(max_nodes_x - 1, max_nodes_y - 1))
+	var node_offset := (size - total_spacing) / Vector2(max_nodes_x, max_nodes_y)
 	var center := size / 2.0
 	
 	var node_positions : Array[Array] = []
@@ -38,9 +42,9 @@ func _draw() -> void:
 		layer_array.resize(layer.node_count)
 		node_positions[layer_index] = layer_array
 		
-		var pos_y := (center.y + (max_nodes_y / 2.0) * node_offset.y + (max_nodes_y / 2.0 - 1) * node_separation.y) - (layer_index + 0.5) * node_offset.y - (layer_index * node_separation.y)
+		var pos_y := center.y + ((max_nodes_y - 1) / 2.0) * node_offset.y + ((max_nodes_y - 1) / 2.0) * node_separation.y - (layer_index * node_offset.y) - (layer_index * node_separation.y) 
 		for node_index in range(layer.node_count):
-			var pos_x = (center.x - (layer.node_count / 2.0) * node_offset.x - (layer.node_count / 2.0 - 1) * node_separation.x) + (node_index + 0.5) * node_offset.x + (node_index * node_separation.x)
+			var pos_x = center.x - ((layer.node_count - 1) / 2.0) * node_offset.x - ((layer.node_count - 1) / 2.0) * node_separation.x + (node_index * node_offset.x) + (node_index * node_separation.x) 
 			var pos := Vector2(pos_x, pos_y)
 			layer_array[node_index] = pos
 	
@@ -53,7 +57,7 @@ func _draw() -> void:
 	for layer in node_positions:
 		for pos in layer:
 			draw_circle(pos, node_radius, node_color, true, -1.0, antialiased)
-			#draw_circle(pos, node_radius, Color.BLACK, false, node_radius * 0.1)
+			draw_circle(pos, node_radius, Color.DIM_GRAY, false, node_radius * 0.2)
 
 
 func get_max_layer_node_count(layout : NetworkLayout) -> int:
@@ -132,9 +136,13 @@ func set_background_color(color : Color) -> void:
 	queue_redraw()
 
 
-
 func set_node_separation(separation : Vector2) -> void:
 	node_separation = separation
+	queue_redraw()
+
+
+func set_margin(value : Vector2) -> void:
+	margin = value
 	queue_redraw()
 
 

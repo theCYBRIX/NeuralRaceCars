@@ -5,8 +5,8 @@ extends Node
 signal layout_changed
 
 @export_group("Network Layout")
-@export_range(1, 100) var num_inputs : int : set = set_num_inputs
-@export_range(1, 100) var num_outputs : int : set = set_num_outputs
+@export_range(1, 100) var num_inputs : int = 1 : set = set_num_inputs
+@export_range(1, 100) var num_outputs : int = 1 : set = set_num_outputs
 @export var hidden_layer_sizes : Array[int] : set = set_hidden_layer_sizes
 @export var activation_functions : Array[NetworkLayer.ActivationFunction] = [NetworkLayer.ActivationFunction.LINEAR, NetworkLayer.ActivationFunction.LINEAR] : set = set_activation_functions
 @export var input_normalizers : Array[NetworkLayer.InputNormalizer] = [NetworkLayer.InputNormalizer.BATCH, NetworkLayer.InputNormalizer.NONE] : set = set_input_normalizers
@@ -32,7 +32,7 @@ signal layout_changed
 #}
 
 func create_network_layout() -> NetworkLayout:
-	var hidden_layers : Array[NetworkLayer]
+	var hidden_layers : Array[NetworkLayer] = []
 	
 	hidden_layers.resize(hidden_layer_sizes.size())
 	for i in range(hidden_layer_sizes.size()):
@@ -41,9 +41,30 @@ func create_network_layout() -> NetworkLayout:
 	return NetworkLayout.new(
 		NetworkLayer.new(num_inputs, activation_functions[0], input_normalizers[0]),
 		hidden_layers,
-		NetworkLayer.new(num_outputs, activation_functions[hidden_layer_sizes.size() + 1], input_normalizers[hidden_layer_sizes.size() + 1])
+		NetworkLayer.new(num_outputs, activation_functions[hidden_layers.size() + 1], input_normalizers[hidden_layers.size() + 1])
 	)
 
+
+func set_layout(layout : NetworkLayout):
+	set_block_signals(true)
+	num_inputs = layout.input_layer.node_count
+	num_outputs = layout.output_layer.node_count
+	hidden_layer_sizes.assign(layout.hidden_layers.map(func(x : NetworkLayer) -> int: return x.node_count))
+	
+	var activations : Array[NetworkLayer.ActivationFunction] = []
+	activations.append(layout.input_layer.activation)
+	activations.append_array(layout.hidden_layers.map(func(x : NetworkLayer) -> NetworkLayer.ActivationFunction: return x.activation))
+	activations.append(layout.output_layer.activation)
+	activation_functions.assign(activations)
+	
+	var normalizers : Array[NetworkLayer.InputNormalizer] = []
+	normalizers.append(layout.input_layer.normalizer)
+	normalizers.append_array(layout.hidden_layers.map(func(x : NetworkLayer) -> NetworkLayer.InputNormalizer: return x.normalizer))
+	normalizers.append(layout.output_layer.normalizer)
+	input_normalizers.assign(normalizers)
+	
+	set_block_signals(false)
+	layout_changed.emit()
 
 
 func set_hidden_layer_sizes(sizes : Array[int]) -> void:

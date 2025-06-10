@@ -5,6 +5,7 @@ const MAIN_SCENES := {
 	Scene.TRAINING : preload("res://scenes/training_scene.tscn"),
 	Scene.GAMEPLAY : preload("res://scenes/gameplay_scene.tscn"),
 	Scene.SAVE_SELECTION : preload("res://scenes/save_selection_menu.tscn"),
+	Scene.TRAINING_MENU : preload("res://scenes/start_training_menu.tscn"),
 }
 
 enum Scene {
@@ -12,6 +13,7 @@ enum Scene {
 	TRAINING,
 	GAMEPLAY,
 	SAVE_SELECTION,
+	TRAINING_MENU,
 }
 
 func set_scene(scene : Scene) -> Node:
