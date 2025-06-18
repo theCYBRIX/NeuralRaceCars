@@ -8,14 +8,16 @@ const POPUP_LIMIT_MIN_VALUE : int = 3
 
 @onready var graphing_area: Control = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea
 @onready var legend: MarginContainer = $Panel/VBoxContainer/Legend
+@onready var graph_label: Label = $Panel/VBoxContainer/Control/MarginContainer/GraphLabel
 @onready var legend_container: HFlowContainer = $Panel/VBoxContainer/Legend/HFlowContainer
-@onready var max_label : Label = $Panel/VBoxContainer/Control/MarginContainer/MaxLabel
+@onready var min_label : Label = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/MarginContainer/VBoxContainer/MinLabel
+@onready var max_label : Label = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/MarginContainer/VBoxContainer/MaxLabel
 @onready var current_label: Label = $Panel/VBoxContainer/Control/MarginContainer/CurrentLabel
-@onready var min_label : Label = $Panel/VBoxContainer/Control/MarginContainer2/MinLabel
 @onready var top_border: Line2D = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/TopBorder
 @onready var bottom_border: Line2D = $Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/BottomBorder
 @onready var update_timer: Timer = $UpdateTimer
 
+@export var title : String = "Graph" : set = set_title
 @export var resolution : int = 100 : set = set_resolution
 @export var update_period : float = 0.2 : set = set_update_period
 @export var realtime : bool = false : set = set_realtime
@@ -61,7 +63,8 @@ var popup_menu : PopupMenu = PopupMenu.new()
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	graphing_area_size = graphing_area.get_size()
-	legend.visible = always_show_legend
+	graph_label.text = title
+	legend.visible = always_show_legend and (legend_container.get_child_count(true) > 0)
 	set_update_period(update_period)
 	if not realtime and auto_update: update_timer.start()
 	popup_menu.add_check_item("Always Show Legend", POPUP_ALWAYS_SHOW_LEGEND)
@@ -140,6 +143,12 @@ func set_fill_volume(enabled : bool) -> void:
 		__update_popup_state()
 
 
+func set_title(value : String) -> void:
+	title = value
+	if is_node_ready():
+		graph_label.text = title
+
+
 func extract_series(series_name : String) -> DataGraph:
 	if not series.has(series_name): return self
 	var graph_scene : PackedScene = load("res://scenes/ui/graph.tscn")
@@ -170,9 +179,9 @@ func add(s : GraphSeries):
 		s.polygon2d.get_parent().remove_child(s.polygon2d)
 	if s.line2d.get_parent():
 		s.line2d.get_parent().remove_child(s.line2d)
-	graphing_area.add_child(s.polygon2d, false, Node.INTERNAL_MODE_BACK)
-	graphing_area.add_child(s.line2d, false, Node.INTERNAL_MODE_BACK)
-	legend_container.add_child(s.legend_item, false, Node.INTERNAL_MODE_BACK)
+	graphing_area.add_child(s.polygon2d, false, Node.INTERNAL_MODE_FRONT)
+	graphing_area.add_child(s.line2d, false, Node.INTERNAL_MODE_FRONT)
+	legend_container.add_child(s.legend_item, false, Node.INTERNAL_MODE_FRONT)
 
 
 func release_series(s : GraphSeries):
@@ -326,14 +335,14 @@ func redraw_borders() -> void:
 func set_always_show_legend(enabled : bool):
 	always_show_legend = enabled
 	if is_node_ready():
-		legend.visible = always_show_legend
+		legend.visible = always_show_legend and legend_container.get_child_count(true) > 0
 		__update_popup_state()
 
 
 func set_show_legend_on_hover(enabled : bool):
 	show_legend_on_hover = enabled
 	if is_node_ready():
-		legend.visible = _is_hovered()
+		legend.visible = _is_hovered() and legend_container.get_child_count(true) > 0
 
 
 func set_limit_max_value(enabled : bool):
@@ -420,7 +429,7 @@ func _is_hovered() -> bool:
 func _on_mouse_entered() -> void:
 	if always_show_legend: return
 	if show_legend_on_hover:
-		legend.visible = true
+		legend.visible =  legend_container.get_child_count(true) > 0
 
 
 func _on_mouse_exited() -> void:
@@ -450,3 +459,7 @@ func __unparent_popup():
 	if popup_menu.visible: return
 	var parent = popup_menu.get_parent()
 	if parent: parent.remove_child(popup_menu)
+
+
+func _on_legend_container_child_order_changed() -> void:
+	legend.visible = always_show_legend or legend_container.get_child_count(true) > 0

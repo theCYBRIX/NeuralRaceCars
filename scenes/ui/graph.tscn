@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://4cr1ena1a11" path="res://scenes/ui/graph.gd" id="1_0vutq"]
 
+[sub_resource type="Theme" id="Theme_suosx"]
+Label/font_sizes/font_size = 26
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xt7i1"]
 bg_color = Color(0.15967, 0.15967, 0.15967, 1)
 border_width_left = 2
@@ -14,8 +17,6 @@ corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
-[sub_resource type="Theme" id="Theme_suosx"]
-
 [node name="Graph" type="Control"]
 custom_minimum_size = Vector2(400, 250)
 layout_mode = 3
@@ -24,6 +25,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("Theme_suosx")
 script = ExtResource("1_0vutq")
 
 [node name="Panel" type="Panel" parent="."]
@@ -50,14 +52,13 @@ size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel/VBoxContainer/Control"]
 layout_mode = 2
-theme_override_constants/margin_left = 10
+theme_override_constants/margin_left = 15
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 10
 
-[node name="MaxLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer"]
+[node name="GraphLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer"]
 layout_mode = 2
-text = "1"
-vertical_alignment = 2
+text = "Graph"
 
 [node name="CurrentLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer"]
 layout_mode = 2
@@ -70,6 +71,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
 [node name="GraphingArea" type="Control" parent="Panel/VBoxContainer/Control/MarginContainer3"]
 clip_contents = true
@@ -89,14 +91,29 @@ points = PackedVector2Array(0, 573, 1132, 573)
 width = 1.0
 default_color = Color(0.572549, 0.572549, 0.572549, 1)
 
-[node name="MarginContainer2" type="MarginContainer" parent="Panel/VBoxContainer/Control"]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 2
+[node name="MarginContainer" type="MarginContainer" parent="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
 
-[node name="MinLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer2"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/MarginContainer"]
 layout_mode = 2
+
+[node name="MaxLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/MarginContainer/VBoxContainer"]
+modulate = Color(0.817521, 0.817521, 0.817521, 1)
+layout_mode = 2
+text = "1"
+vertical_alignment = 2
+
+[node name="MinLabel" type="Label" parent="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea/MarginContainer/VBoxContainer"]
+modulate = Color(0.817521, 0.817521, 0.817521, 1)
+layout_mode = 2
+size_flags_vertical = 10
 text = "-1"
 
 [node name="Legend" type="MarginContainer" parent="Panel/VBoxContainer"]
@@ -120,4 +137,5 @@ wait_time = 0.2
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
 [connection signal="resized" from="Panel/VBoxContainer/Control/MarginContainer3/GraphingArea" to="." method="_on_graphing_area_resized"]
+[connection signal="child_order_changed" from="Panel/VBoxContainer/Legend/HFlowContainer" to="." method="_on_legend_container_child_order_changed"]
 [connection signal="timeout" from="UpdateTimer" to="." method="_on_timer_timeout"]
