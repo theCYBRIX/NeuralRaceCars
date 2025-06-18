@@ -24,7 +24,7 @@ func _ready() -> void:
 			return _player.checkpoint_tracker.checkpoint_index + (1 - (_player.global_position.distance_squared_to(next_check_pos) / check_to_check_dist))
 		)
 	
-	var state : TrainingState = SaveManager.load_training_state("C:\\Users\\math_\\AppData\\Roaming\\Godot\\app_userdata\\CarGame\\saved_networks(18 - 3.89).json")
+	#var state : TrainingState = SaveManager.load_training_state("C:\\Users\\math_\\AppData\\Roaming\\Godot\\app_userdata\\CarGame\\saved_networks(18 - 3.89).json")
 	
 	if not neural_api_client.is_node_ready():
 		await neural_api_client.ready
@@ -75,7 +75,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				pause()
 
 
-func _on_track_provider_track_updated(track: BaseTrack) -> void:
+func _on_track_provider_track_updated(_track: BaseTrack) -> void:
 	if is_node_ready() and include_player:
 		spawn_player()
 

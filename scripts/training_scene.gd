@@ -230,7 +230,7 @@ func start_camrera_reparent_cooldown():
 	camera_reparent_cooldown.start()
 
 
-func _on_leaderboard_first_place_changed(new_first: Car, prev_first: Car) -> void:
+func _on_leaderboard_first_place_changed(new_first: Car, _prev_first: Car) -> void:
 	set_first_place_car(new_first)
 
 

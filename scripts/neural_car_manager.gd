@@ -161,7 +161,7 @@ func _instanciate_neural_car(index : int) -> NeuralCar:
 	inactive_cars.append(c)
 	return c
 
-
+@warning_ignore("shadowed_variable")
 func set_deactivate_on_contact(enabled : bool) -> void:
 	deactivate_on_contact = enabled
 	for car in cars:
@@ -247,6 +247,8 @@ func _on_track_ready():
 	
 	if not _api_client.simulation_network_ids or _api_client.simulation_network_ids.is_empty():
 		await _api_client.network_ids_updated
+	
+	track_ready.emit()
 	
 	#var idx = -1
 	#for car in cars:
@@ -356,12 +358,6 @@ func set_api_client(client : NeuralAPIClient):
 			_on_api_client_connected()
 	
 	update_configuration_warnings()
-
-
-func _connect_io_handler_signals() -> void:
-	var io_handler := _api_client.io_handler
-	
-	
 
 
 func _get_configuration_warnings() -> PackedStringArray:

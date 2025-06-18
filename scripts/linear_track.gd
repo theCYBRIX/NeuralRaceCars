@@ -31,7 +31,7 @@ func get_closest_spawn_point(for_whom : Car = null) -> SpawnPoint:
 
 
 func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px : float) -> float:
-	return get_track_direction(node.global_position, checkpoint_index, look_ahead_px)
+	return get_track_direction(node.global_position, checkpoint_index, 4, look_ahead_px)
 
 
 func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
@@ -48,6 +48,7 @@ func get_lap_progress(global_pos : Vector2, checkpoint_index : int) -> float:
 
 
 func get_absolute_progress(global_pos : Vector2, checkpoint_index : int) -> float:
+	@warning_ignore("integer_division")
 	var laps_completed : int = floori(checkpoint_index / num_checkpoints)
 	var lap_progress : float = get_lap_progress(global_pos, checkpoint_index)
 	if (checkpoint_index % num_checkpoints) == (num_checkpoints - 1):

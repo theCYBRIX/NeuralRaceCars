@@ -25,7 +25,8 @@ var _selected_items : Array[SaveFileListItem] = [] : set = set_selected_items
 var _item_array : Array[SaveFileListItem] = []
 var _file_paths : Dictionary = {}
 
-var _worker_thread_tasks : Array[int] = []
+var worker_task_manager := WorkerTaskManager.new()
+var _cancel_item_update : bool = false
 
 @onready var list_items: VBoxContainer = $VBoxContainer/MarginContainer4/ScrollContainer/MarginContainer/ListItems
 @onready var scroll_container: ScrollContainer = $VBoxContainer/MarginContainer4/ScrollContainer
@@ -91,52 +92,69 @@ func refresh_file_list(path : String) -> Error:
 	_file_paths.clear()
 	
 	var load_file_tasks : Array[Callable] = []
+	var item_counter : int = 0
 	
 	for file in files:
+		item_counter += 1
 		var list_item := SAVE_FILE_LIST_ITEM.instantiate()
 		list_item.file_name = file.get_file()
-		load_file_tasks.append(list_item.set_file_path.bind(path + "\\" + file))
+		load_file_tasks.append(update_list_item_content.bind(list_item, path + "\\" + file))
 		list_item.selected.connect(_on_item_selected.bind(list_item))
 		list_item.deselected.connect(_on_item_deselected.bind(list_item))
 		list_item.pressed.connect(_on_item_pressed.bind(list_item))
 		list_item.disabled = disabled
+		if item_counter == files.size():
+			list_item.ready.connect(
+				worker_task_manager.add_task.bind(update_list_items.bind(load_file_tasks))
+			)
 		list_items.call_deferred("add_child", list_item, false, Node.INTERNAL_MODE_FRONT)
 		_item_array.append(list_item)
 		_file_paths[list_item] = file
 	
-	var task_id := WorkerThreadPool.add_task(
-		func():
-			for task in load_file_tasks:
-				task.call()
-	)
-	_worker_thread_tasks.append(task_id)
-	await wait_for_worker_tasks()
+	if files.is_empty():
+		update_list_items(load_file_tasks)
+	
+	return OK
+
+
+func cancel_list_item_updates() -> void:
+	_cancel_item_update = true
+
+
+func update_list_item_content(list_item : SaveFileListItem, file_path : String) -> void:
+	if not _cancel_item_update:
+		list_item.set_file_path(file_path)
+
+
+func update_list_items(load_file_tasks : Array[Callable]) -> void:
+	_cancel_item_update = false
+	worker_task_manager.add_group_task(func(idx : int): load_file_tasks[idx].call(), load_file_tasks.size(), -1, false, "Load Save File Contents")
+	worker_task_manager.wait_for_group_tasks()
+	worker_task_manager.wait_for_all_tasks()
+	
+	if _cancel_item_update:
+		return
 	
 	_sort_item_array()
 	call_deferred("_update_item_order")
 	
 	call_deferred("_item_count_changed")
-	
-	return OK
 
 
 func refresh_file_list_asynch(path : String) -> void:
-	_worker_thread_tasks.append(WorkerThreadPool.add_task(refresh_file_list.bind(path)))
-
-
-func wait_for_worker_tasks() -> void:
-	while _worker_thread_tasks.size() > 0:
-		WorkerThreadPool.wait_for_task_completion(_worker_thread_tasks.pop_back())
+	worker_task_manager.add_task(refresh_file_list.bind(path))
 
 
 
 func _exit_tree() -> void:
-	if _worker_thread_tasks.is_empty():
+	if worker_task_manager.is_empty():
 		return
 	if is_queued_for_deletion():
 		cancel_free()
 	
-	wait_for_worker_tasks()
+	cancel_list_item_updates()
+	worker_task_manager.wait_for_group_tasks()
+	worker_task_manager.wait_for_tasks()
 	
 	queue_free()
 
@@ -204,7 +222,7 @@ func clear():
 	
 	_item_count_changed()
 
-
+@warning_ignore("shadowed_variable")
 func _free_all(list_items : Array[SaveFileListItem]):
 	for item in list_items:
 		item.queue_free()

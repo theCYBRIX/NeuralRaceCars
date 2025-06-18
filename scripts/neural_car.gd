@@ -56,7 +56,7 @@ func _physics_process(delta: float) -> void:
 		#score_adjustment -= 0.1 * delta
 		pass
 
-
+@warning_ignore("shadowed_variable_base_class")
 func deactivate(emit_signal := true) -> void:
 	if not active:
 		return

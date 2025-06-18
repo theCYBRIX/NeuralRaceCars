@@ -39,6 +39,13 @@ func _ready() -> void:
 		return
 
 
+func _exit_tree() -> void:
+	if Engine.is_editor_hint():
+		return
+	if binary_io_handler and binary_io_handler.IsConnected():
+		binary_io_handler.Disconnect()
+
+
 func update_car_inputs(cars : Array[NeuralCar], batch_size : int = cars.size()):
 	var outputs := {}
 	var process_queue : Array[Array] = []
@@ -137,7 +144,7 @@ func _get_network_inputs(cars : Array[NeuralCar]) -> Dictionary:
 
 
 func populate_new_generation(network_scores : Dictionary) -> Error:
-	var response := await request("createNewGeneration", { "networkScores" : network_scores })
+	var response := request("createNewGeneration", { "networkScores" : network_scores })
 	if not error_flag:
 		training_network_ids = _get_network_ids(response)
 	
@@ -147,7 +154,7 @@ func populate_new_generation(network_scores : Dictionary) -> Error:
 func populate_random_generation() -> Error:
 	
 	#NOTE: Randomizes existing networks and leaves their IDs unchanged
-	await request("randomizeNetworks")
+	request("randomizeNetworks")
 	
 	return FAILED if error_flag else OK
 
@@ -174,10 +181,10 @@ func setup_session(num_networks : int, parent_selector : ParentSelection, initia
 	
 	payload["layout"] = network_layout
 	payload["numNetworks"] = network_count
-	payload["parentSelector"] = ParentSelection.keys()[parent_selector]
+	payload["parentSelector"] = parent_selection
 	payload["createMetadata"] = true
 	
-	var response : Dictionary = await request("setup", payload)
+	var response : Dictionary = request("setup", payload)
 	
 	if not error_flag:
 		training_network_ids = _get_network_ids(response)
@@ -236,14 +243,14 @@ func get_network_outputs(network_inputs : Dictionary) -> Dictionary:
 
 
 func get_best_networks(num_networks : int) -> Array:
-	var response := await request("getBestNetworks", { "numRequested" : num_networks})
+	var response := request("getBestNetworks", { "numRequested" : num_networks})
 	if error_flag: return []
 	var networks : Array = response["payload"]["networks"]
 	return networks
 
 
 func get_networks(ids : Array[int]) -> Dictionary:
-	var response := await request("getNetworks", { "networkIds" : ids})
+	var response := request("getNetworks", { "networkIds" : ids})
 	if error_flag: return {}
 	var networks : Dictionary = response["payload"]["networks"]
 	return networks
@@ -254,13 +261,14 @@ func train_on_dataset(dataset : DrivingData):
 
 
 func get_training_status() -> Dictionary:
-	return await request("getTrainingState")
+	return request("getTrainingState")
 
 
 func stop_training():
 	request("stopTraining")
 
 
+@warning_ignore("shadowed_variable")
 func _send_request(request : String, payload : Dictionary = {}) -> void:
 	var packet : Dictionary = {
 		"request" : request,
@@ -276,15 +284,17 @@ func _read_response() -> Dictionary:
 	return parse_message(io_handler.read())
 
 
+@warning_ignore("shadowed_variable")
 func request(request : String, payload : Dictionary = {}) -> Dictionary:
 	return _request_callable.call(request, payload)
 
 
+@warning_ignore("shadowed_variable")
 func _request_direct(request : String, payload : Dictionary = {}) -> Dictionary:
 	_send_request(request, payload)
 	return _read_response()
 
-
+@warning_ignore("shadowed_variable")
 func _request_timed(request : String, payload : Dictionary = {}) -> Dictionary:
 	_response_timer.start()
 	_send_request(request, payload)

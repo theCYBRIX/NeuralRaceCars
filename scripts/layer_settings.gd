@@ -22,15 +22,27 @@ func _ready() -> void:
 
 
 func get_node_count() -> int:
-	return node_count.value
+	return int(node_count.value)
+
+
+func set_node_count(count : int) -> void:
+	node_count.value = count
 
 
 func get_activation_func() -> int:
 	return activation_option.get_selected_id()
 
 
+func set_activation_func(function : NetworkLayer.ActivationFunction):
+	activation_option.select(activation_option.get_item_index(function))
+
+
 func get_input_normalizer() -> int:
 	return normalizer_option.get_selected_id()
+
+
+func set_input_normalizer(normalizer : NetworkLayer.InputNormalizer) -> void:
+	normalizer_option.select(normalizer_option.get_item_index(normalizer))
 
 
 func _on_node_count_value_changed(value: float) -> void:

@@ -38,11 +38,6 @@ func _ready() -> void:
 		graph.custom_minimum_size = minimum_graph_size
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
-
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		match event.keycode:

@@ -54,9 +54,9 @@ enabled = false
 script = ExtResource("5_vlj7q")
 num_inputs = 15
 num_outputs = 4
-hidden_layer_sizes = Array[int]([26])
-activation_functions = Array[int]([0, 1, 2])
-input_normalizers = Array[int]([1, 0, 0])
+hidden_layer_sizes = Array[int]([64, 64, 32])
+activation_functions = Array[int]([0, 1, 1, 1, 2])
+input_normalizers = Array[int]([1, 0, 0, 0, 0])
 
 [node name="ConsoleIOHandler" type="Node" parent="NeuralAPIClient"]
 process_mode = 3

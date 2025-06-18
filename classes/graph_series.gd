@@ -17,7 +17,7 @@ var enabled : bool = true : set = set_enabled
 var fill_volume : bool = true : set = set_fill_volume
 
 @warning_ignore("shadowed_variable", "narrowing_conversion")
-func _init(title : String, color : Color, data_supplier : Callable, max_points : float) -> void:
+func _init(title : String, color : Color, data_supplier : Callable, max_points : int) -> void:
 	self.title = title
 	var darkened_color := color * 0.65
 	darkened_color.a = 0.75
@@ -90,6 +90,7 @@ func set_enabled(state : bool):
 		legend_item.modulate = Color(0.5, 0.5, 0.5, 0.5)
 
 
+@warning_ignore("shadowed_variable")
 func set_fill_volume(enabled : bool) -> void:
 	if fill_volume == enabled:
 		return

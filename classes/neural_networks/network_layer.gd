@@ -46,8 +46,11 @@ func to_dict() -> Dictionary:
 static func from_dict(layer : Dictionary) -> NetworkLayer:
 	if not layer: return null
 	
+	@warning_ignore("shadowed_variable")
 	var node_count : int
+	@warning_ignore("shadowed_variable")
 	var activation : ActivationFunction
+	@warning_ignore("shadowed_variable")
 	var normalizer : InputNormalizer
 	
 	if layer.has(LAYER_NODES):

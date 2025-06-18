@@ -11,6 +11,7 @@ signal deselected
 @onready var highest_score_label: Label = $MarginContainer/VBoxContainer/MarginContainer/Details/Column2/HighestScoreLabel
 @onready var num_networks_label: Label = $MarginContainer/VBoxContainer/MarginContainer/Details/Column2/NumNetworksLabel
 @onready var network_visualizer: NetworkVisualizer = $MarginContainer/VBoxContainer/MarginContainer/Details/MarginContainer/NetworkVisualizer
+@onready var json_summary_loader: Node = $JsonSummaryLoader
 
 @export_color_no_alpha var default_color : Color = 0x3A3A3AFF : set = set_default_color
 @export_color_no_alpha var hovered_color : Color = 0x494949FF : set = set_hovered_color
@@ -32,11 +33,10 @@ const NOT_AVAILABLE := "N/A"
 
 var file_name : String = NOT_AVAILABLE : set = set_file_name
 var file_path : String : set = set_file_path
-var file_contents : TrainingState : set = set_file_contents
+var summary : Summary
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	child_order_changed
 	var panel_stylebox = get_theme_stylebox("panel")
 	default_stylebox = panel_stylebox.duplicate()
 	default_stylebox.bg_color = default_color
@@ -54,8 +54,7 @@ func _ready() -> void:
 	_update_style_overrides()
 	
 	update_file_name_label()
-	update_detail_labels()
-	update_network_visualizer()
+	update_detail_labels(null)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -79,28 +78,32 @@ func set_file_name(string_name : String) -> void:
 
 func set_file_path(string_name : String) -> void:
 	file_path = string_name
-	update_file_contents()
+	#var timer := AbsoluteTimer.new()
+	#timer.start()
+	summary = Summary.from_dict(json_summary_loader.GetJsonSummary(file_path))
+	#timer.stop()
+	#print("Summary from dict: %.2fs" % timer.get_elapsed_time_sec())
+	#print.call_deferred(JSON.stringify(summary))
+	update_file_details()
 
 
-func set_file_contents(state : TrainingState) -> void:
-	file_contents = state
+func update_file_details() -> void:
 	if is_node_ready() and not is_queued_for_deletion():
-		call_thread_safe("update_detail_labels")
-		call_thread_safe("update_network_visualizer")
+		#var file_contents := _load_training_state(file_path)
+		assert(summary != null or file_path == null)
+		update_detail_labels(summary)
+		update_network_visualizer(summary)
 
-
-func update_network_visualizer() -> void:
-	if not file_contents:
+@warning_ignore("shadowed_variable")
+func update_network_visualizer(summary : Summary) -> void:
+	if not summary:
 		return
-	if not file_contents.networks or file_contents.networks.is_empty():
+	if summary.network_count <= 0:
 		return
-	var first_network = file_contents.networks.front()
-	if not first_network or not first_network.has("layout"):
+	if not summary.layout or summary.layout.is_empty():
 		return
-	if not first_network.layout:
-		return
-	var layout := NetworkLayout.from_dict(first_network.layout)
-	network_visualizer.network_layout = layout
+	var layout := NetworkLayout.from_dict(summary.layout)
+	network_visualizer.set_deferred("network_layout", layout)
 
 
 func _set_hovered(enabled : bool) -> void:
@@ -134,20 +137,27 @@ func is_selected() -> bool:
 	return _selected
 
 
+func get_training_state() -> TrainingState:
+	return _load_training_state(file_path)
+
+
 func set_default_color(color : Color) -> void:
 	default_color = color
 	if is_node_ready():
 		default_stylebox.bg_color = default_color
+
 
 func set_hovered_color(color : Color) -> void:
 	hovered_color = color
 	if is_node_ready():
 		hovered_stylebox.bg_color = hovered_color
 
+
 func set_selected_color(color : Color) -> void:
 	selected_color = color
 	if is_node_ready():
 		selected_stylebox.bg_color = selected_color
+
 
 func set_disabled_color(color : Color) -> void:
 	disabled_color = color
@@ -158,34 +168,30 @@ func set_disabled_color(color : Color) -> void:
 func update_file_name_label() -> void:
 	file_name_label.text = file_name
 
-
-func update_detail_labels() -> void:
+@warning_ignore("shadowed_variable")
+func update_detail_labels(summary : Summary) -> void:
 	var generation := NOT_AVAILABLE
 	var time_elapsed := NOT_AVAILABLE
 	var highest_score := NOT_AVAILABLE
 	var network_count := NOT_AVAILABLE
 	
-	if file_contents:
-		network_count = str(file_contents.networks.size())
-		if file_contents.generation > 0:
-			generation = str(file_contents.generation)
-		if roundi(file_contents.time_elapsed) > 0:
-			time_elapsed = Util.format_time(roundi(file_contents.time_elapsed))
-		if file_contents.highest_score == 0:
-			highest_score = NOT_AVAILABLE
-		else:
-			highest_score = "%-3.2f" % [roundf(file_contents.highest_score * 100) / 100]
-		
-	generations_label.text = "Generations: " + generation
-	training_time_label.text = "Time Elapsed: " + time_elapsed
-	highest_score_label.text = "Highest Score: " + highest_score
-	num_networks_label.text = "Network Count: " + network_count
+	if summary:
+		if summary.network_count > 0:
+			network_count = str(summary.network_count)
+		if summary.generation > 0:
+			generation = str(summary.generation)
+		if roundi(summary.time_elapsed) > 0:
+			time_elapsed = Util.format_time(roundi(summary.time_elapsed))
+		if summary.highest_score > 0:
+			highest_score = "%-3.2f" % [roundf(summary.highest_score * 100) / 100]
+	
+	generations_label.set_deferred("text", "Generations: " + generation)
+	training_time_label.set_deferred("text", "Time Elapsed: " + time_elapsed)
+	highest_score_label.set_deferred("text", "Highest Score: " + highest_score)
+	num_networks_label.set_deferred("text", "Network Count: " + network_count)
 
 
-func update_file_contents() -> void:
-	file_contents = _load_training_state(file_path)
-
-
+@warning_ignore("shadowed_variable")
 static func _load_training_state(file_path : String) -> TrainingState:
 	var contents = SaveManager.load_training_state(file_path)
 	if not contents: return null

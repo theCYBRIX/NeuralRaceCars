@@ -32,6 +32,7 @@ static func from_dict(dict : Dictionary) -> TrainingState:
 	if dict.has("highest_score"):
 		state.highest_score = dict.highest_score
 	if dict.has("networks"):
+		@warning_ignore("shadowed_variable")
 		var networks = dict.networks
 		if networks is Array:
 			var network_array : Array[Dictionary] = []

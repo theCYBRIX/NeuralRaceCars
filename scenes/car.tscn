@@ -37,7 +37,6 @@ physics_material_override = SubResource("PhysicsMaterial_pmuwr")
 linear_damp = 1.0
 angular_damp = 3.0
 script = ExtResource("1_ay7o7")
-tire_friction = 0.5
 steering_dropoff = SubResource("Curve_nlpam")
 accelecation_curve = SubResource("Curve_b72up")
 

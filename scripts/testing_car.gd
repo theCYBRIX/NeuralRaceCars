@@ -27,7 +27,7 @@ func _ready() -> void:
 	sequential_sensors.append_array($Sensors/AnchorBR.get_children())
 	print(sequential_sensors.size())
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	#super._process(delta)
 	
 	#print("Lap progress: %4.3f" % get_lap_progress())

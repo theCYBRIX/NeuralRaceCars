@@ -70,7 +70,7 @@ func set_replay_data(data : ReplayData):
 	replay_data = data
 
 
-func set_frame_rate(rate : float) -> void:
+func set_frame_rate(rate : int) -> void:
 	if rate <= 0:
 		push_error("Frame rate cannot be <= 0")
 		return

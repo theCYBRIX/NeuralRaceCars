@@ -27,7 +27,7 @@ func _enter_tree() -> void:
 		target_car = parent
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if target_car.active and target_car.speed > 10:
 		driving_data.record(target_car.get_sensor_data(), target_car.get_user_inputs())
 

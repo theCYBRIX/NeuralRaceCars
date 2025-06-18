@@ -1,6 +1,7 @@
 class_name TrackProvider
 extends Node
 
+@warning_ignore("unused_signal")
 signal track_updated(track : BaseTrack)
 
 @export var target_path : NodePath = ".." : set = set_target_path

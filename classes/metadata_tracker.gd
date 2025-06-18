@@ -106,6 +106,7 @@ class TypeDetails:
 		if scores.is_empty():
 			return 0.0
 		
+		@warning_ignore("shadowed_variable")
 		var count := int(round(scores.size() * fraction))
 		count = clamp(count, 1, scores.size())
 		

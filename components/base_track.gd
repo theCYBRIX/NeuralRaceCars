@@ -29,7 +29,7 @@ func _ready() -> void:
 	num_checkpoints = checkpoints_area.get_child_count()
 
 
-func get_target_direction(node : Node2D, checkpoint_index : int, look_ahead_px : float) -> float:
+func get_target_direction(node : Node2D, checkpoint_index : int, _look_ahead_px : float) -> float:
 	return node.global_position.angle_to_point(get_checkpoint(checkpoint_index + 1).global_position)
 
 
@@ -45,6 +45,7 @@ func _on_checkpoints_body_shape_entered(_body_rid: RID, body: Node2D, _body_shap
 		
 		if body.has_node("CheckpointTracker"):
 			var tracker : CheckpointTracker = body.get_node("CheckpointTracker")
+			@warning_ignore("integer_division")
 			tracker.checkpoint(((tracker.checkpoint_index + 1) / num_checkpoints) * num_checkpoints + local_shape_index)
 
 
@@ -83,8 +84,7 @@ func get_spawn_point(type := SpawnType.TRACK_START, for_whom : Car = null) -> Sp
 			return SpawnPoint.from(spawn_point)
 
 
-@warning_ignore("unused_variable")
-func get_track_start_spawn_point(for_whom : Car = null) -> SpawnPoint:
+func get_track_start_spawn_point(_for_whom : Car = null) -> SpawnPoint:
 	return SpawnPoint.from(spawn_point)
 
 

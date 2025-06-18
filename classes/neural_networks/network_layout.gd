@@ -26,8 +26,11 @@ func to_dict() -> Dictionary:
 static func from_dict(layout : Dictionary) -> NetworkLayout:
 	if not layout: return null
 	
+	@warning_ignore("shadowed_variable")
 	var input_layer : NetworkLayer
+	@warning_ignore("shadowed_variable")
 	var output_layer : NetworkLayer
+	@warning_ignore("shadowed_variable")
 	var hidden_layers : Array[NetworkLayer]
 	
 	if layout.has(LAYOUT_INPUTS):

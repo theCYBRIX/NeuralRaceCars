@@ -21,19 +21,19 @@ func _ready() -> void:
 	_update_layout_generator()
 	
 	#TODO: Remove this temp code
-	hidden_layers.get_children()[0].queue_free()
-	await get_tree().process_frame
-	
-	for i in [64, 64, 32]:
-		var layer := add_layer().get_settings()
-		layer.node_count.value = i
-		layer.activation_option.select(layer.activation_option.get_item_index(NetworkLayer.ActivationFunction.ReLU))
-	
-	input_layer.node_count.value = 15
-	input_layer.normalizer_option.select(input_layer.normalizer_option.get_item_index(NetworkLayer.InputNormalizer.BATCH))
-	
-	output_layer.node_count.value = 4
-	output_layer.activation_option.select(output_layer.activation_option.get_item_index(NetworkLayer.ActivationFunction.SIGMOID))
+	if OS.is_debug_build():
+		hidden_layers.get_children()[0].free()
+		
+		for i in [64, 64, 32]:
+			var layer := add_layer().get_settings()
+			layer.set_node_count(i)
+			layer.set_activation_func(NetworkLayer.ActivationFunction.ReLU)
+		
+		input_layer.set_node_count(15)
+		input_layer.set_input_normalizer(NetworkLayer.InputNormalizer.BATCH)
+		
+		output_layer.set_node_count(4)
+		output_layer.set_activation_func(NetworkLayer.ActivationFunction.SIGMOID)
 
 
 func get_layout() -> NetworkLayout:

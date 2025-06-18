@@ -113,7 +113,7 @@ func _on_car_deactivated(car : NeuralCar):
 	super._on_car_deactivated(car)
 	
 	if id_queue_index < _api_client.training_network_ids.size():
-		var batch_index : int = id_queue_index / num_cars
+		#var batch_index : int = id_queue_index / num_cars
 		#if batch_colors.size() > 0:
 			#car.respawned.connect(car.set_body_color.bind(batch_colors[batch_index % batch_colors.size()]), CONNECT_ONE_SHOT)
 		activate_neural_car(_api_client.training_network_ids[id_queue_index])
@@ -126,7 +126,7 @@ func _on_car_deactivated(car : NeuralCar):
 
 func start_training() -> void:
 	if not api_configured:
-		var error := await _api_client.setup_session(num_networks, parent_selection,  initial_networks)
+		var error := _api_client.setup_session(num_networks, parent_selection,  initial_networks)
 		
 		if error == OK:
 			_on_server_configured()
@@ -195,7 +195,7 @@ func start_next_batch():
 	
 	improvement_flag = false
 	
-	var metadata = await _api_client.get_network_metadata()
+	var metadata = _api_client.get_network_metadata()
 	metadata_tracker.analyze(network_scores, metadata)
 	metadata_updated.emit(metadata_tracker)
 	
@@ -208,7 +208,7 @@ func start_next_batch():
 
 
 func populate_new_generation():
-	var error := await _api_client.populate_new_generation(network_scores)
+	var error := _api_client.populate_new_generation(network_scores)
 	reset_network_scores()
 	
 	if error == OK:
@@ -223,7 +223,7 @@ func populate_random_generation():
 		if training_state.highest_score >= autosave_score_thresh:
 			save_networks(autosave_path, autosave_network_count)
 	
-	var error := await _api_client.populate_random_generation()
+	var error := _api_client.populate_random_generation()
 	reset_network_scores()
 	
 	if error == OK:
@@ -247,7 +247,7 @@ func reset_network_scores() -> void:
 func get_best_networks(n := num_networks) -> Array[Dictionary]:
 	var best_ids : Array[int] = get_best_network_ids(n)
 	
-	var best_networks_dict : Dictionary = await _api_client.get_networks(best_ids)
+	var best_networks_dict : Dictionary = _api_client.get_networks(best_ids)
 	var best_networks : Array[Dictionary] = []
 	best_networks.resize(best_networks_dict.size())
 	
@@ -265,7 +265,7 @@ func get_best_networks(n := num_networks) -> Array[Dictionary]:
 
 func save_networks(save_path : String, network_count : int) -> Error:
 	var error := OK
-	training_state.networks = await get_best_networks(min(network_count, num_networks))
+	training_state.networks = get_best_networks(min(network_count, num_networks))
 	
 	if _api_client.error_occurred():
 		error = FAILED

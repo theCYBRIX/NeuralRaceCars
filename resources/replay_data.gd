@@ -14,8 +14,8 @@ var _last_record : TransformRecord
 
 var _iter_index : int
 
-var _positon : Vector2 = Vector2.ZERO
-var _rotation : float = 0
+#var _positon : Vector2 = Vector2.ZERO
+#var _rotation : float = 0
 
 func _init(buffer_size := DEFAULT_BUFFER_SIZE) -> void:
 	_buffer_size = buffer_size
@@ -43,6 +43,7 @@ func get_record(idx : int) -> TransformRecord:
 	if idx < 0 or idx >= _frame_count:
 		push_warning("Index %d out of bounds for ReplayData of size %d." % [idx, _frame_count])
 		return null
+	@warning_ignore("integer_division")
 	return _data[idx / _buffer_size][idx % _buffer_size]
 
 
@@ -86,7 +87,7 @@ func generate_animation(position_path : String, rotation_path : String) -> Anima
 	animation.track_set_path(position_track, position_path)
 	animation.track_set_path(rotation_track, rotation_path)
 	
-	var frame_count := size()
+	#var frame_count := size()
 	
 	for frame_data in self:
 		animation.track_insert_key(position_track, frame_data.time_stamp, frame_data.position)
@@ -94,7 +95,7 @@ func generate_animation(position_path : String, rotation_path : String) -> Anima
 	
 	return animation
 
-
+@warning_ignore("shadowed_variable")
 func set_buffer_size(size : int):
 	if size == _buffer_size: return
 	_buffer_size = size
@@ -162,6 +163,8 @@ func _rebundle_data() -> void:
 		total_snap_count += chunk.size()
 	
 	var rebundled : Array[Array] = []
+	
+	@warning_ignore("integer_division")
 	rebundled.resize(total_snap_count / _buffer_size)
 	
 	var rebundled_idx : int = 0
@@ -197,15 +200,15 @@ func save(file_path : String, overwrite := false) -> Error:
 func should_continue():
 	return (_iter_index < _frame_count)
 
-func _iter_init(arg):
+func _iter_init(_arg):
 	_iter_index = 0
 	return should_continue()
 
-func _iter_next(arg):
+func _iter_next(_arg):
 	_iter_index += 1
 	return should_continue()
 
-func _iter_get(arg):
+func _iter_get(_arg):
 	return get_record(_iter_index)
 
 

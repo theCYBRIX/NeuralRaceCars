@@ -19,6 +19,7 @@ shader_parameter/color_thresh = 0.75
 contact_monitor = true
 max_contacts_reported = 1
 script = ExtResource("2_62y6a")
+tire_friction = 0.5
 body_color = Color(0, 0.72549, 0, 1)
 
 [node name="Sprite" parent="." index="1"]

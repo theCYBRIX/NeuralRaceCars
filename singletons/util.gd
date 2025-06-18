@@ -80,16 +80,18 @@ func browse_folder(file_mode : FileDialog.FileMode, on_item_selected : Callable,
 	get_tree().get_root().add_child(dialog)
 	dialog.show()
 
-@warning_ignore("integer_division")
 func format_time(seconds : int) -> String:
 	
 	var formatted := "%ds" % (seconds % SECONDS_PER_MINUTE)
 	
 	if seconds > SECONDS_PER_MINUTE:
+		@warning_ignore("integer_division")
 		formatted = ("%dm " % ((seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR)) + formatted
 	if seconds > SECONDS_PER_HOUR:
+		@warning_ignore("integer_division")
 		formatted = ("%dh " % ((seconds / SECONDS_PER_HOUR) % HOURS_PER_DAY)) + formatted
 	if seconds > SECONDS_PER_DAY:
+		@warning_ignore("integer_division")
 		formatted = ("%dd " % (seconds / SECONDS_PER_DAY)) + formatted
 	
 	return formatted

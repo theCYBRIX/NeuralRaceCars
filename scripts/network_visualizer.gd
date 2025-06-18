@@ -23,7 +23,7 @@ var network_layout : NetworkLayout : set = set_network_layout
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), background_color, true)
 	if not network_layout:
-		push_warning("Attempted to redraw network layout that is null.")
+		#push_warning("Attempted to redraw network layout that is null.")
 		return
 	var max_nodes_x := get_max_layer_node_count(network_layout)
 	var max_nodes_y := get_layer_count(network_layout)
@@ -48,16 +48,23 @@ func _draw() -> void:
 			var pos := Vector2(pos_x, pos_y)
 			layer_array[node_index] = pos
 	
+	var lines := PackedVector2Array()
 	for layer in range(node_positions.size() - 1):
 		for pos in node_positions[layer]:
 				for node in node_positions[layer + 1]:
-					draw_line(pos, node, connection_color, line_stroke_width, antialiased)
+					lines.append(pos)
+					lines.append(node)
+	draw_multiline(lines, connection_color, line_stroke_width, antialiased if line_stroke_width > 0 else false)
 	
 	var node_radius := (minf(node_offset.x, node_offset.y) / 2.0) *  node_size_multiplier
 	for layer in node_positions:
 		for pos in layer:
 			draw_circle(pos, node_radius, node_color, true, -1.0, antialiased)
 			draw_circle(pos, node_radius, Color.DIM_GRAY, false, node_radius * 0.2)
+
+
+func update():
+	pass
 
 
 func get_max_layer_node_count(layout : NetworkLayout) -> int:

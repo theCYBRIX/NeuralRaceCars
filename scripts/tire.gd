@@ -18,7 +18,7 @@ func _ready() -> void:
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var index : int = _despawning.size() - 1
 	while index >= 0:
 		var mark := _despawning[index]
@@ -76,6 +76,6 @@ func _new_tire_mark() -> Line2D:
 	return mark
 
 class TireMark extends Line2D:
-	func _process(delta: float) -> void:
+	func _process(_delta: float) -> void:
 		global_position = Vector2.ZERO
 		global_rotation = 0

@@ -8,6 +8,7 @@ signal item_pressed(list_item : SaveFileListItem)
 @onready var browse_button: Button = $VBoxContainer/MarginContainer/HBoxContainer/BrowseButton
 @onready var refresh_button: Button = $VBoxContainer/MarginContainer/HBoxContainer/RefreshButton
 @onready var sort_options: OptionButton = $VBoxContainer/MarginContainer/HBoxContainer/SortOptions
+@onready var back_button: Button = $VBoxContainer/MarginContainer2/Control/BackButton
 
 @export var initial_path := SaveManager.DEFAULT_SAVE_DIR_PATH
 
@@ -53,7 +54,6 @@ func refresh_save_file_list():
 	_refresh_task_id = WorkerThreadPool.add_task(save_file_list.refresh_file_list.bind(folder_path_edit.text))
 	_task_id_valid = true
 	await save_file_list.list_updated
-	_update_list_sorting()
 	refresh_button.disabled = false
 
 
@@ -67,8 +67,10 @@ func _on_refresh_button_pressed() -> void:
 
 
 func _on_back_button_pressed() -> void:
+	back_button.disabled = true
+	save_file_list.cancel_list_item_updates()
 	await _release_refresh_thread()
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	SceneManager.set_scene(SceneManager.Scene.MAIN_MENU)
 
 
 func _on_browse_button_pressed() -> void:
@@ -76,14 +78,18 @@ func _on_browse_button_pressed() -> void:
 
 
 func _on_load_button_pressed() -> void:
+	load_button.disabled = true
 	var selected_items := save_file_list.get_selected_items()
-	if not selected_items or selected_items.is_empty(): return
-	switch_to_state(selected_items[0].file_contents)
+	if not selected_items or selected_items.is_empty():
+		load_button.disabled = false
+		return
+	await switch_to_state(selected_items[0].get_training_state())
 
 
 func _on_save_file_list_item_pressed(list_item: SaveFileListItem) -> void:
 	if not list_item: return
-	switch_to_state(list_item.file_contents)
+	item_pressed.emit(list_item)
+	switch_to_state(list_item.get_training_state())
 
 
 func _release_refresh_thread() -> void:
@@ -100,11 +106,3 @@ func _on_save_file_list_selection_count_changed(num_selected: int) -> void:
 
 func _on_sort_options_item_selected(index: int) -> void:
 	save_file_list.sorting_order = save_file_list.SortBy.values()[index]
-
-
-func _update_list_sorting() -> void:
-	if not is_node_ready():
-		return
-	
-	save_file_list.wait_for_worker_tasks()
-	

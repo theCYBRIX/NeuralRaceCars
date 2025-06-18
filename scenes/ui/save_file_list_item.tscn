@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://chxejmnpfsj1l"]
+[gd_scene load_steps=4 format=3 uid="uid://chxejmnpfsj1l"]
 
 [ext_resource type="Script" uid="uid://knnb4fq5f0am" path="res://scripts/save_file_list_item.gd" id="1_gkpno"]
 [ext_resource type="Script" uid="uid://by5viny2mwso7" path="res://scripts/network_visualizer.gd" id="2_0e7bo"]
+[ext_resource type="Script" uid="uid://nkrg15wyddfw" path="res://classes/JsonSummaryLoader.cs" id="3_as3vt"]
 
 [node name="SaveFileListItem" type="PanelContainer"]
 clip_contents = true
@@ -42,6 +43,7 @@ theme_override_constants/margin_left = 10
 theme_override_constants/margin_right = 10
 
 [node name="NetworkVisualizer" type="Control" parent="MarginContainer/VBoxContainer/MarginContainer/Details/MarginContainer"]
+clip_contents = true
 custom_minimum_size = Vector2(320, 200)
 layout_mode = 2
 mouse_filter = 1
@@ -74,6 +76,9 @@ text = "Highest Score"
 [node name="NumNetworksLabel" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/Details/Column2"]
 layout_mode = 2
 text = "Number of Networks"
+
+[node name="JsonSummaryLoader" type="Node" parent="."]
+script = ExtResource("3_as3vt")
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

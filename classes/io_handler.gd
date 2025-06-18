@@ -2,16 +2,20 @@ class_name IOHandler
 extends Node
 
 
+@warning_ignore("unused_signal")
 signal connecting
+@warning_ignore("unused_signal")
 signal connected
+@warning_ignore("unused_signal")
 signal disconnected
+@warning_ignore("unused_signal")
 signal connection_error
 
 
 func read() -> String:
 	return ""
 
-func write(msg : String) -> void:
+func write(_msg : String) -> void:
 	pass
 
 func query(msg : String) -> String:
