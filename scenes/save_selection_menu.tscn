@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://vmbxcw7j1qu8"]
+[gd_scene load_steps=4 format=3 uid="uid://vmbxcw7j1qu8"]
 
 [ext_resource type="Script" uid="uid://c6rbewq3af642" path="res://scenes/save_selection_menu.gd" id="1_7e6it"]
 [ext_resource type="PackedScene" uid="uid://dbfw2qma5day0" path="res://scenes/ui/save_file_list.tscn" id="2_safoo"]
+[ext_resource type="Script" uid="uid://b8wtl1g6jp5g" path="res://scripts/track_selector.gd" id="3_tlgsq"]
 
 [node name="SaveSelectionMenu" type="Control"]
 layout_mode = 3
@@ -67,6 +68,10 @@ layout_mode = 2
 disabled = true
 text = "Load"
 
+[node name="OptionButton" type="OptionButton" parent="VBoxContainer/MarginContainer2/Control"]
+layout_mode = 2
+script = ExtResource("3_tlgsq")
+
 [node name="BackButton" type="Button" parent="VBoxContainer/MarginContainer2/Control"]
 layout_mode = 2
 text = "Back"
@@ -77,4 +82,5 @@ text = "Back"
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/BrowseButton" to="." method="_on_browse_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer/HBoxContainer/RefreshButton" to="." method="_on_refresh_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer2/Control/LoadButton" to="." method="_on_load_button_pressed"]
+[connection signal="item_selected" from="VBoxContainer/MarginContainer2/Control/OptionButton" to="VBoxContainer/MarginContainer2/Control/OptionButton" method="_on_item_selected"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer2/Control/BackButton" to="." method="_on_back_button_pressed"]

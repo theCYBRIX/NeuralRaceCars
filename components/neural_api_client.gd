@@ -5,7 +5,7 @@ extends Node
 
 signal connected
 signal disconnected
-signal connection_error(error : Error)
+signal connection_error
 signal network_ids_updated(Array)
 
 @export var io_handler : IOHandler : set = set_io_handler
@@ -422,9 +422,9 @@ func _on_io_handler_disconnected() -> void:
 	disconnected.emit()
 
 
-func _on_io_handler_connection_error(error : Error) -> void:
+func _on_io_handler_connection_error() -> void:
 	_api_connected = false
-	connection_error.emit(error)
+	connection_error.emit()
 
 
 class ProcessTask:

@@ -1,9 +1,10 @@
 using Godot;
 using Godot.Collections;
 using System;
-using System.Buffers.Binary;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
+using System.Buffers.Binary;
 
 public partial class BinaryIoHandler : Node
 {
@@ -78,29 +79,29 @@ public partial class BinaryIoHandler : Node
 		GD.Print("Okay, that works");
 	}
 
-	public Dictionary<string, Godot.Collections.Array<double>> ProcessInputs(Dictionary<int, Godot.Collections.Array<double>> inputs)
+	public Dictionary<string, Array<double>> ProcessInputs(Dictionary<int, Array<double>> inputs)
 	{
 		_timer.Start();
 
-		var outputs = new Dictionary<string, Godot.Collections.Array<double>>();
+		var outputs = new Dictionary<string, Array<double>>();
 
 		using var ms = new MemoryStream();
 		using var bufferWriter = new BinaryWriter(ms);
 
 		// Write request header
-		bufferWriter.Write(System.Net.IPAddress.HostToNetworkOrder(PROCESS_INPUTS_ENDPOINT));
-		bufferWriter.Write(System.Net.IPAddress.HostToNetworkOrder(inputs.Count));
+		bufferWriter.Write(IPAddress.HostToNetworkOrder(PROCESS_INPUTS_ENDPOINT));
+		bufferWriter.Write(IPAddress.HostToNetworkOrder(inputs.Count));
 
+		Span<byte> span = stackalloc byte[8];
 		foreach (var kvp in inputs)
 		{
-			int netId = System.Net.IPAddress.HostToNetworkOrder(kvp.Key);
-			int count = System.Net.IPAddress.HostToNetworkOrder(kvp.Value.Count);
+			int netId = IPAddress.HostToNetworkOrder(kvp.Key);
+			int count = IPAddress.HostToNetworkOrder(kvp.Value.Count);
 			bufferWriter.Write(netId);
 			bufferWriter.Write(count);
 
 			foreach (double val in kvp.Value)
 			{
-				Span<byte> span = stackalloc byte[8];
 				BinaryPrimitives.WriteDoubleBigEndian(span, val);
 				bufferWriter.Write(span);
 			}
@@ -111,14 +112,14 @@ public partial class BinaryIoHandler : Node
 		_writer.Flush();
 
 		// Read and handle response
-		int errorCode = System.Net.IPAddress.NetworkToHostOrder(_reader.ReadInt32());
+		int errorCode = IPAddress.NetworkToHostOrder(_reader.ReadInt32());
 		if (errorCode != 0)
 		{
 			GD.PushError($"Binary IO Channel returned error code: {errorCode}");
 			return outputs;
 		}
 
-		int numNetworks = System.Net.IPAddress.NetworkToHostOrder(_reader.ReadInt32());
+		int numNetworks = IPAddress.NetworkToHostOrder(_reader.ReadInt32());
 		if (numNetworks != inputs.Count)
 		{
 			GD.PushError($"Num networks changed {numNetworks} -> {inputs.Count}");
@@ -126,9 +127,9 @@ public partial class BinaryIoHandler : Node
 
 		for (int i = 0; i < numNetworks; i++)
 		{
-			int networkId = System.Net.IPAddress.NetworkToHostOrder(_reader.ReadInt32());
-			int numOutputs = System.Net.IPAddress.NetworkToHostOrder(_reader.ReadInt32());
-			Godot.Collections.Array<double> outputArray = new Godot.Collections.Array<double>(new double[numOutputs]);
+			int networkId = IPAddress.NetworkToHostOrder(_reader.ReadInt32());
+			int numOutputs = IPAddress.NetworkToHostOrder(_reader.ReadInt32());
+			Array<double> outputArray = new Array<double>(new double[numOutputs]);
 
 			for (int j = 0; j < numOutputs; j++)
 			{

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://bjbn6seg1c2g5"]
+
+[ext_resource type="Shader" uid="uid://c22veewpvar06" path="res://shaders/checkerboard.gdshader" id="1_j2txr"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rp11s"]
+resource_local_to_scene = true
+shader = ExtResource("1_j2txr")
+shader_parameter/even_color = Color(0.1812, 0.1812, 0.1812, 1)
+shader_parameter/odd_color = Color(0.326679, 0.326679, 0.326679, 1)
+shader_parameter/rectangle_size = Vector2(320, 320)
+shader_parameter/speed = 0.015
+shader_parameter/angle_degrees = 45.0
+
+[node name="CheckeredBackground" type="ColorRect"]
+material = SubResource("ShaderMaterial_rp11s")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

@@ -462,4 +462,4 @@ func __unparent_popup():
 
 
 func _on_legend_container_child_order_changed() -> void:
-	legend.visible = always_show_legend or legend_container.get_child_count(true) > 0
+	legend.visible = always_show_legend and legend_container.get_child_count(true) > 0

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://bjdf47qbor0rh"]
+[gd_scene load_steps=6 format=3 uid="uid://dnlwrl5582l2t"]
 
-[ext_resource type="Script" uid="uid://ddghwtx2uh7nl" path="res://scripts/main_menu.gd" id="1_luxh3"]
-[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://checkered_background.tscn" id="2_ekxnf"]
+[ext_resource type="Script" uid="uid://dmji1pg1rda1t" path="res://scripts/start_playing_menu.gd" id="1_jnpgn"]
+[ext_resource type="Script" uid="uid://b8wtl1g6jp5g" path="res://scripts/track_selector.gd" id="1_sxa1o"]
+[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://checkered_background.tscn" id="2_rp11s"]
 
-[sub_resource type="Shader" id="Shader_ekxnf"]
+[sub_resource type="Shader" id="Shader_rp11s"]
 resource_local_to_scene = true
 code = "shader_type canvas_item;
 
@@ -28,26 +29,26 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bqqt6"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_i8qly"]
 resource_local_to_scene = true
-shader = SubResource("Shader_ekxnf")
+shader = SubResource("Shader_rp11s")
 shader_parameter/even_color = Color(0.1812, 0.1812, 0.1812, 1)
 shader_parameter/odd_color = Color(0.326679, 0.326679, 0.326679, 1)
 shader_parameter/rectangle_size = Vector2(320, 320)
 shader_parameter/speed = 0.015
 shader_parameter/angle_degrees = 45.0
 
-[node name="MainMenu" type="Control"]
+[node name="StartPlayingMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_luxh3")
+script = ExtResource("1_jnpgn")
 
-[node name="CheckeredBackground" parent="." instance=ExtResource("2_ekxnf")]
-material = SubResource("ShaderMaterial_bqqt6")
+[node name="CheckeredBackground" parent="." instance=ExtResource("2_rp11s")]
+material = SubResource("ShaderMaterial_i8qly")
 layout_mode = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
@@ -63,23 +64,18 @@ alignment = 1
 layout_mode = 2
 alignment = 1
 
-[node name="PlayButton" type="Button" parent="HBoxContainer/VBoxContainer"]
+[node name="OptionButton" type="OptionButton" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "Play"
+script = ExtResource("1_sxa1o")
 
 [node name="StartButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "Start  Training"
+text = "Start"
 
-[node name="LoadButton" type="Button" parent="HBoxContainer/VBoxContainer"]
+[node name="BackButton" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "Load previous"
+text = "Back"
 
-[node name="ExitButton" type="Button" parent="HBoxContainer/VBoxContainer"]
-layout_mode = 2
-text = "Exit"
-
-[connection signal="pressed" from="HBoxContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="item_selected" from="HBoxContainer/VBoxContainer/OptionButton" to="HBoxContainer/VBoxContainer/OptionButton" method="_on_item_selected"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="HBoxContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
-[connection signal="pressed" from="HBoxContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

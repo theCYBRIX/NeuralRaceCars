@@ -50,7 +50,7 @@ func browse_folder(file_mode : FileDialog.FileMode, on_item_selected : Callable,
 		dialog.add_filter("*." + filter.file_extension, filter.description)
 	
 	if file_mode != FileDialog.FILE_MODE_OPEN_DIR and FileAccess.file_exists(initial_path):
-		if filters.is_empty() or filters.has(initial_path.get_extension()):
+		if filters.is_empty() or filters.any(func(x : FileFilter): return x.file_extension == initial_path.get_extension()):
 			dialog.current_file = initial_path
 		else:
 			dialog.current_path = initial_path.get_base_dir()
@@ -109,3 +109,21 @@ func invert_dictionary(dict : Dictionary) -> Dictionary:
 	for key in dict.keys():
 		inverted[dict[key]] = key
 	return inverted
+
+
+func is_java_installed() -> bool:
+	var java_check := []
+
+	# Windows requires .exe, macOS/Linux don't
+	if OS.has_feature("windows"):
+		java_check = ["cmd", "/c", "java -version"]
+	else:
+		java_check = ["sh", "-c", "java -version"]
+
+	var output := []
+	var exit_code := OS.execute(java_check[0], java_check.slice(1), output, true)
+
+	# Java writes version info to stderr (not stdout)
+	var output_str := "".join(output)
+
+	return exit_code == 0 and ("version" in output_str or "openjdk" in output_str)

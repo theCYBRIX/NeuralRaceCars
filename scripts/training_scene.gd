@@ -159,7 +159,7 @@ func _on_evolution_manager_new_generation(generation : int) -> void:
 	stat_screen.total_gens_label.set_text("Total Generations: " + str(total_generations))
 	
 	stat_screen.gen_label.set_text("Generation: " + str(generation))
-	stat_screen.improvement_label.set_text("Gens without improvement: " + str(evolution_manager.gens_without_improvement))
+	stat_screen.improvement_label.set_text("Gens without improvement: %d (limit: %s)" % [evolution_manager.gens_without_improvement, evolution_manager.gens_without_improvement_limit])
 	
 	#TODO: Do properly
 	if track and track.has_method("randomize_checkpoints"):

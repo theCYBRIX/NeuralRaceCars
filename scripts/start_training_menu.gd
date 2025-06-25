@@ -1,7 +1,7 @@
 extends Control
 
 
-@onready var layout_creator: LayoutCreator = $MarginContainer/VBoxContainer/LayoutCreator
+@onready var layout_creator: LayoutCreator = $MarginContainer/VBoxContainer/HBoxContainer2/LayoutCreator
 
 
 func _on_start_button_pressed() -> void:
