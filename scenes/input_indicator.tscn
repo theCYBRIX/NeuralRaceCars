@@ -1,0 +1,76 @@
+[gd_scene load_steps=10 format=3 uid="uid://cym1pxy1xv6tf"]
+
+[ext_resource type="Script" uid="uid://c581oe3x3p8vb" path="res://scripts/input_indicator.gd" id="1_bhtwp"]
+[ext_resource type="Texture2D" uid="uid://df0reek4m3gy7" path="res://assets/Gas Pedal And Brake.png" id="2_kcqsb"]
+[ext_resource type="Texture2D" uid="uid://bu0w4ef15a4b3" path="res://assets/Steering Wheel.png" id="3_bhtwp"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v2bho"]
+atlas = ExtResource("2_kcqsb")
+region = Rect2(708, 0, 236, 378)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rj4xh"]
+atlas = ExtResource("2_kcqsb")
+region = Rect2(472, 0, 236, 378)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fvs06"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v2bho")
+}],
+"loop": true,
+"name": &"Gas Pedal Down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rj4xh")
+}],
+"loop": true,
+"name": &"Gas Pedal Up",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_44i2h"]
+atlas = ExtResource("2_kcqsb")
+region = Rect2(236, 0, 236, 378)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cjx1s"]
+atlas = ExtResource("2_kcqsb")
+region = Rect2(0, 0, 236, 378)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_orukt"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_44i2h")
+}],
+"loop": true,
+"name": &"Brake Pedal Down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cjx1s")
+}],
+"loop": true,
+"name": &"Brake Pedal Up",
+"speed": 5.0
+}]
+
+[node name="InputIndicator" type="Node2D"]
+script = ExtResource("1_bhtwp")
+
+[node name="GasPedal" type="AnimatedSprite2D" parent="."]
+position = Vector2(424, 344)
+sprite_frames = SubResource("SpriteFrames_fvs06")
+animation = &"Gas Pedal Up"
+
+[node name="BrakePedal" type="AnimatedSprite2D" parent="."]
+position = Vector2(154, 347)
+sprite_frames = SubResource("SpriteFrames_orukt")
+animation = &"Brake Pedal Up"
+
+[node name="SteeringWheel" type="Sprite2D" parent="."]
+position = Vector2(854, 316)
+texture = ExtResource("3_bhtwp")
