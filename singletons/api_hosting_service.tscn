@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://bkloelflx3ntg"]
+
+[ext_resource type="Script" uid="uid://b48xb2licctcx" path="res://scripts/api_hosting_service.gd" id="1_kork7"]
+[ext_resource type="Script" uid="uid://bl6losfm06e1k" path="res://scripts/java_process_manager.gd" id="2_u58jt"]
+
+[node name="APIHostingService" type="Node"]
+script = ExtResource("1_kork7")
+
+[node name="JavaProcessManager" type="Node" parent="."]
+script = ExtResource("2_u58jt")
+auto_read_stream = true
+metadata/_custom_type_script = "uid://bl6losfm06e1k"
+
+[connection signal="err_message_received" from="JavaProcessManager" to="." method="_on_java_process_manager_err_message_received"]
+[connection signal="message_received" from="JavaProcessManager" to="." method="_on_java_process_manager_message_received"]
