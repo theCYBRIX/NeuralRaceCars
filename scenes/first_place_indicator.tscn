@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://csrsaf8s800vu"]
+
+[ext_resource type="Shader" uid="uid://bigqku8ni261m" path="res://shaders/doughnut.gdshader" id="1_4u64j"]
+[ext_resource type="Script" uid="uid://dbkq0w30s7abf" path="res://scripts/first_place_indicator.gd" id="1_bb0jf"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bb0jf"]
+shader = ExtResource("1_4u64j")
+shader_parameter/circle_color = Color(1, 1, 0, 1)
+shader_parameter/radius = 0.405
+shader_parameter/thickness = 0.11
+
+[node name="FirstPlaceIndicator" type="Node2D"]
+script = ExtResource("1_bb0jf")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_bb0jf")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -80.0
+offset_right = 80.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(80, 80)
