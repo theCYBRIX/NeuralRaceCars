@@ -8,25 +8,18 @@ signal car_freed(car : NeuralCar)
 signal car_respawned(car : NeuralCar)
 signal car_deactivated(car : NeuralCar)
 
-signal track_ready(track : BaseTrack)
-
 
 const INPUT_THRESH : float = 0.5
 
 
-
 @export var car_parent: Node = self as Node: set = set_car_parent
-@export var track_provider : TrackProvider = null : set = set_track_provider
 @export var deactivate_on_contact := true : set = set_deactivate_on_contact
+@export var use_global_settings := true : set = set_use_global_settings
 
 @export var enabled : bool = true
 
 @export_range(0, Util.INT_32_MAX_VALUE) var num_cars : int : set = set_num_cars
 @export var input_mapping : Array[NetworkInputMapper.InputProperty] = NetworkInputMapper.DEFAULT_MAPPING : set = set_input_mapping
-
-@export_group("Autoload")
-@export var load_saved_networks : bool = false
-@export_global_file("*.json") var network_load_path := SaveManager.DEFAULT_SAVE_FILE_PATH
 
 var track : BaseTrack : set = set_track
 
@@ -58,9 +51,11 @@ func _ready() -> void:
 		update_configuration_warnings()
 		return
 	
+	GameSettings.car_settings_changed.connect(_on_car_settings_changed)
+	
 	process_physics_priority = -1
 	
-	if enabled and track:
+	if enabled:
 		_update_car_count()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -99,8 +94,6 @@ func _notification(what: int) -> void:
 
 
 func _update_car_count():
-	if not track: return
-	
 	var num_cars_needed = num_cars
 	if cars.size() > 0:
 		num_cars_needed -= cars.size()
@@ -129,8 +122,21 @@ func _add_neural_cars(count : int):
 		c.deactivate_on_contact = deactivate_on_contact
 		c.deactivated.connect(_on_car_deactivated.bind(c), CONNECT_DEFERRED)
 		c.respawned.connect(_on_car_respawned.bind(c), CONNECT_DEFERRED)
-		car_parent.add_child(c, false, Node.INTERNAL_MODE_FRONT)
+		if car_parent:
+			car_parent.add_child(c, false, Node.INTERNAL_MODE_FRONT)
 		car_instanciated.emit(c)
+
+
+func _update_car_parent(car : NeuralCar) -> void:
+	if not car:
+		return
+	var curr_parent := car.get_parent()
+	if curr_parent == car_parent:
+		return
+	if curr_parent:
+		curr_parent.remove_child(car)
+	if car_parent:
+		car_parent.add_child(car , false, Node.INTERNAL_MODE_FRONT)
 
 
 func _on_car_deactivated(car : NeuralCar):
@@ -153,7 +159,7 @@ func _instanciate_neural_car(index : int) -> NeuralCar:
 	
 	c.id = index
 	c.set_name("Neural Car " + str(index))
-	if track and track.is_node_ready():
+	if track:
 		c.track = track
 	if input_mapping:
 		c.input_mapper.input_properties = input_mapping
@@ -218,48 +224,19 @@ func get_inputs(index : int, car_array : Array[NeuralCar], registry : Dictionary
 
 
 func set_track(new_track : BaseTrack):
-	if track:
-		Util.disconnect_from_signal(_on_track_ready, track.ready)
-	
 	track = new_track
-	
-	if not track:
-		return
-	
-	if track.is_node_ready():
-		_on_track_ready()
-	else:
-		track.ready.connect(_on_track_ready, CONNECT_ONE_SHOT)
+	for car in cars:
+		car.track = track
 
 
 func set_car_parent(node : Node):
 	car_parent = node if node else self as Node
+	for car in cars:
+		_update_car_parent(car)
 
 
 func _should_ignore_deactivations() -> bool:
 	return ignore_deactivations or not track or not track.is_node_ready()
-
-
-func _on_track_ready():
-	
-	if enabled:
-		_update_car_count()
-	
-	if not _api_client.simulation_network_ids or _api_client.simulation_network_ids.is_empty():
-		await _api_client.network_ids_updated
-	
-	track_ready.emit()
-	
-	#var idx = -1
-	#for car in cars:
-		#idx += 1
-		#car.track_path = car.get_path_to(track)
-		#reset_neural_car(_api_client.simulation_network_ids[idx], car)
-	#
-	#await get_tree().create_timer(0.5).timeout
-	#
-	#for car in cars:
-		#car.active = true
 
 
 func set_num_cars(n : int):
@@ -310,24 +287,6 @@ func _on_api_client_connection_error() -> void:
 	_on_api_client_disconnected()
 
 
-func _on_track_updated(new_track : BaseTrack) -> void:
-	track = new_track
-
-
-func set_track_provider(provider : TrackProvider) -> void:
-	if track_provider and is_instance_valid(track_provider) and not Engine.is_editor_hint():
-		Util.disconnect_from_signal(_on_track_updated, track_provider.track_updated)
-	track_provider = provider
-	
-	if not Engine.is_editor_hint():
-		if track_provider:
-			track_provider.track_updated.connect(_on_track_updated)
-			track = track_provider.track
-		else:
-			track = null
-	update_configuration_warnings()
-
-
 func deactivate_all() -> void:
 	for car : NeuralCar in active_cars.values():
 		car.deactivate(false)
@@ -360,15 +319,20 @@ func set_api_client(client : NeuralAPIClient):
 	update_configuration_warnings()
 
 
+func set_use_global_settings(value : bool) -> void:
+	use_global_settings = value
+	if use_global_settings:
+		deactivate_on_contact = GameSettings.car_settings.deactivate_on_contact
+
+
+func _on_car_settings_changed(settings : CarSettings) -> void:
+	deactivate_on_contact = settings.deactivate_on_contact
+
+
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings : PackedStringArray = []
 	
 	if not _api_client:
 		warnings.append("Node must be a child of a NeuralAPIClient.")
-	
-	if not track_provider:
-		warnings.append("No TrackProvider has been set.")
-	elif not (track_provider is TrackProvider):
-		warnings.append("TrackProvider path is not valid.")
 	
 	return warnings

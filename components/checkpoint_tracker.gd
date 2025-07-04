@@ -9,6 +9,9 @@ signal checkpoint_updated(prev_idx : int, new_idx : int)
 @export var checkpoint_index : int = default_value : set = set_checkpoint
 
 
+var pos_at_last_checkpoint : Vector2
+
+
 func _init() -> void:
 	name = "CheckpointTracker"
 
@@ -28,6 +31,7 @@ func set_checkpoint(idx : int) -> void:
 	if idx == checkpoint_index: return
 	var prev_idx := checkpoint_index
 	checkpoint_index = idx
+	pos_at_last_checkpoint = get_parent().global_position
 	checkpoint_updated.emit(prev_idx, checkpoint_index)
 
 

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dmji1pg1rda1t" path="res://scripts/start_playing_menu.gd" id="1_jnpgn"]
 [ext_resource type="Script" uid="uid://b8wtl1g6jp5g" path="res://scripts/track_selector.gd" id="1_sxa1o"]
-[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://checkered_background.tscn" id="2_rp11s"]
+[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://scenes/checkered_background.tscn" id="2_rp11s"]
 
 [sub_resource type="Shader" id="Shader_rp11s"]
 resource_local_to_scene = true

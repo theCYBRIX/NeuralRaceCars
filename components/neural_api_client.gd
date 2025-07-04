@@ -37,6 +37,9 @@ var _request_callable : Callable = _request_timed
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	
+	if get_parent().name != "GameplayScene":
+		ApiHostingService.get_process_manager().start()
 
 
 func _exit_tree() -> void:
@@ -44,6 +47,8 @@ func _exit_tree() -> void:
 		return
 	if binary_io_handler and binary_io_handler.IsConnected():
 		binary_io_handler.Disconnect()
+	
+	ApiHostingService.get_process_manager().stop()
 
 
 func update_car_inputs(cars : Array[NeuralCar], batch_size : int = cars.size()):

@@ -44,12 +44,14 @@ theme_override_constants/margin_right = 10
 
 [node name="NetworkVisualizer" type="Control" parent="MarginContainer/VBoxContainer/MarginContainer/Details/MarginContainer"]
 clip_contents = true
-custom_minimum_size = Vector2(320, 200)
+custom_minimum_size = Vector2(160, 100)
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("2_0e7bo")
-node_size_multiplier = 0.6
+node_separation = Vector2(0.5, 0.5)
+node_size_multiplier = 0.912
 line_stroke_width = -1.0
+antialiased = false
 
 [node name="Column1" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Details"]
 layout_mode = 2

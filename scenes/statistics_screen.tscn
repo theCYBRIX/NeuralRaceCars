@@ -193,7 +193,7 @@ size_flags_horizontal = 3
 columns = 2
 
 [node name="Graph" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
-custom_minimum_size = Vector2(400, 500)
+custom_minimum_size = Vector2(200, 250)
 layout_mode = 2
 size_flags_horizontal = 3
 title = "Game"
@@ -207,7 +207,7 @@ min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
 [node name="Graph2" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
-custom_minimum_size = Vector2(400, 500)
+custom_minimum_size = Vector2(200, 250)
 layout_mode = 2
 size_flags_horizontal = 3
 title = "Best Score"
@@ -221,7 +221,7 @@ min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
 [node name="ManualGraph" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
-custom_minimum_size = Vector2(400, 500)
+custom_minimum_size = Vector2(200, 250)
 layout_mode = 2
 size_flags_horizontal = 3
 title = "Average Score"
@@ -236,7 +236,7 @@ min_value_restrict_ceiling = true
 metadata/_edit_use_anchors_ = true
 
 [node name="ManualGraph2" parent="MarginContainer/Columns/VBoxContainer/HBoxContainer/ScrollContainer2/Items" instance=ExtResource("1_yu65y")]
-custom_minimum_size = Vector2(400, 500)
+custom_minimum_size = Vector2(200, 250)
 layout_mode = 2
 size_flags_horizontal = 3
 title = "Top 5%"

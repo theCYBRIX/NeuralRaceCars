@@ -2,6 +2,8 @@ extends Node
 
 
 const INT_32_MAX_VALUE := 0xFFFFFFFF
+const FLOAT_MAX = 3.4028235e+38
+const FLOAT_MIN = -FLOAT_MAX
 
 const SECONDS_PER_MINUTE : int = 60
 const SECONDS_PER_HOUR : int = 3600
@@ -127,3 +129,9 @@ func is_java_installed() -> bool:
 	var output_str := "".join(output)
 
 	return exit_code == 0 and ("version" in output_str or "openjdk" in output_str)
+
+
+func clamp_infinity_to_finite(value: float) -> float:
+	if is_inf(value):
+		return FLOAT_MAX if signf(value) > 0.0 else FLOAT_MIN
+	return value

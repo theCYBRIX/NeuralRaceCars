@@ -9,6 +9,12 @@ const MAIN_SCENES := {
 	Scene.PLAY_GAME_MENU : preload("res://scenes/start_playing_menu.tscn"),
 }
 
+const TRACKS := {
+	Track.TRACK_2 : "res://scenes/track_2.tscn",
+	Track.TRACK_3 : "res://scenes/track_3.tscn",
+	Track.POINT_TO_POINT : "res://scenes/point_to_point.tscn",
+}
+
 enum Scene {
 	MAIN_MENU,
 	TRAINING,
@@ -18,32 +24,11 @@ enum Scene {
 	PLAY_GAME_MENU,
 }
 
-var JAVA_INSTALLED : bool
-var ACTION_DOWNLOAD := "download"
-var ACTION_EXIT := "exit"
-
-
-func _ready() -> void:
-	JAVA_INSTALLED = Util.is_java_installed()
-	if not JAVA_INSTALLED:
-		var dialog = AcceptDialog.new()
-		dialog.disable_3d = true
-		dialog.dialog_text = "Java is required to run SimpleNeuralNetwork.\nPlease install Java and restart the game."
-		dialog.custom_action.connect(_on_dialog_custom_action)
-		dialog.add_button("Get Java", true, ACTION_DOWNLOAD)
-		dialog.add_button("Exit", true, ACTION_EXIT)
-		dialog.visibility_changed.connect(func(): if not dialog.visible: dialog.queue_free())
-		add_child(dialog)
-		dialog.popup_centered()
-
-
-func _on_dialog_custom_action(action : String) -> void:
-	match action:
-		ACTION_DOWNLOAD:
-			OS.shell_open("https://www.java.com/en/download/")
-		ACTION_EXIT:
-			get_tree().quit()
-	
+enum Track {
+	TRACK_2,
+	TRACK_3,
+	POINT_TO_POINT,
+}
 
 
 func set_scene(scene : Scene) -> Node:
@@ -70,3 +55,15 @@ func set_scene_to_packed(scene : PackedScene) -> Node:
 
 func get_packed(scene : Scene) -> PackedScene:
 	return MAIN_SCENES[scene]
+
+
+func get_track_name(track : Track) -> String:
+	match track:
+		Track.TRACK_2:
+			return "Track 2"
+		Track.TRACK_3:
+			return "Track 3"
+		Track.POINT_TO_POINT:
+			return "Point to Point"
+		_:
+			return "Undefined"

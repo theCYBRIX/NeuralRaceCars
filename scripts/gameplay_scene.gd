@@ -9,6 +9,7 @@ extends Node2D
 @onready var neural_car_manager: NeuralCarManager = $NeuralAPIClient/NeuralCarManager
 @onready var neural_api_client: NeuralAPIClient = $NeuralAPIClient
 @onready var graph: DataGraph = $CanvasLayer/Graph
+@onready var input_indicator: Node2D = $CanvasLayer/InputIndicatorAnchor/InputIndicator
 
 var _player : Car
 
@@ -96,8 +97,9 @@ func spawn_player() -> void:
 	_player.add_child(replay_recorder)
 	track_provider.track.add_child(_player)
 	#camera_manager.start_tracking(_player)
-	$Camera2D.target = _player
-	$Camera2D.start()
+	camera_manager.start_tracking(_player)
+	input_indicator.car = _player
+	_player.reset()
 
 
 func pause():

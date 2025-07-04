@@ -39,7 +39,7 @@ func _init(title : String, color : Color, data_supplier : Callable, max_points :
 	line2d.round_precision = 16
 	line2d.antialiased = true
 	line2d.set_default_color(color)
-	line2d.set_width(2)
+	line2d.set_width(1)
 	legend_item = LEGEND_ITEM.instantiate()
 	legend_item.series = self
 	legend_item.set_color(color)

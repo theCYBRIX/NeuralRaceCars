@@ -1,16 +1,5 @@
 extends Node2D
 
-@onready var binary_io_handler: Node = $NeuralAPIClient/BinaryIOHandler
-
-@onready var evolution_manager: EvolutionManager = $NeuralAPIClient/EvolutionManager
-@onready var neural_api_client: NeuralAPIClient = $NeuralAPIClient
-@onready var camera_manager: CameraManager = $CameraManager
-@onready var camera_reparent_cooldown: Timer = $CameraReparentCooldown
-@onready var stat_screen: Control = $CanvasLayer/StatScreen
-@onready var exit_dialog: ConfirmationDialog = $ExitDialog
-@onready var leaderboard: Leaderboard = $Leaderboard
-@onready var start_button: Button = $CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton
-@onready var network_layout_generator: NetworkLayoutGenerator = $NeuralAPIClient/NetworkLayoutGenerator
 
 var total_generations : int = 0
 var time_elapsed_int : int = 0
@@ -31,6 +20,20 @@ var next_camera_target_set_flag := false
 
 var track : BaseTrack : set = set_track
 
+
+@onready var binary_io_handler: Node = $NeuralAPIClient/BinaryIOHandler
+@onready var evolution_manager: EvolutionManager = $NeuralAPIClient/EvolutionManager
+@onready var neural_api_client: NeuralAPIClient = $NeuralAPIClient
+@onready var camera_manager: CameraManager = $CameraManager
+@onready var camera_reparent_cooldown: Timer = $CameraReparentCooldown
+@onready var stat_screen: Control = $CanvasLayer/StatScreen
+@onready var exit_dialog: ConfirmationDialog = $ExitDialog
+@onready var leaderboard: Leaderboard = $Leaderboard
+@onready var start_button: Button = $CanvasLayer/Control/MarginContainer/HBoxContainer/VBoxContainer/StartButton
+@onready var network_layout_generator: NetworkLayoutGenerator = $NeuralAPIClient/NetworkLayoutGenerator
+@onready var input_indicator: Node2D = $CanvasLayer/InputIndicatorAnchor/InputIndicator
+@onready var first_place_indicator: Node2D = $FirstPlaceIndicator
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	set_process(false)
@@ -41,9 +44,11 @@ func _ready() -> void:
 		set_camera_target(car_childred.front())
 	
 	evolution_manager.car_respawned.connect(set_first_place_car, CONNECT_ONE_SHOT)
-	
 	evolution_manager.ready.connect(_on_evolution_manager_reset, CONNECT_ONE_SHOT)
-	
+	evolution_manager.track = track
+	leaderboard.track = track
+	for car in evolution_manager.cars:
+		leaderboard.add(car)
 	
 	if GameSettings.network_layout:
 		network_layout_generator.set_layout(GameSettings.network_layout)
@@ -155,6 +160,8 @@ func _on_evolution_manager_reset() -> void:
 
 
 func _on_evolution_manager_new_generation(generation : int) -> void:
+	first_place_indicator.stop_tracking()
+	
 	total_generations += 1
 	stat_screen.total_gens_label.set_text("Total Generations: " + str(total_generations))
 	
@@ -178,27 +185,26 @@ func _on_stat_screen_save_button_pressed(save_path : String, network_count : int
 func set_track(instance : BaseTrack):
 	track = instance
 	
-	if not track.is_node_ready():
-		await track.ready
-	
-	for car : Car in find_children("*", "Car", false):
-		car.track_path = car.get_path_to(track)
-	
+	if leaderboard:
+		leaderboard.track = track
 
 
 func set_first_place_car(car : NeuralCar):
+	if input_indicator: input_indicator.set_car(car)
+	if first_place_indicator: first_place_indicator.start_tracking(car)
 	if best_network_id == car.id: return
 	if first_place_car and first_place_car.deactivated.is_connected(_on_first_place_car_deactevated):
 		first_place_car.deactivated.disconnect(_on_first_place_car_deactevated)
 	first_place_car = car
 	best_network_id = car.id
 	first_place_car.deactivated.connect(_on_first_place_car_deactevated, CONNECT_ONE_SHOT)
-	camera_manager.start_tracking(first_place_car)
+	camera_manager.target = first_place_car
+	camera_manager.start_tracking()
 
 
 func update_first_place_car():
 	best_network_id = -1
-	set_first_place_car.call_deferred($Leaderboard.leaderboard.back())
+	set_first_place_car.call_deferred(leaderboard.leaderboard.back())
 	return
 
 
@@ -209,7 +215,7 @@ func set_camera_target(target : Node):
 		#print("target queued")
 	else:
 		#print("new target")
-		camera_manager.start_tracking(target)
+		camera_manager.target = target
 		start_camrera_reparent_cooldown()
 
 
@@ -236,7 +242,6 @@ func _on_leaderboard_first_place_changed(new_first: Car, _prev_first: Car) -> vo
 
 func _on_track_provider_track_updated(new_track: BaseTrack) -> void:
 	track = new_track
-	$Leaderboard.track = track
 
 
 func _on_start_button_pressed() -> void:
@@ -259,7 +264,8 @@ func _on_stat_screen_exit_button_pressed() -> void:
 
 
 func _on_evolution_manager_car_instanciated(car: NeuralCar) -> void:
-	leaderboard.add(car)
+	if leaderboard:
+		leaderboard.add(car)
 
 
 func _on_evolution_manager_training_started() -> void:

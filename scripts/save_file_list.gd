@@ -128,7 +128,7 @@ func update_list_item_content(list_item : SaveFileListItem, file_path : String) 
 
 func update_list_items(load_file_tasks : Array[Callable]) -> void:
 	_cancel_item_update = false
-	worker_task_manager.add_group_task(func(idx : int): load_file_tasks[idx].call(), load_file_tasks.size(), -1, false, "Load Save File Contents")
+	worker_task_manager.add_group_task(func(idx : int): load_file_tasks[idx].call(), load_file_tasks.size(), 1, true, "Load Save File Contents")
 	worker_task_manager.wait_for_group_tasks()
 	worker_task_manager.wait_for_all_tasks()
 	

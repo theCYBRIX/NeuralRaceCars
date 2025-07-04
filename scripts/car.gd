@@ -11,7 +11,7 @@ const MAX_STEERING_ANGLE := deg_to_rad(45)
 @export var forward_acceleration : float = 150000
 @export var reverse_acceleration : float = 100000
 @export var braking_power : float = 70000
-@export var tire_friction : float = 10
+@export var tire_friction : float = 10 : set = set_tire_friction
 
 @export var turn_rate : float = PI / 80.0
 
@@ -46,10 +46,10 @@ func _ready() -> void:
 	set_body_color(body_color)
 	
 	if not track:
-		track = get_parent()
-	
-	if track and track.is_node_ready():
-		reset()
+		var parent := get_parent()
+		if parent is BaseTrack:
+			track = parent
+
 
 func get_throttle_input() -> float:
 	return Input.get_axis("decelerate", "accelerate")
@@ -113,20 +113,15 @@ func respawn(pos : Vector2, angle : float):
 func _set_position_and_rotation(pos : Vector2, angle : float):
 	set_physics_process(false)
 	await get_tree().physics_frame
-	#position = pos
-	#rotation = angle
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0
 	
-	#var new_transform = transform.rotated(angle_difference(rotation, angle))
 	var new_transform = Transform2D(angle, transform.get_scale(), transform.get_skew(), pos)
-	#new_transform.origin = pos
 	PhysicsServer2D.body_set_state(
 		self,
 		PhysicsServer2D.BODY_STATE_TRANSFORM,
 		new_transform
 	)
-	#force_update_transform()
 	set_physics_process(true)
 
 
@@ -138,16 +133,21 @@ func set_body_color(color : Color):
 			pass
 
 
+func set_tire_friction(friction : float) -> void:
+	tire_friction = friction
+
+
 func set_track(node : BaseTrack) -> void:
 	track = node
 
 
 func reset(spawn_type : BaseTrack.SpawnType = BaseTrack.SpawnType.TRACK_START):
 	if not track:
+		await respawn(Vector2.ZERO, 0)
 		return
 	
 	if not track.is_node_ready():
-		push_error("Unable to reset. Track is not ready.")
+		track.ready.connect(reset, CONNECT_ONE_SHOT)
 		return
 		
 	var spawn_point := track.get_spawn_point(spawn_type, self)
@@ -166,3 +166,7 @@ func _update_tire_angles(steering_input : float) -> void:
 	var tire_angle := steering_input * MAX_STEERING_ANGLE
 	tire_fl.rotation = tire_angle
 	tire_fr.rotation = tire_angle
+
+
+func _on_car_settings_changed(settings : CarSettings) -> void:
+	tire_friction = settings.tire_friction

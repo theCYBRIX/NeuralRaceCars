@@ -18,6 +18,11 @@ var _progress_update_task : int = -1
 var _leaderboard_update_task : int = -1
 
 
+func _ready() -> void:
+	if not track:
+		set_physics_process(false)
+
+
 func _process(_delta: float) -> void:
 	if _leaderboard_update_task != -1:
 		if not WorkerThreadPool.is_task_completed(_leaderboard_update_task):
@@ -35,16 +40,15 @@ func _physics_process(_delta: float) -> void:
 
 func update_progress(index : int):
 	var node : Node2D = leaderboard[index]
-	var check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index).global_position
-	var next_check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index + 1).global_position
-	var check_to_check_dist := check_pos.distance_squared_to(next_check_pos)
-	var node_pos = node.global_position
-	if node is Car:
-		var sprite : Sprite2D = node.get_node("Sprite")
-		if sprite:
-			var texture_size := sprite.texture.get_size() * sprite.scale
-			node_pos += node.linear_velocity.normalized() * max(texture_size.x, texture_size.y)
-	_progress_dict[node] = node.checkpoint_tracker.checkpoint_index + (1 - (node_pos.distance_squared_to(next_check_pos) / check_to_check_dist))
+	_progress_dict[node] = track.get_progress(node)
+	
+	#var initial_pos : Vector2 = node.checkpoint_tracker.pos_at_last_checkpoint
+	#if not initial_pos:
+		#initial_pos = track.get_checkpoint(node.checkpoint_tracker.checkpoint_index).global_position #fallback to last ckeckpoint pos
+	#var next_check_pos := track.get_checkpoint(node.checkpoint_tracker.checkpoint_index + 1).global_position
+	#var initial_check_dist :=  initial_pos.distance_squared_to(next_check_pos)
+	#var node_pos = node.global_position
+	#_progress_dict[node] = node.checkpoint_tracker.checkpoint_index + (1 - (node_pos.distance_squared_to(next_check_pos) / initial_check_dist))
 
 func update_leaderboard() -> void:
 	if _progress_update_task != -1:
@@ -72,7 +76,7 @@ func add(node : Node2D) -> bool:
 	
 	var checkpoint_tracker : CheckpointTracker = node.get_node_or_null("CheckpointTracker")
 	
-	if not checkpoint_tracker:
+	if not checkpoint_tracker or leaderboard.has(node):
 		return false
 	
 	leaderboard.append(node)
@@ -137,6 +141,11 @@ func set_free_labels_when_hidden(enabled := true):
 	
 	if free_labels_when_hidden and not show_labels:
 		_free_labels()
+
+
+func set_track(node : BaseTrack) -> void:
+	track = node
+	set_physics_process(track != null)
 
 
 func _update_labels():

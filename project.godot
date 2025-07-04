@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="CarGame"
+config/name="NeuralRaceCars"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 run/max_fps=60
@@ -22,10 +22,13 @@ SceneManager="*res://singletons/scene_manager.gd"
 Util="*res://singletons/util.gd"
 SaveManager="*res://singletons/save_manager.gd"
 GameSettings="*res://singletons/game_settings.gd"
+ApiHostingService="*res://singletons/api_hosting_service.tscn"
 
 [display]
 
 window/subwindows/embed_subwindows=false
+window/stretch/mode="canvas_items"
+window/stretch/aspect="ignore"
 
 [dotnet]
 
@@ -60,7 +63,9 @@ Cars=""
 
 [gui]
 
-theme/default_theme_scale=2.0
+theme/stretch/aspect="ignore"
+theme/stretch/mode="canvas_items"
+theme/name="NeuralRaceCars"
 
 [input]
 

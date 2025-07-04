@@ -119,3 +119,7 @@ func respawn(pos : Vector2, angle : float) -> void:
 
 func set_deactivate_on_contact(enabled := true):
 	deactivate_on_contact = enabled
+
+
+func _on_car_settings_changed(settings : CarSettings) -> void:
+	super._on_car_settings_changed(settings)

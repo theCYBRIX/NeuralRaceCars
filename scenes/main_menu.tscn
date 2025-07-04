@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bjdf47qbor0rh"]
 
 [ext_resource type="Script" uid="uid://ddghwtx2uh7nl" path="res://scripts/main_menu.gd" id="1_luxh3"]
-[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://checkered_background.tscn" id="2_ekxnf"]
+[ext_resource type="PackedScene" uid="uid://bjbn6seg1c2g5" path="res://scenes/checkered_background.tscn" id="2_ekxnf"]
 
 [sub_resource type="Shader" id="Shader_ekxnf"]
 resource_local_to_scene = true

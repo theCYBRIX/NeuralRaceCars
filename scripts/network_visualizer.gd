@@ -95,6 +95,8 @@ func get_layers_as_array(layout : NetworkLayout) -> Array[NetworkLayer]:
 
 
 func set_layout_generator(generator : NetworkLayoutGenerator):
+	if layout_generator:
+		Util.disconnect_from_signal(_on_network_layout_generator_layout_changed, layout_generator.layout_changed)
 	layout_generator = generator
 	if layout_generator:
 		layout_generator.layout_changed.connect(_on_network_layout_generator_layout_changed)
