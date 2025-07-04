@@ -2,18 +2,23 @@ extends Camera2D
 
 signal toggle_free_floating(enabled : bool)
 
-const MIN_ZOOM := Vector2.ONE * 0.01
-const MAX_ZOOM := Vector2.ONE * 5
-
+@export var default_zoom : float = 1.0 : set = set_default_zoom
+@export var min_zoom : float = 0.01 : set = set_min_zoom
+@export var max_zoom : float = 5 : set = set_max_zoom
 @export var zoom_multiplier : float = 0.08
 @export var speed : float = 75
-
 @export var free_floating : bool = false : set = set_free_floating
+
 
 var dragging : bool = false
 
+var _default_zoom_vec : Vector2 = Vector2.ONE * default_zoom
+var _min_zoom_vec : Vector2  = Vector2.ONE * min_zoom
+var _max_zoom_vec : Vector2   = Vector2.ONE * max_zoom
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	zoom = _default_zoom_vec
 	set_process(free_floating)
 
 
@@ -47,7 +52,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func limit_zoom(desired : Vector2) -> Vector2:
-	return clamp(desired, MIN_ZOOM, MAX_ZOOM)
+	return clamp(desired, _min_zoom_vec, _max_zoom_vec)
 
 
 func set_free_floating(floating : bool):
@@ -56,3 +61,18 @@ func set_free_floating(floating : bool):
 	set_process(free_floating)
 	position_smoothing_enabled = not free_floating
 	toggle_free_floating.emit(free_floating)
+
+
+func set_default_zoom(value : float) -> void:
+	default_zoom = value
+	_default_zoom_vec = Vector2.ONE * default_zoom
+
+
+func set_min_zoom(value : float) -> void:
+	min_zoom = value
+	_min_zoom_vec = Vector2.ONE * min_zoom
+
+
+func set_max_zoom(value : float) -> void:
+	max_zoom = value
+	_max_zoom_vec = Vector2.ONE * max_zoom

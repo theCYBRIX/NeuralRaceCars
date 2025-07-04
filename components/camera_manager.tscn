@@ -1,24 +1,16 @@
-[gd_scene load_steps=4 format=3 uid="uid://bo3ui0wlk1dqt"]
+[gd_scene load_steps=3 format=3 uid="uid://bo3ui0wlk1dqt"]
 
 [ext_resource type="Script" uid="uid://twncl88g6ami" path="res://components/camera_manager.gd" id="1_i01r3"]
 [ext_resource type="PackedScene" uid="uid://c6afl8m87cwgr" path="res://scenes/free_camera.tscn" id="2_iy7yc"]
-[ext_resource type="Script" uid="uid://cd3a6fd5uty0n" path="res://scripts/car_follow_camera.gd" id="3_ofee5"]
 
 [node name="CameraManager" type="Node"]
 script = ExtResource("1_i01r3")
 
-[node name="Camera" parent="." instance=ExtResource("2_iy7yc")]
+[node name="FreeCam" parent="." instance=ExtResource("2_iy7yc")]
 offset = Vector2(0, -200)
+zoom = Vector2(0.8, 0.8)
 position_smoothing_enabled = true
 position_smoothing_speed = 5.0
+default_zoom = 0.35
 
-[node name="CarFollowCamera" type="Camera2D" parent="."]
-enabled = false
-script = ExtResource("3_ofee5")
-
-[node name="RemoteTransform2D" type="RemoteTransform2D" parent="."]
-remote_path = NodePath("../Camera")
-update_rotation = false
-update_scale = false
-
-[connection signal="toggle_free_floating" from="Camera" to="." method="_on_camera_toggle_free_floating"]
+[connection signal="toggle_free_floating" from="FreeCam" to="." method="_on_camera_toggle_free_floating"]
