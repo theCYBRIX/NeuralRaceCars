@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dtn4aty5t1x3s" path="res://scripts/layer_settings.gd" id="1_qu6kh"]
 
 [node name="LayerSettings" type="PanelContainer"]
+focus_mode = 1
 script = ExtResource("1_qu6kh")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]

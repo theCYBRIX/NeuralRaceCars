@@ -25,6 +25,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_yafnn")
+item_swap_animation_length = 0.25
 
 [node name="RootContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -50,9 +51,9 @@ hidden layers: [10]
 outputs: 1"
 script = ExtResource("2_a34ga")
 layout_generator = NodePath("../../../NetworkLayoutGenerator")
-node_separation = Vector2(10, 20)
-node_size_multiplier = 0.711
+node_size_multiplier = 0.764
 line_stroke_width = -1.0
+antialiased = false
 metadata/_custom_type_script = "uid://by5viny2mwso7"
 
 [node name="MarginContainer2" type="MarginContainer" parent="RootContainer"]
@@ -70,17 +71,24 @@ alignment = 1
 
 [node name="PanelContainer" type="PanelContainer" parent="RootContainer/MarginContainer2/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Input Layer"
 horizontal_alignment = 1
 
-[node name="InputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer" instance=ExtResource("1_kgssf")]
+[node name="InputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" instance=ExtResource("1_kgssf")]
 layout_mode = 2
 size_flags_horizontal = 4
 
@@ -90,10 +98,10 @@ size_flags_horizontal = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2"]
 layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
 
 [node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer"]
 layout_mode = 2
@@ -108,13 +116,14 @@ horizontal_alignment = 1
 [node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
 
 [node name="ScrollContainer" type="ScrollContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_yafnn")
+follow_focus = true
 
 [node name="HiddenLayers" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer"]
 layout_mode = 2
@@ -135,17 +144,24 @@ text = "Add"
 
 [node name="PanelContainer3" type="PanelContainer" parent="RootContainer/MarginContainer2/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 8
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3"]
+[node name="MarginContainer" type="MarginContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer"]
+[node name="Label" type="Label" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Output Layer"
 horizontal_alignment = 1
 
-[node name="OutputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer" instance=ExtResource("1_kgssf")]
+[node name="OutputLayer" parent="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" instance=ExtResource("1_kgssf")]
 layout_mode = 2
 size_flags_horizontal = 4
 
@@ -156,16 +172,18 @@ activation_functions = Array[int]([0, 0, 0])
 input_normalizers = Array[int]([1, 0, 0])
 metadata/_custom_type_script = "uid://csppnnlo4buwi"
 
-[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_activation_func_changed"]
-[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_input_normalizer_changed"]
-[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/VBoxContainer/InputLayer" to="." method="_on_any_node_count_changed"]
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/InputLayer" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/InputLayer" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/InputLayer" to="." method="_on_any_node_count_changed"]
+[connection signal="down_button_pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem" to="." method="_on_layer_item_down_button_pressed"]
 [connection signal="trash_button_pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem" to="." method="_on_layer_item_trash_button_pressed"]
-[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_activation_func_changed"]
-[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_input_normalizer_changed"]
-[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/LayerSettings" to="." method="_on_any_node_count_changed"]
+[connection signal="up_button_pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem" to="." method="_on_layer_item_up_button_pressed"]
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/PanelContainer/MarginContainer/HBoxContainer/LayerSettings" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/PanelContainer/MarginContainer/HBoxContainer/LayerSettings" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem/PanelContainer/MarginContainer/HBoxContainer/LayerSettings" to="." method="_on_any_node_count_changed"]
 [connection signal="pressed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/HBoxContainer/AddLayerButton" to="." method="_on_add_layer_button_pressed"]
-[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_activation_func_changed"]
-[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_input_normalizer_changed"]
-[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/VBoxContainer/OutputLayer" to="." method="_on_any_node_count_changed"]
+[connection signal="activation_func_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/OutputLayer" to="." method="_on_any_activation_func_changed"]
+[connection signal="input_normalizer_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/OutputLayer" to="." method="_on_any_input_normalizer_changed"]
+[connection signal="node_count_changed" from="RootContainer/MarginContainer2/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/OutputLayer" to="." method="_on_any_node_count_changed"]
 
 [editable path="RootContainer/MarginContainer2/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MarginContainer/ScrollContainer/HiddenLayers/LayerSettingsItem"]
