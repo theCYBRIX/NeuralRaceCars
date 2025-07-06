@@ -4,14 +4,17 @@ extends Node2D
 @export var car : Car : set = set_car
 @export var max_steering_degrees : float = 120
 @export var steering_lerp_time : float = 0.15
+@export var pedal_lerp_time : float = 0.025
 
 
-@onready var gas_pedal: AnimatedSprite2D = $GasPedal
-@onready var brake_pedal: AnimatedSprite2D = $BrakePedal
+@onready var gas_pedal: Sprite2D = $GasPedal
+@onready var brake_pedal: Sprite2D = $BrakePedal
 @onready var steering_wheel: Sprite2D = $SteeringWheel
 
 
 var _steering_tween : Tween
+var _gas_pedal_tween : Tween
+var _brake_pedal_tween : Tween
 
 
 func _process(_delta: float) -> void:
@@ -51,19 +54,33 @@ func set_steering(input : float) -> void:
 
 
 func set_throttle(value : float) -> void:
-	var depressed := value >= 0.5
-	if depressed:
-		gas_pedal.play("Gas Pedal Down")
-	else:
-		gas_pedal.play("Gas Pedal Up")
+	if _gas_pedal_tween and _gas_pedal_tween.is_running():
+		_gas_pedal_tween.kill()
+	_gas_pedal_tween = create_tween()
+	_gas_pedal_tween.tween_method(_set_throttle_shader_value, _get_throttle_shader_value(), value, pedal_lerp_time).set_ease(Tween.EASE_IN)
+
+
+func _set_throttle_shader_value(value : float) -> void:
+	gas_pedal.material.set_shader_parameter("press", value)
+
+
+func _get_throttle_shader_value() -> float:
+	return gas_pedal.material.get_shader_parameter("press")
 
 
 func set_brake(value : float) -> void:
-	var depressed := value >= 0.5
-	if depressed:
-		brake_pedal.play("Brake Pedal Down")
-	else:
-		brake_pedal.play("Brake Pedal Up")
+	if _brake_pedal_tween and _brake_pedal_tween.is_running():
+		_brake_pedal_tween.kill()
+	_brake_pedal_tween = create_tween()
+	_brake_pedal_tween.tween_method(_set_brake_shader_value, _get_brake_shader_value(), value, pedal_lerp_time).set_ease(Tween.EASE_IN)
+
+
+func _set_brake_shader_value(value : float) -> void:
+	brake_pedal.material.set_shader_parameter("press", value)
+
+
+func _get_brake_shader_value() -> float:
+	return brake_pedal.material.get_shader_parameter("press")
 
 
 func set_car(obj : Car) -> void:
