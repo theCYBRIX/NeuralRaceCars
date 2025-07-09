@@ -1,19 +1,26 @@
 class_name ConsoleIOHandler
 extends IOHandler
 
-@export var app_path : String = "./SimpleNeuralNetwork/SimpleNeuralNetwork.jar"
+
+@export_node_path("JavaProcessManager") var process_manager_path : NodePath = NodePath("")
 @export var autostart : bool = false
 
-var app_properties : Dictionary
-var std_io : FileAccess
 
+var java_process_manager : JavaProcessManager : set = set_process_manager
 var shutdown_requested : bool = false
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	if not Engine.is_editor_hint() and autostart:
 		start()
 	set_process(false)
+	
+	if not process_manager_path or process_manager_path.is_empty():
+		process_manager_path = get_path_to(ApiHostingService.java_process_manager)
+	
+	java_process_manager = get_node_or_null(process_manager_path)
+
 
 func _process(_delta: float) -> void:
 	if is_running(): return
@@ -22,50 +29,73 @@ func _process(_delta: float) -> void:
 	disconnected.emit()
 	set_process(false)
 
+
 func write(msg : String) -> void:
-	std_io.store_pascal_string(msg)
+	java_process_manager.std_io.store_pascal_string(msg)
+
 
 func read() -> String:
-	return std_io.get_pascal_string()
+	return java_process_manager.std_io.get_pascal_string()
+
 
 func is_running() -> bool:
-	return app_properties and app_properties.has("pid") and OS.is_process_running(app_properties.pid)
+	return java_process_manager and java_process_manager.is_running()
+
 
 func start() -> bool:
-	if app_properties and is_running():
-		stop()
-	
-	app_properties = OS.execute_with_pipe("java", ["-jar", app_path])
-	std_io = app_properties.stdio
-	std_io.big_endian = true
-	if is_running():
-		print("SimpleNNConsole started successfully.")
-		connected.emit()
-		set_process(true)
-		return true
-	else:
-		print("SimpleNNConsole failed to start.")
-		connection_error.emit()
+	if not java_process_manager:
 		return false
+	connecting.emit()
+	return java_process_manager.start()
 
 
 func stop() -> bool:
-	if is_running():
-		write(JSON.stringify({ "request" : "exit" }))
-		shutdown_requested = true
-		
-		var response : Dictionary = JSON.parse_string(read())
-		
-		if !response or !response.has("status") or !(response["status"] == "ok"):
-			OS.kill(app_properties.pid)
-		else:
-			print("SimpleNNConsole shutdown properly.")
-		
-		if OS.is_process_running(app_properties.pid):
-			get_tree().create_timer(0.25).timeout.connect(OS.kill.bind(app_properties.pid), CONNECT_ONE_SHOT)
-			
-	return true
+	if not java_process_manager:
+		return false
+	else:
+		return await java_process_manager.stop()
 
 
 func _exit_tree() -> void:
-	stop()
+	cancel_free()
+	await stop()
+	queue_free()
+
+
+func set_process_manager(manager : JavaProcessManager) -> void:
+	if java_process_manager:
+		Util.disconnect_from_signal(_on_process_manager_process_started, java_process_manager.process_started)
+		Util.disconnect_from_signal(_on_process_manager_process_shutdown, java_process_manager.process_shutdown)
+		Util.disconnect_from_signal(_on_process_manager_startup_error, java_process_manager.startup_error)
+		Util.disconnect_from_signal(_on_process_manager_err_message_received, java_process_manager.err_message_received)
+	
+	java_process_manager = manager
+	
+	if java_process_manager:
+		java_process_manager.process_started.connect(_on_process_manager_process_started)
+		java_process_manager.process_shutdown.connect(_on_process_manager_process_shutdown)
+		java_process_manager.startup_error.connect(_on_process_manager_startup_error)
+		java_process_manager.err_message_received.connect(_on_process_manager_err_message_received)
+		java_process_manager.auto_read_err_stream = true
+
+
+func _on_process_manager_process_started() -> void:
+	connected.emit()
+
+
+func _on_process_manager_process_shutdown() -> void:
+	disconnected.emit()
+
+
+func _on_process_manager_startup_error() -> void:
+	connection_error.emit()
+
+
+func _on_process_manager_err_message_received(msg : String) -> void:
+	var lines : PackedStringArray = ["[%s]:\n" % java_process_manager.app_name]
+	lines.append_array(msg.strip_edges().split("\n"))
+	print("~\t".join(lines), "\n")
+
+
+func _on_process_manager_message_received(msg : String) -> void:
+	print(msg)

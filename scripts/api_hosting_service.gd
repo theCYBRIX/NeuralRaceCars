@@ -31,6 +31,10 @@ func _on_dialog_custom_action(action : String) -> void:
 			get_tree().quit()
 
 
+func is_running() -> bool:
+	return java_process_manager.is_running()
+
+
 func get_process_manager() -> JavaProcessManager:
 	return java_process_manager
 

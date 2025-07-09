@@ -38,7 +38,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	if get_parent().name != "GameplayScene":
+	if get_parent().name != "GameplayScene" and io_handler is ServerIOHandler:
 		ApiHostingService.get_process_manager().start()
 
 
@@ -48,7 +48,9 @@ func _exit_tree() -> void:
 	if binary_io_handler and binary_io_handler.IsConnected():
 		binary_io_handler.Disconnect()
 	
-	ApiHostingService.get_process_manager().stop()
+	
+	if get_parent().name != "GameplayScene" and io_handler is ServerIOHandler:
+		ApiHostingService.get_process_manager().stop()
 
 
 func update_car_inputs(cars : Array[NeuralCar], batch_size : int = cars.size()):
@@ -342,7 +344,7 @@ func parse_message(server_msg : String) -> Dictionary:
 		var error : String
 	
 		if parse_error != OK:
-			error = "Error on line %d when parsing server response. Error: %s" % [parser.get_error_line(), parser.get_error_message()]
+			error = "Error on line %d when parsing server response. Error: %s\nMessage: \n\"%s\"" % [parser.get_error_line(), parser.get_error_message(), server_msg]
 		
 		elif not response:
 			error = "Parser returned null.\n Response was:\"%s\"" % server_msg

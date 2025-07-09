@@ -9,9 +9,11 @@ signal err_message_received(msg : String)
 
 @export var app_name : String = "SimpleNeuralNetwork"
 @export_file("*.jar") var app_path : String = "./SimpleNeuralNetwork/SimpleNeuralNetwork.jar"
-@export var args : Array[String] = ["--mode=tcp", "--port=3050", "--parent-pid=%d" % OS.get_process_id()]
+#@export var args : Array[String] = ["--mode=tcp", "--port=3050", "--parent-pid=%d" % OS.get_process_id()]
+@export var args : Array[String] = ["--mode=stdio", "--parent-pid=%d" % OS.get_process_id()]
 @export var stop_command : String = "exit"
-@export var auto_read_stream := false
+@export var auto_read_io_stream := false
+@export var auto_read_err_stream := false
 
 var app_properties : Dictionary
 var std_io : FileAccess
@@ -50,10 +52,11 @@ func _read_stream(stream : FileAccess) -> String:
 
 func _process(_delta: float) -> void:
 	if is_running():
-		if auto_read_stream:
+		if auto_read_io_stream:
 			var out := read_std_out()
 			if out and out.length() > 0:
 				message_received.emit(out)
+		if auto_read_err_stream:
 			var err_out := read_std_err()
 			if err_out and err_out.length() > 0:
 				err_message_received.emit(err_out)
@@ -66,10 +69,10 @@ func _process(_delta: float) -> void:
 
 func start() -> bool:
 	if app_properties and is_running():
-		stop()
+		return true
 	var arguments := ["-jar", app_path]
 	arguments.append_array(args)
-	app_properties = OS.execute_with_pipe("java", arguments, false)
+	app_properties = OS.execute_with_pipe("java", arguments)
 	std_io = app_properties.stdio
 	std_err = app_properties.stderr
 	std_io.big_endian = true
